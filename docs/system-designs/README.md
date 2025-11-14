@@ -4,7 +4,7 @@ Comprehensive walkthroughs of common system design interview questions.
 
 ## Contents
 
-1. [URL Shortener](url-shortener.md) - Classic starter problem
+1. [URL Shortener](design-topics/tiny-url/url-shortener.md) - Classic starter problem
 2. [Social Media Feed](social-feed.md) - Instagram/Twitter feed
 3. [Distributed Cache](distributed-cache.md) - Redis/Memcached design
 4. [Notification System](notification-system.md) - Push notifications at scale

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyURL System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.metrics { background: #fef3c7; color: #92400e; }
+        .tag.security { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .dns-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 3;
+        }
+
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 3;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 4;
+        }
+
+        .api-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 8;
+        }
+
+        .services-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .idgen-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 3;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 4;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔗 TinyURL System Design Blueprint</h1>
+        <div class="subtitle">Complete End-to-End Architecture</div>
+        <div class="tags">
+            <span class="tag metrics">High Throughput</span>
+            <span class="tag security">Secure & Reliable</span>
+            <span class="tag scale">Horizontally Scalable</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- DNS Layer -->
+        <div class="section dns-section">
+            <div class="section-title">🌐 DNS LAYER</div>
+            <div class="component">
+                <div class="component-name">Route 53 / CloudFlare DNS</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Geographic routing</li>
+                        <li>Health checks</li>
+                        <li>Failover policies</li>
+                        <li>TTL: 60-300 seconds</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Resolves tiny.url</div>
+        </div>
+
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👤 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Web/Mobile/API Clients</div>
+                <div class="component-details">
+                    <strong>Request Types:</strong>
+                    <ul>
+                        <li>POST /shorten (create)</li>
+                        <li>GET /{shortCode} (redirect)</li>
+                        <li>GET /stats/{shortCode}</li>
+                        <li>DELETE /{shortCode}</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS Request</div>
+        </div>
+
+        <!-- CDN/Edge -->
+        <div class="section gateway-section">
+            <div class="section-title">⚡ CDN / EDGE NETWORK</div>
+            <div class="component">
+                <div class="component-name">CloudFront / Fastly</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Static content:</strong> Landing pages, assets</li>
+                        <li><strong>Edge caching:</strong> Popular short URLs (304 redirects)</li>
+                        <li><strong>DDoS protection:</strong> AWS Shield / Cloudflare</li>
+                        <li><strong>SSL/TLS termination</strong></li>
+                        <li><strong>Geo-distribution:</strong> 200+ edge locations</li>
+                    </ul>
+                    <div class="code-snippet">
+                        Cache-Control: public, max-age=3600
+                        X-Cache: Hit from cloudfront</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Algorithms:</strong>
+                    <ul>
+                        <li>Round Robin</li>
+                        <li>Least Connections</li>
+                        <li>IP Hash (sticky sessions)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Health checks (every 30s)</li>
+                        <li>Auto-scaling triggers</li>
+                        <li>SSL offloading</li>
+                        <li>Rate limiting: 100 req/sec/IP</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Backend</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section api-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT, API Keys, OAuth2</li>
+                        <li><strong>Rate Limiting:</strong> Token bucket algorithm
+                            <div class="code-snippet">
+                                Free tier: 10 URLs/hour
+                                Paid tier: 1000 URLs/hour</div>
+                        </li>
+                        <li><strong>Request validation:</strong> URL format, length checks</li>
+                        <li><strong>Response transformation</strong></li>
+                        <li><strong>Circuit breaker:</strong> 5 failures → 30s timeout</li>
+                        <li><strong>Metrics collection:</strong> Latency, error rates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core Services -->
+        <div class="section services-section">
+            <div class="section-title">🔧 CORE SERVICES</div>
+
+            <div class="component">
+                <div class="component-name">URL Shortening Service</div>
+                <div class="component-details">
+                    <strong>Java/Spring Boot Microservice</strong>
+                    <div class="code-snippet">
+                        POST /api/v1/shorten
+                        {
+                        "longUrl": "https://example.com/very/long/url",
+                        "customAlias": "mylink", // optional
+                        "expirationDate": "2025-12-31",
+                        "userId": "user123"
+                        }
+
+                        Response: {
+                        "shortUrl": "tiny.url/Xy9K2p",
+                        "shortCode": "Xy9K2p",
+                        "createdAt": "2025-11-13T..."
+                        }</div>
+                    <strong>Logic Flow:</strong>
+                    <ul>
+                        <li>Validate long URL (exists, no malicious content)</li>
+                        <li>Check if URL already shortened (deduplication)</li>
+                        <li>Generate unique short code (7 chars, base62)</li>
+                        <li>Store mapping in database</li>
+                        <li>Publish event to analytics queue</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">URL Redirection Service</div>
+                <div class="component-details">
+                    <strong>High-performance Read Service</strong>
+                    <div class="code-snippet">
+                        GET /Xy9K2p
+
+                        1. Check Redis cache (hit rate: ~80%)
+                        2. If miss → Query database
+                        3. Return 301/302 redirect
+                        4. Async: Log analytics event
+
+                        Response:
+                        HTTP 301 Moved Permanently
+                        Location: https://example.com/very/long/url</div>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Redis cache with 24hr TTL</li>
+                        <li>Bloom filter for non-existent URLs</li>
+                        <li>Connection pooling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Analytics Service</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Track clicks, geography, device, referrer</li>
+                        <li>Real-time aggregation (ClickHouse)</li>
+                        <li>Daily/weekly/monthly reports</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">User Management Service</div>
+                <div class="component-details">
+                    <ul>
+                        <li>User registration & authentication</li>
+                        <li>API key generation</li>
+                        <li>Quota management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ID Generation -->
+        <div class="section idgen-section">
+            <div class="section-title">🔢 ID GENERATION</div>
+            <div class="component">
+                <div class="component-name">Distributed ID Generator</div>
+                <div class="component-details">
+                    <strong>Strategy: Base62 Encoding</strong>
+                    <div class="code-snippet">
+                        // Python implementation
+                        import hashlib
+                        import base64
+
+                        BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+                        def generate_short_code(url, counter):
+                        hash_input = f"{url}{counter}{timestamp}"
+                        hash_value = hashlib.md5(
+                        hash_input.encode()
+                        ).digest()
+
+                        # Convert to base62
+                        num = int.from_bytes(hash_value[:6])
+                        code = ""
+                        while num > 0:
+                        code = BASE62[num % 62] + code
+                        num //= 62
+
+                        return code[:7]  # 7 chars = 62^7 = 3.5 trillion URLs</div>
+                    <strong>Alternatives:</strong>
+                    <ul>
+                        <li><strong>Snowflake ID:</strong> 64-bit timestamp + machine ID + sequence</li>
+                        <li><strong>UUID:</strong> Collision-resistant but longer</li>
+                        <li><strong>Counter + Base62:</strong> Simple, sequential</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Master-Slave replication (3 masters, 3 replicas)</li>
+                        <li>Consistent hashing for sharding</li>
+                        <li>LRU eviction policy</li>
+                    </ul>
+                    <strong>Data Structure:</strong>
+                    <div class="code-snippet">
+                        # Key-Value Store
+                        SET short:Xy9K2p "https://example.com/..." EX 86400
+
+                        # Hot URLs (Sorted Set by access count)
+                        ZADD hot_urls 1500 "Xy9K2p"
+
+                        # Bloom filter for existence check
+                        BF.ADD url_exists "Xy9K2p"</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 100K ops/sec</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Hit rate: 80-85%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER</div>
+            <div class="component">
+                <div class="component-name">Primary Database (PostgreSQL)</div>
+                <div class="component-details">
+                    <strong>Schema Design:</strong>
+                    <div class="code-snippet">
+                        -- Main URL Mapping Table
+                        CREATE TABLE url_mappings (
+                        id BIGSERIAL PRIMARY KEY,
+                        short_code VARCHAR(10) UNIQUE NOT NULL,
+                        long_url TEXT NOT NULL,
+                        user_id BIGINT,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        expires_at TIMESTAMP,
+                        click_count BIGINT DEFAULT 0,
+                        is_active BOOLEAN DEFAULT TRUE
+                        );
+
+                        CREATE INDEX idx_short_code ON url_mappings(short_code);
+                        CREATE INDEX idx_user_id ON url_mappings(user_id);
+                        CREATE INDEX idx_created_at ON url_mappings(created_at);
+
+                        -- Users Table
+                        CREATE TABLE users (
+                        id BIGSERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE,
+                        api_key VARCHAR(64) UNIQUE,
+                        tier VARCHAR(20), -- free, premium, enterprise
+                        created_at TIMESTAMP DEFAULT NOW()
+                        );</div>
+                    <strong>Sharding Strategy:</strong>
+                    <ul>
+                        <li><strong>Horizontal sharding</strong> by short_code hash</li>
+                        <li>16 shards initially (grows to 64)</li>
+                        <li>Consistent hashing for shard mapping</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Read Replicas</div>
+                <div class="component-details">
+                    <ul>
+                        <li>3 read replicas per master</li>
+                        <li>Asynchronous replication</li>
+                        <li>Read-write splitting (CQRS pattern)</li>
+                        <li>Lag monitoring: <100ms</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Cold Storage (S3 / Archive)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Archive URLs older than 2 years</li>
+                        <li>Parquet format for analytics</li>
+                        <li>Lifecycle policies: S3 → Glacier</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Database -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS STORE</div>
+            <div class="component">
+                <div class="component-name">ClickHouse / DynamoDB</div>
+                <div class="component-details">
+                    <strong>Time-Series Analytics:</strong>
+                    <div class="code-snippet">
+                        -- ClickHouse Schema
+                        CREATE TABLE click_events (
+                        short_code String,
+                        timestamp DateTime,
+                        ip_address String,
+                        country String,
+                        city String,
+                        device_type String,
+                        os String,
+                        browser String,
+                        referrer String
+                        ) ENGINE = MergeTree()
+                        PARTITION BY toYYYYMM(timestamp)
+                        ORDER BY (short_code, timestamp);</div>
+                    <strong>Aggregations:</strong>
+                    <ul>
+                        <li>Real-time dashboards (1-min windows)</li>
+                        <li>Top URLs by geography</li>
+                        <li>Click trends over time</li>
+                        <li>Device/Browser analytics</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Elasticsearch</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Full-text search on URLs</li>
+                        <li>User activity logs</li>
+                        <li>7-day retention for hot data</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka / AWS SQS</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>url.created:</strong> New URL shortened</li>
+                        <li><strong>url.clicked:</strong> Redirection event (high volume)</li>
+                        <li><strong>url.expired:</strong> URL reached expiration</li>
+                    </ul>
+                    <div class="code-snippet">
+                        // Event Schema
+                        {
+                        "eventType": "url.clicked",
+                        "shortCode": "Xy9K2p",
+                        "timestamp": "2025-11-13T10:30:00Z",
+                        "metadata": {
+                        "ip": "203.0.113.42",
+                        "userAgent": "Mozilla/5.0...",
+                        "referrer": "https://google.com"
+                        }
+                        }</div>
+                    <strong>Consumer Groups:</strong>
+                    <ul>
+                        <li>Analytics processor (real-time)</li>
+                        <li>Click counter updater (batched)</li>
+                        <li>Notification service</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & ALERTS</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li>Request rate (QPS)</li>
+                        <li>Latency percentiles (P50, P95, P99)</li>
+                        <li>Error rate (4xx, 5xx)</li>
+                        <li>Cache hit rate</li>
+                        <li>Database connection pool</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ELK Stack (Logging)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Centralized log aggregation</li>
+                        <li>Structured logging (JSON format)</li>
+                        <li>Distributed tracing (Jaeger)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">PagerDuty / Alerts</div>
+                <div class="component-details">
+                    <strong>Alert Rules:</strong>
+                    <ul>
+                        <li>Latency > 500ms for 2min</li>
+                        <li>Error rate > 1% for 5min</li>
+                        <li>Cache hit rate < 70%</li>
+                        <li>Database replication lag > 200ms</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Object Storage -->
+        <div class="section storage-section">
+            <div class="section-title">☁️ OBJECT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>QR Code storage:</strong> Generated on-demand, cached in S3</li>
+                        <li><strong>Analytics exports:</strong> CSV/Parquet files</li>
+                        <li><strong>Backups:</strong> Daily database snapshots</li>
+                        <li><strong>Static assets:</strong> Landing pages, favicons</li>
+                    </ul>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Intelligent tiering (frequent → infrequent)</li>
+                        <li>CloudFront integration for CDN</li>
+                        <li>Versioning enabled for backups</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">3.5 Trillion</div>
+                <div class="metric-label">Total URL capacity (62^7)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10,000 QPS</div>
+                <div class="metric-label">Read throughput (redirections)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">500 QPS</div>
+                <div class="metric-label">Write throughput (new URLs)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;50ms</div>
+                <div class="metric-label">P95 latency (cache hit)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">80-85%</div>
+                <div class="metric-label">Cache hit rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADDITIONAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>URL Validation:</strong> Blacklist malicious domains, malware scanning</li>
+                    <li><strong>Rate Limiting:</strong> Per IP, per user, per API key</li>
+                    <li><strong>DDoS Protection:</strong> CloudFlare, AWS Shield</li>
+                    <li><strong>CAPTCHA:</strong> For suspicious traffic patterns</li>
+                    <li><strong>HTTPS Only:</strong> TLS 1.3, HSTS headers</li>
+                    <li><strong>API Authentication:</strong> JWT tokens, API keys with rotation</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Auto-scaling groups (2-50 instances)</li>
+                    <li><strong>Database Sharding:</strong> Consistent hashing by short_code</li>
+                    <li><strong>Read-Write Separation:</strong> CQRS pattern</li>
+                    <li><strong>Caching Strategy:</strong> Multi-tier (CDN, Redis, Application)</li>
+                    <li><strong>Async Processing:</strong> Event-driven for analytics</li>
+                    <li><strong>Geographic Distribution:</strong> Multi-region deployment</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Write:</strong> Strong consistency (PostgreSQL ACID)</li>
+                    <li><strong>Read:</strong> Eventual consistency (replica lag <100ms)</li>
+                    <li><strong>Cache Invalidation:</strong> TTL-based + event-driven</li>
+                    <li><strong>Conflict Resolution:</strong> Last-write-wins for duplicates</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Failure Scenarios & Recovery</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Database Failover:</strong> Auto-promote replica (30s RTO)</li>
+                    <li><strong>Cache Failure:</strong> Fallback to database (circuit breaker)</li>
+                    <li><strong>Service Failure:</strong> Health checks + auto-restart</li>
+                    <li><strong>Region Failure:</strong> DNS failover to backup region (5min RTO)</li>
+                    <li><strong>Data Loss:</strong> Point-in-time recovery, daily backups</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain-Driven Design Mapping -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🎨 DOMAIN-DRIVEN DESIGN MAPPING</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">URL Shortening Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> URL, ShortCode<br>
+                    <strong>Entities:</strong> LongURL, ExpirationPolicy<br>
+                    <strong>Value Objects:</strong> ShortCode, CreatedAt<br>
+                    <strong>Domain Events:</strong> URLShortened, URLExpired<br>
+                    <strong>Repository:</strong> URLRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Analytics Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> ClickEvent, AnalyticsSummary<br>
+                    <strong>Entities:</strong> Click, Visitor<br>
+                    <strong>Value Objects:</strong> IPAddress, GeoLocation<br>
+                    <strong>Domain Events:</strong> URLClicked, DailyReportGenerated<br>
+                    <strong>Repository:</strong> ClickEventRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">User Management Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> User, APIKey<br>
+                    <strong>Entities:</strong> Subscription, QuotaLimit<br>
+                    <strong>Value Objects:</strong> Email, TierType<br>
+                    <strong>Domain Events:</strong> UserRegistered, QuotaExceeded<br>
+                    <strong>Repository:</strong> UserRepository
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Pareto Principle Applied:</strong> This design focuses on the 20% of patterns that solve 80% of distributed systems challenges</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Java/Spring Boot • Python/FastAPI • PostgreSQL • Redis • Kafka • Kubernetes</p>
+    </div>
+</div>
+</body>
+</html>

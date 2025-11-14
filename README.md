@@ -53,7 +53,7 @@
 - [Platform Architecture](docs/platform-engineering/architecture.md)
 
 ### 7. [Real-World System Designs](docs/system-designs/README.md)
-- [URL Shortener](docs/system-designs/url-shortener.md)
+- [URL Shortener](docs/system-designs/design-topics/tiny-url/url-shortener.md)
 - [Social Media Feed](docs/system-designs/social-feed.md)
 - [Distributed Cache](docs/system-designs/distributed-cache.md)
 - [Notification System](docs/system-designs/notification-system.md)
