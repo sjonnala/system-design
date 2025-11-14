@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Graphs Architecture Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #6366f1;
+        }
+
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #6366f1;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .comparison-box {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .comparison-box h4 {
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📱 Social Graphs Architecture Flow Diagram</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('post')">📝 Post Creation Flow</button>
+            <button class="tab" onclick="showDiagram('feed-write')">📰 Feed: Fan-out on Write</button>
+            <button class="tab" onclick="showDiagram('feed-read')">📰 Feed: Fan-out on Read</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System Architecture</button>
+        </div>
+    </div>
+
+    <!-- Post Creation Flow -->
+    <div id="post-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#6366f1" />
+                </marker>
+                <linearGradient id="grad-client" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-lb" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-gateway" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f87171;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-service" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-queue" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-media" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Post Creation Flow
+            </text>
+
+            <!-- Client -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📱 Mobile App</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">User creates post</text>
+            </g>
+
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#4338ca" font-weight="600">POST /api/posts</text>
+
+            <!-- Load Balancer -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="url(#grad-lb)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⚖️ Load Balancer</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="white">Route to backend</text>
+            </g>
+
+            <path d="M 700 260 L 700 300" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="300" width="200" height="80" rx="10" fill="url(#grad-gateway)" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Auth + Validation</text>
+            </g>
+
+            <path d="M 700 380 L 700 420" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Post Service -->
+            <g class="component">
+                <rect x="550" y="420" width="300" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="455" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📝 Post Service</text>
+                <text x="700" y="475" font-size="12" text-anchor="middle" fill="white">Process post content</text>
+                <text x="700" y="495" font-size="11" text-anchor="middle" fill="white">• Validate • Extract hashtags • Mentions</text>
+            </g>
+
+            <!-- Media Upload (Right side) -->
+            <path d="M 850 470 L 1020 470" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="900" y="460" font-size="11" fill="#4338ca" font-weight="600">Upload Media</text>
+
+            <g class="component">
+                <rect x="1020" y="420" width="200" height="100" rx="10" fill="url(#grad-media)" stroke="#0284c7" stroke-width="2"/>
+                <text x="1120" y="455" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📸 Media Service</text>
+                <text x="1120" y="475" font-size="11" text-anchor="middle" fill="white">S3 Upload</text>
+                <text x="1120" y="495" font-size="11" text-anchor="middle" fill="white">Generate thumbnails</text>
+            </g>
+
+            <!-- Database Write -->
+            <path d="M 700 520 L 700 620" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="575" font-size="11" fill="#4338ca" font-weight="600">Save post</text>
+
+            <g class="component">
+                <rect x="550" y="620" width="300" height="120" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="660" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="700" y="680" font-size="12" text-anchor="middle" fill="white">INSERT INTO posts</text>
+                <text x="700" y="700" font-size="11" text-anchor="middle" fill="white">Sharded by post_id</text>
+            </g>
+
+            <!-- Publish Event -->
+            <path d="M 700 740 L 700 820" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="785" font-size="11" fill="#4338ca" font-weight="600">Publish Event</text>
+
+            <g class="component">
+                <rect x="550" y="820" width="300" height="100" rx="10" fill="url(#grad-queue)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="700" y="855" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka</text>
+                <text x="700" y="875" font-size="12" text-anchor="middle" fill="white">Topic: post.created</text>
+                <text x="700" y="895" font-size="11" text-anchor="middle" fill="white">Event: {postId, authorId, content}</text>
+            </g>
+
+            <!-- Fan out to consumers -->
+            <path d="M 550 870 L 200 870 L 200 1000" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <path d="M 850 870 L 1200 870 L 1200 1000" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <!-- Consumers -->
+            <g class="component">
+                <rect x="100" y="1000" width="200" height="80" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="200" y="1035" font-size="13" font-weight="bold" text-anchor="middle" fill="#581c87">📰 Feed Generator</text>
+                <text x="200" y="1055" font-size="10" text-anchor="middle" fill="#581c87">Update timelines</text>
+            </g>
+
+            <g class="component">
+                <rect x="350" y="1000" width="200" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="450" y="1035" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">🔔 Notifications</text>
+                <text x="450" y="1055" font-size="10" text-anchor="middle" fill="#92400e">Notify followers</text>
+            </g>
+
+            <g class="component">
+                <rect x="600" y="1000" width="200" height="80" rx="10" fill="#dbeafe" stroke="#0284c7" stroke-width="2"/>
+                <text x="700" y="1035" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">🔍 Search Indexer</text>
+                <text x="700" y="1055" font-size="10" text-anchor="middle" fill="#075985">Elasticsearch</text>
+            </g>
+
+            <g class="component">
+                <rect x="850" y="1000" width="200" height="80" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                <text x="950" y="1035" font-size="13" font-weight="bold" text-anchor="middle" fill="#166534">🤖 ML Pipeline</text>
+                <text x="950" y="1055" font-size="10" text-anchor="middle" fill="#166534">Recommendations</text>
+            </g>
+
+            <g class="component">
+                <rect x="1100" y="1000" width="200" height="80" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+                <text x="1200" y="1035" font-size="13" font-weight="bold" text-anchor="middle" fill="#831843">📊 Analytics</text>
+                <text x="1200" y="1055" font-size="10" text-anchor="middle" fill="#831843">ClickHouse</text>
+            </g>
+
+            <!-- Response -->
+            <path d="M 550 470 L 200 470 L 200 220 L 600 220" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="120" y="350" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="120" y="370" font-size="11" fill="#059669">201 Created</text>
+            <text x="120" y="385" font-size="11" fill="#059669">{postId: "12345"}</text>
+
+            <!-- Step numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="220" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="227" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="340" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="347" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="700" cy="470" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="477" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="700" cy="680" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="687" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="700" cy="870" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="877" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📝 Post Creation Flow Steps</h3>
+            <ol>
+                <li><strong>User Creates Post:</strong> Mobile/web client sends POST request with content, media, hashtags</li>
+                <li><strong>Load Balancer:</strong> Routes request to available API server</li>
+                <li><strong>API Gateway:</strong> Validates JWT token, checks rate limits, authorizes user</li>
+                <li><strong>Post Service:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Validates content (length, spam detection, profanity filter)</li>
+                        <li>Extracts hashtags and mentions</li>
+                        <li>Uploads media to S3 (if present) via Media Service</li>
+                        <li>Generates thumbnails and optimizes images</li>
+                    </ul>
+                </li>
+                <li><strong>Database Write:</strong> Saves post to sharded PostgreSQL (shard by post_id hash)</li>
+                <li><strong>Event Publishing:</strong> Publishes <code>post.created</code> event to Kafka for async processing</li>
+                <li><strong>Async Consumers:</strong> Multiple consumers process the event:
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Feed Generator:</strong> Updates follower timelines (fan-out)</li>
+                        <li><strong>Notification Service:</strong> Sends push notifications to followers</li>
+                        <li><strong>Search Indexer:</strong> Indexes post in Elasticsearch for search</li>
+                        <li><strong>ML Pipeline:</strong> Updates recommendation models</li>
+                        <li><strong>Analytics:</strong> Stores event in ClickHouse for reporting</li>
+                    </ul>
+                </li>
+                <li><strong>Response:</strong> Returns success with post ID to client immediately (non-blocking)</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Fan-out on Write -->
+    <div id="feed-write-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Feed Generation: Fan-out on Write (Push Model - Twitter Style)
+            </text>
+
+            <!-- User posts -->
+            <g class="component">
+                <rect x="600" y="70" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="105" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User A</text>
+                <text x="700" y="125" font-size="12" text-anchor="middle" fill="white">Posts: "Hello World!"</text>
+            </g>
+
+            <path d="M 700 150 L 700 200" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="180" font-size="11" fill="#4338ca" font-weight="600">Post Created</text>
+
+            <!-- Feed Generator -->
+            <g class="component">
+                <rect x="550" y="200" width="300" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="240" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📰 Feed Generator</text>
+                <text x="700" y="260" font-size="12" text-anchor="middle" fill="white">Fan-out on Write</text>
+                <text x="700" y="280" font-size="11" text-anchor="middle" fill="white">Get all followers of User A</text>
+            </g>
+
+            <path d="M 700 300 L 700 350" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="330" font-size="11" fill="#4338ca" font-weight="600">Query Followers</text>
+
+            <!-- Graph DB -->
+            <g class="component">
+                <rect x="550" y="350" width="300" height="80" rx="10" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>
+                <text x="700" y="385" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">🕸️ Graph DB</text>
+                <text x="700" y="405" font-size="11" text-anchor="middle" fill="#92400e">Returns: [User B, User C, User D, ...]</text>
+            </g>
+
+            <path d="M 700 430 L 700 480" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Fan out -->
+            <text x="700" y="465" font-size="13" fill="#4338ca" font-weight="700">⬇️ Write to each follower's feed cache ⬇️</text>
+
+            <!-- Follower feeds -->
+            <g class="component">
+                <rect x="150" y="500" width="200" height="100" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="250" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#581c87">User B Feed</text>
+                <text x="250" y="555" font-size="10" text-anchor="middle" fill="#581c87">Redis: feed:user_b</text>
+                <text x="250" y="575" font-size="10" text-anchor="middle" fill="#581c87">LPUSH postId_123</text>
+            </g>
+
+            <g class="component">
+                <rect x="400" y="500" width="200" height="100" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="500" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#581c87">User C Feed</text>
+                <text x="500" y="555" font-size="10" text-anchor="middle" fill="#581c87">Redis: feed:user_c</text>
+                <text x="500" y="575" font-size="10" text-anchor="middle" fill="#581c87">LPUSH postId_123</text>
+            </g>
+
+            <g class="component">
+                <rect x="650" y="500" width="200" height="100" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="750" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#581c87">User D Feed</text>
+                <text x="750" y="555" font-size="10" text-anchor="middle" fill="#581c87">Redis: feed:user_d</text>
+                <text x="750" y="575" font-size="10" text-anchor="middle" fill="#581c87">LPUSH postId_123</text>
+            </g>
+
+            <g class="component">
+                <rect x="900" y="500" width="200" height="100" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="1000" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#581c87">... (1000s more)</text>
+                <text x="1000" y="555" font-size="10" text-anchor="middle" fill="#581c87">All followers get update</text>
+            </g>
+
+            <!-- Arrows to followers -->
+            <path d="M 600 430 L 250 500" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 650 430 L 500 500" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 750 430 L 750 500" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 800 430 L 1000 500" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- User reads feed -->
+            <text x="700" y="650" font-size="13" fill="#10b981" font-weight="700">📱 When User B opens app:</text>
+
+            <g class="component">
+                <rect x="550" y="680" width="300" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="700" y="715" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Instant Feed Load</text>
+                <text x="700" y="735" font-size="11" text-anchor="middle" fill="#065f46">GET feed:user_b from Redis (~1ms)</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📰 Fan-out on Write (Push Model)</h3>
+            <p><strong>Strategy:</strong> Pre-compute timelines when a post is created by writing to all followers' feeds.</p>
+
+            <h4 style="margin-top: 15px; color: #10b981;">✅ Advantages:</h4>
+            <ul style="margin-left: 20px;">
+                <li><strong>Ultra-fast reads:</strong> Feed is pre-computed, just read from Redis (~1ms)</li>
+                <li><strong>Simple read path:</strong> No complex aggregation needed</li>
+                <li><strong>Scalable reads:</strong> Can handle millions of concurrent feed requests</li>
+            </ul>
+
+            <h4 style="margin-top: 15px; color: #ef4444;">❌ Disadvantages:</h4>
+            <ul style="margin-left: 20px;">
+                <li><strong>Slow writes for influencers:</strong> If user has 10M followers, must write to 10M feeds</li>
+                <li><strong>Wasted writes:</strong> Inactive users still get feed updates</li>
+                <li><strong>Storage overhead:</strong> Duplicate post data across many feeds</li>
+            </ul>
+
+            <div class="comparison-box">
+                <h4>🎯 Best For:</h4>
+                <p>Twitter-style platforms where most users have <10K followers. Use hybrid approach for celebrities.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fan-out on Read -->
+    <div id="feed-read-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Feed Generation: Fan-out on Read (Pull Model - Instagram Style)
+            </text>
+
+            <!-- User requests feed -->
+            <g class="component">
+                <rect x="600" y="70" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="105" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📱 User A</text>
+                <text x="700" y="125" font-size="12" text-anchor="middle" fill="white">Opens app, requests feed</text>
+            </g>
+
+            <path d="M 700 150 L 700 200" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="180" font-size="11" fill="#4338ca" font-weight="600">GET /feed</text>
+
+            <!-- Feed Service -->
+            <g class="component">
+                <rect x="550" y="200" width="300" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="240" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📰 Feed Service</text>
+                <text x="700" y="260" font-size="12" text-anchor="middle" fill="white">Fan-out on Read</text>
+                <text x="700" y="280" font-size="11" text-anchor="middle" fill="white">Get users that User A follows</text>
+            </g>
+
+            <path d="M 700 300 L 700 350" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Graph DB -->
+            <g class="component">
+                <rect x="550" y="350" width="300" height="80" rx="10" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>
+                <text x="700" y="385" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">🕸️ Graph DB</text>
+                <text x="700" y="405" font-size="11" text-anchor="middle" fill="#92400e">Following: [User B, User C, User D, ...]</text>
+            </g>
+
+            <path d="M 700 430 L 700 480" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Aggregate posts -->
+            <text x="700" y="465" font-size="13" fill="#4338ca" font-weight="700">⬇️ Fetch recent posts from each followed user ⬇️</text>
+
+            <!-- User posts -->
+            <g class="component">
+                <rect x="150" y="500" width="200" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="250" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#9a3412">User B Posts</text>
+                <text x="250" y="555" font-size="10" text-anchor="middle" fill="#9a3412">DB: posts_shard_1</text>
+                <text x="250" y="575" font-size="10" text-anchor="middle" fill="#9a3412">Returns latest 20 posts</text>
+            </g>
+
+            <g class="component">
+                <rect x="400" y="500" width="200" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="500" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#9a3412">User C Posts</text>
+                <text x="500" y="555" font-size="10" text-anchor="middle" fill="#9a3412">DB: posts_shard_2</text>
+                <text x="500" y="575" font-size="10" text-anchor="middle" fill="#9a3412">Returns latest 20 posts</text>
+            </g>
+
+            <g class="component">
+                <rect x="650" y="500" width="200" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="750" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#9a3412">User D Posts</text>
+                <text x="750" y="555" font-size="10" text-anchor="middle" fill="#9a3412">DB: posts_shard_3</text>
+                <text x="750" y="575" font-size="10" text-anchor="middle" fill="#9a3412">Returns latest 20 posts</text>
+            </g>
+
+            <g class="component">
+                <rect x="900" y="500" width="200" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="1000" y="535" font-size="14" font-weight="bold" text-anchor="middle" fill="#9a3412">... (all followed)</text>
+                <text x="1000" y="555" font-size="10" text-anchor="middle" fill="#9a3412">Parallel queries</text>
+            </g>
+
+            <path d="M 600 430 L 250 500" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 650 430 L 500 500" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 750 430 L 750 500" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 800 430 L 1000 500" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Merge and rank -->
+            <text x="700" y="650" font-size="13" fill="#6366f1" font-weight="700">⬇️ Merge, rank, and return top 50 ⬇️</text>
+
+            <g class="component">
+                <rect x="550" y="680" width="300" height="100" rx="10" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="700" y="715" font-size="14" font-weight="bold" text-anchor="middle" fill="#5b21b6">🎯 Ranking Algorithm</text>
+                <text x="700" y="735" font-size="11" text-anchor="middle" fill="#5b21b6">Sort by: recency + engagement</text>
+                <text x="700" y="755" font-size="11" text-anchor="middle" fill="#5b21b6">Cache result for 5 min</text>
+            </g>
+
+            <path d="M 700 780 L 700 830" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="550" y="830" width="300" height="60" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="700" y="865" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Return Personalized Feed</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📰 Fan-out on Read (Pull Model)</h3>
+            <p><strong>Strategy:</strong> Generate feed on-demand when user requests it by aggregating posts from followed users.</p>
+
+            <h4 style="margin-top: 15px; color: #10b981;">✅ Advantages:</h4>
+            <ul style="margin-left: 20px;">
+                <li><strong>Fast writes:</strong> Just save post to DB, no fan-out needed</li>
+                <li><strong>Works for influencers:</strong> Posting is O(1) regardless of follower count</li>
+                <li><strong>No wasted work:</strong> Only generate feeds for active users</li>
+                <li><strong>Storage efficient:</strong> No duplicate data</li>
+            </ul>
+
+            <h4 style="margin-top: 15px; color: #ef4444;">❌ Disadvantages:</h4>
+            <ul style="margin-left: 20px;">
+                <li><strong>Slow reads:</strong> Must query multiple DB shards on every feed request</li>
+                <li><strong>Complex ranking:</strong> Real-time aggregation and sorting is expensive</li>
+                <li><strong>Hot-spotting:</strong> Popular users' posts get queried millions of times</li>
+            </ul>
+
+            <div class="comparison-box">
+                <h4>🎯 Best For:</h4>
+                <p>Instagram-style platforms with celebrities and influencers. Use aggressive caching (5-10 min TTL) to mitigate read latency.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full System Architecture -->
+    <div id="full-diagram" class="diagram-container">
+        <svg viewBox="0 0 1600 1200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="800" y="35" font-size="28" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Complete Social Graphs System Architecture
+            </text>
+
+            <!-- Layer Labels -->
+            <text x="30" y="100" font-size="14" font-weight="bold" fill="#64748b">CLIENT</text>
+            <text x="30" y="220" font-size="14" font-weight="bold" fill="#64748b">EDGE</text>
+            <text x="30" y="360" font-size="14" font-weight="bold" fill="#64748b">GATEWAY</text>
+            <text x="30" y="520" font-size="14" font-weight="bold" fill="#64748b">SERVICES</text>
+            <text x="30" y="850" font-size="14" font-weight="bold" fill="#64748b">DATA</text>
+            <text x="30" y="1100" font-size="14" font-weight="bold" fill="#64748b">ANALYTICS</text>
+
+            <!-- Dividers -->
+            <line x1="150" y1="180" x2="1550" y2="180" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10,5"/>
+            <line x1="150" y1="310" x2="1550" y2="310" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10,5"/>
+            <line x1="150" y1="470" x2="1550" y2="470" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10,5"/>
+            <line x1="150" y1="800" x2="1550" y2="800" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10,5"/>
+            <line x1="150" y1="1050" x2="1550" y2="1050" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="10,5"/>
+
+            <!-- CLIENT LAYER -->
+            <g class="component">
+                <rect x="250" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="325" y="100" font-size="13" font-weight="bold" text-anchor="middle" fill="white">📱 iOS</text>
+            </g>
+            <g class="component">
+                <rect x="450" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="525" y="100" font-size="13" font-weight="bold" text-anchor="middle" fill="white">🤖 Android</text>
+            </g>
+            <g class="component">
+                <rect x="650" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="725" y="100" font-size="13" font-weight="bold" text-anchor="middle" fill="white">💻 Web</text>
+            </g>
+
+            <!-- Arrows -->
+            <path d="M 325 140 L 325 210" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 525 140 L 525 210" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 725 140 L 725 210" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- EDGE LAYER -->
+            <g class="component">
+                <rect x="200" y="210" width="250" height="70" rx="10" fill="#a5f3fc" stroke="#0891b2" stroke-width="2"/>
+                <text x="325" y="250" font-size="13" font-weight="bold" text-anchor="middle" fill="#164e63">⚡ CDN (CloudFront)</text>
+            </g>
+            <g class="component">
+                <rect x="500" y="210" width="250" height="70" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="625" y="250" font-size="13" font-weight="bold" text-anchor="middle" fill="#991b1b">🛡️ WAF / DDoS Protection</text>
+            </g>
+
+            <path d="M 525 280 L 525 340" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- GATEWAY LAYER -->
+            <g class="component">
+                <rect x="250" y="340" width="200" height="80" rx="10" fill="url(#grad-lb)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="350" y="380" font-size="13" font-weight="bold" text-anchor="middle" fill="white">⚖️ Load Balancer</text>
+            </g>
+            <g class="component">
+                <rect x="500" y="340" width="200" height="80" rx="10" fill="url(#grad-gateway)" stroke="#dc2626" stroke-width="2"/>
+                <text x="600" y="380" font-size="13" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+            </g>
+
+            <path d="M 350 420 L 350 500" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 600 420 L 600 500" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- SERVICES LAYER -->
+            <g class="component">
+                <rect x="200" y="500" width="140" height="70" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="270" y="540" font-size="11" font-weight="bold" text-anchor="middle" fill="white">👤 User Service</text>
+            </g>
+            <g class="component">
+                <rect x="360" y="500" width="140" height="70" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="430" y="540" font-size="11" font-weight="bold" text-anchor="middle" fill="white">📝 Post Service</text>
+            </g>
+            <g class="component">
+                <rect x="520" y="500" width="140" height="70" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="590" y="540" font-size="11" font-weight="bold" text-anchor="middle" fill="white">📰 Feed Service</text>
+            </g>
+            <g class="component">
+                <rect x="680" y="500" width="140" height="70" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="750" y="540" font-size="11" font-weight="bold" text-anchor="middle" fill="white">🕸️ Graph Service</text>
+            </g>
+            <g class="component">
+                <rect x="840" y="500" width="140" height="70" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="910" y="540" font-size="11" font-weight="bold" text-anchor="middle" fill="white">🔔 Notification</text>
+            </g>
+
+            <!-- Message Queue -->
+            <g class="component">
+                <rect x="200" y="620" width="780" height="60" rx="10" fill="url(#grad-queue)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="590" y="655" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📬 Apache Kafka (Event Bus)</text>
+            </g>
+
+            <!-- Media Services -->
+            <g class="component">
+                <rect x="1020" y="500" width="200" height="180" rx="10" fill="url(#grad-media)" stroke="#0284c7" stroke-width="2"/>
+                <text x="1120" y="535" font-size="13" font-weight="bold" text-anchor="middle" fill="white">📸 Media Pipeline</text>
+                <text x="1120" y="555" font-size="10" text-anchor="middle" fill="white">Upload Service</text>
+                <text x="1120" y="575" font-size="10" text-anchor="middle" fill="white">Image Processing</text>
+                <text x="1120" y="595" font-size="10" text-anchor="middle" fill="white">Video Encoding</text>
+                <text x="1120" y="615" font-size="10" text-anchor="middle" fill="white">CDN Distribution</text>
+            </g>
+
+            <!-- Arrows to data layer -->
+            <path d="M 270 570 L 330 850" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 430 570 L 450 850" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 590 570 L 590 850" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 750 570 L 750 850" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- DATA LAYER -->
+            <g class="component">
+                <rect x="200" y="850" width="180" height="100" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="290" y="890" font-size="12" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="290" y="910" font-size="9" text-anchor="middle" fill="white">Users, Posts</text>
+            </g>
+            <g class="component">
+                <rect x="400" y="850" width="180" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="490" y="890" font-size="12" font-weight="bold" text-anchor="middle" fill="#9a3412">📚 Cassandra</text>
+                <text x="490" y="910" font-size="9" text-anchor="middle" fill="#9a3412">Timelines, Feeds</text>
+            </g>
+            <g class="component">
+                <rect x="600" y="850" width="180" height="100" rx="10" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>
+                <text x="690" y="890" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">🕸️ Neo4j</text>
+                <text x="690" y="910" font-size="9" text-anchor="middle" fill="#92400e">Social Graph</text>
+            </g>
+            <g class="component">
+                <rect x="800" y="850" width="180" height="100" rx="10" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="890" y="890" font-size="12" font-weight="bold" text-anchor="middle" fill="#5b21b6">💾 Redis Cluster</text>
+                <text x="890" y="910" font-size="9" text-anchor="middle" fill="#5b21b6">Cache, Sessions</text>
+            </g>
+            <g class="component">
+                <rect x="1000" y="850" width="180" height="100" rx="10" fill="#bae6fd" stroke="#0284c7" stroke-width="2"/>
+                <text x="1090" y="890" font-size="12" font-weight="bold" text-anchor="middle" fill="#075985">☁️ S3</text>
+                <text x="1090" y="910" font-size="9" text-anchor="middle" fill="#075985">Media Storage</text>
+            </g>
+
+            <!-- ANALYTICS LAYER -->
+            <g class="component">
+                <rect x="200" y="1080" width="250" height="80" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="325" y="1120" font-size="13" font-weight="bold" text-anchor="middle" fill="#581c87">📊 ClickHouse</text>
+                <text x="325" y="1140" font-size="10" text-anchor="middle" fill="#581c87">Real-time Analytics</text>
+            </g>
+            <g class="component">
+                <rect x="480" y="1080" width="250" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="605" y="1120" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">🔍 Elasticsearch</text>
+                <text x="605" y="1140" font-size="10" text-anchor="middle" fill="#92400e">Search & Discovery</text>
+            </g>
+            <g class="component">
+                <rect x="760" y="1080" width="250" height="80" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                <text x="885" y="1120" font-size="13" font-weight="bold" text-anchor="middle" fill="#166534">🤖 ML Pipeline</text>
+                <text x="885" y="1140" font-size="10" text-anchor="middle" fill="#166534">Recommendations</text>
+            </g>
+
+            <!-- Monitoring -->
+            <g class="component">
+                <rect x="1250" y="500" width="280" height="150" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="1390" y="540" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">📈 MONITORING</text>
+                <text x="1390" y="565" font-size="11" text-anchor="middle" fill="#065f46">• Prometheus</text>
+                <text x="1390" y="585" font-size="11" text-anchor="middle" fill="#065f46">• Grafana</text>
+                <text x="1390" y="605" font-size="11" text-anchor="middle" fill="#065f46">• ELK Stack</text>
+                <text x="1390" y="625" font-size="11" text-anchor="middle" fill="#065f46">• Jaeger Tracing</text>
+            </g>
+
+            <path d="M 980 535 L 1250 535" stroke="#10b981" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+            <text x="1080" y="525" font-size="11" fill="#10b981" font-weight="600">Metrics →</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🏗️ Full System Architecture Overview</h3>
+            <p style="margin-bottom: 15px; line-height: 1.8;">
+                Complete social graphs architecture showing all layers: clients, edge, gateway, microservices, data stores, and analytics.
+                The system uses <strong>event-driven architecture</strong> with Kafka as the central message bus for asynchronous processing.
+            </p>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Comparison</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">~1ms</div>
+                <div class="metric-label">Feed latency (fan-out on write)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">~200ms</div>
+                <div class="metric-label">Feed latency (fan-out on read)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">O(followers)</div>
+                <div class="metric-label">Write complexity (fan-out on write)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">O(1)</div>
+                <div class="metric-label">Write complexity (fan-out on read)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100K QPS</div>
+                <div class="metric-label">Feed read throughput</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">10K QPS</div>
+                <div class="metric-label">Post write throughput</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        document.getElementById(type + '-diagram').classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))';
+        });
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
