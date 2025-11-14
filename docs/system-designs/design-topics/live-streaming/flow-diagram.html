@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Streaming Flow Diagrams - Twitch/YouTube Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: #f7fafc;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #4a5568;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #edf2f7;
+            color: #667eea;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flow-container {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: "↓";
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .step-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .step-details {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 150px;
+        }
+
+        .detail-value {
+            color: #4a5568;
+            flex: 1;
+        }
+
+        .code-snippet {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔴 Live Streaming Flow Diagrams</h1>
+            <div class="subtitle">Complete workflows for Twitch & YouTube Live platforms</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('start-stream')">🎥 Start Stream</button>
+            <button class="tab" onclick="showTab('viewer-join')">👁️ Viewer Join</button>
+            <button class="tab" onclick="showTab('chat')">💬 Chat System</button>
+            <button class="tab" onclick="showTab('monetization')">💰 Monetization</button>
+            <button class="tab" onclick="showTab('end-stream')">🛑 End Stream</button>
+        </div>
+
+        <!-- Start Stream Flow -->
+        <div id="start-stream" class="tab-content active">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Stream Start Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Broadcaster Configuration</div>
+                    </div>
+                    <div class="step-description">
+                        Streamer configures streaming software (OBS) and prepares to go live.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Software:</span>
+                            <span class="detail-value">OBS Studio, Streamlabs, XSplit, Twitch Studio</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Settings:</span>
+                            <span class="detail-value">1080p60, 6000 Kbps bitrate, x264 encoder</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Stream Key:</span>
+                            <span class="detail-value">Obtained from Twitch dashboard (authentication)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Server:</span>
+                            <span class="detail-value">Auto (closest ingest), or manual selection</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># OBS Stream Settings</span>
+Server: rtmp://live.twitch.tv/app/
+Stream Key: live_123456789_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+
+Video Bitrate: 6000 Kbps
+Audio Bitrate: 160 Kbps (AAC)
+Keyframe Interval: 2 seconds
+Resolution: 1920x1080
+FPS: 60
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">RTMP Connection</div>
+                    </div>
+                    <div class="step-description">
+                        OBS establishes RTMP connection to nearest Twitch ingest server.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Protocol:</span>
+                            <span class="detail-value">RTMP (Real-Time Messaging Protocol) over TCP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Handshake:</span>
+                            <span class="detail-value">3-way TCP handshake + RTMP handshake</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Authentication:</span>
+                            <span class="detail-value">Validate stream key against user database</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ingest PoP:</span>
+                            <span class="detail-value">GeoDNS routes to nearest location (100+ globally)</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value"><200ms</div>
+                            <div class="metric-label">Connection Time</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">100+</div>
+                            <div class="metric-label">Ingest PoPs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Stream Validation</div>
+                    </div>
+                    <div class="step-description">
+                        Ingest server validates stream parameters and broadcaster permissions.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Checks:</span>
+                            <span class="detail-value">Valid stream key, account status, concurrent stream limit</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Quality Check:</span>
+                            <span class="detail-value">Verify bitrate, resolution, codec compatibility</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Concurrent Limit:</span>
+                            <span class="detail-value">Only one stream per account (prevent abuse)</span>
+                        </div>
+                    </div>
+                    <div class="warning-box">
+                        <strong>Common Failures:</strong> Invalid stream key, account banned, bitrate too high (>6000 Kbps), concurrent stream detected
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Transcoding Allocation</div>
+                    </div>
+                    <div class="step-description">
+                        Allocate transcoding resources for multi-bitrate streaming.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Availability:</span>
+                            <span class="detail-value">Partners/Affiliates: Guaranteed, Non-partners: Best effort</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Encoder:</span>
+                            <span class="detail-value">NVIDIA GPU (NVENC) for real-time encoding</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Output Qualities:</span>
+                            <span class="detail-value">Source, 1080p60, 720p60, 720p, 480p, 360p, 160p (audio)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Latency Added:</span>
+                            <span class="detail-value">2-5 seconds for transcoding</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Stream Metadata Update</div>
+                    </div>
+                    <div class="step-description">
+                        Update database and notify systems that channel is now live.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Database Update:</span>
+                            <span class="detail-value">Set channel status = 'live', record start time</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Redis Cache:</span>
+                            <span class="detail-value">Update viewer count = 0, stream health metrics</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Search Index:</span>
+                            <span class="detail-value">Add to "live channels" in Elasticsearch</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Notifications Sent</div>
+                    </div>
+                    <div class="step-description">
+                        Notify followers that streamer has gone live.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Push Notifications:</span>
+                            <span class="detail-value">Mobile (FCM/APNs) to followers with notifications enabled</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">Batch emails (aggregated, not real-time)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Discord Webhooks:</span>
+                            <span class="detail-value">Third-party integrations</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Delay:</span>
+                            <span class="detail-value">1-2 minutes after stream start (avoid false positives)</span>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <strong>Notification Strategy:</strong> Batched to avoid notification spam. If multiple followed channels go live simultaneously, aggregate into one notification.
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">CDN Distribution</div>
+                    </div>
+                    <div class="step-description">
+                        Stream segments distributed to CDN edge locations for viewer playback.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Segment Duration:</span>
+                            <span class="detail-value">6 seconds (standard), 2 seconds (low-latency)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Format:</span>
+                            <span class="detail-value">HLS (.m3u8 playlist + .ts segments)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Distribution:</span>
+                            <span class="detail-value">Origin → Regional PoPs → Edge servers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cache TTL:</span>
+                            <span class="detail-value">30-120 seconds (short for live content)</span>
+                        </div>
+                    </div>
+                    <div class="success-box">
+                        <strong>Stream is Live!</strong> Viewers can now watch. Typical time from "Start Streaming" to watchable: 10-15 seconds.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Viewer Join Flow -->
+        <div id="viewer-join" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Viewer Join Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">User Discovers Stream</div>
+                    </div>
+                    <div class="step-description">
+                        Viewer finds stream via browse page, following list, or notification.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Discovery Methods:</span>
+                            <span class="detail-value">Following page, Browse by game, Search, Recommendations, Direct link</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Thumbnail:</span>
+                            <span class="detail-value">Live preview image updated every 30-60 seconds</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Metadata Shown:</span>
+                            <span class="detail-value">Stream title, game, viewer count, tags</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Load Channel Page</div>
+                    </div>
+                    <div class="step-description">
+                        User clicks on channel, browser loads page and initializes player.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">API Calls:</span>
+                            <span class="detail-value">GET /channel/{username}, GET /stream/{channel_id}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response:</span>
+                            <span class="detail-value">Channel info, stream status, viewer count, chat server</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Player Init:</span>
+                            <span class="detail-value">JavaScript HLS player (video.js, hls.js)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Request Playback Token</div>
+                    </div>
+                    <div class="step-description">
+                        Player requests access token for stream playback.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Endpoint:</span>
+                            <span class="detail-value">POST /api/channel/{channel}/access_token</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Authentication:</span>
+                            <span class="detail-value">User JWT token (if logged in)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response:</span>
+                            <span class="detail-value">{ token, sig, playlist_url }</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Checks:</span>
+                            <span class="detail-value">Geographic restrictions, subscriber-only mode, banned users</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Fetch HLS Playlist</div>
+                    </div>
+                    <div class="step-description">
+                        Player fetches master playlist with all available quality variants.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">URL:</span>
+                            <span class="detail-value">https://video-edge.twitch.tv/{channel}/playlist.m3u8?token={token}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">CDN Routing:</span>
+                            <span class="detail-value">GeoDNS routes to nearest edge PoP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response:</span>
+                            <span class="detail-value">Master playlist with quality variants (source, 720p60, 480p, etc.)</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># Master Playlist Response</span>
+#EXTM3U
+#EXT-X-TWITCH-INFO:...
+#EXT-X-STREAM-INF:BANDWIDTH=6000000,RESOLUTION=1920x1080,CODECS="avc1.64002a,mp4a.40.2",VIDEO="1080p60"
+https://video-edge.twitch.tv/chunked/index-dvr.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=4500000,RESOLUTION=1280x720,CODECS="avc1.64001f,mp4a.40.2",VIDEO="720p60"
+https://video-edge.twitch.tv/720p60/index-dvr.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=852x480,CODECS="avc1.64001e,mp4a.40.2",VIDEO="480p"
+https://video-edge.twitch.tv/480p/index-dvr.m3u8
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Select Quality & Start Playback</div>
+                    </div>
+                    <div class="step-description">
+                        Player selects initial quality based on bandwidth and starts downloading segments.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Initial Quality:</span>
+                            <span class="detail-value">Auto-select based on bandwidth estimate (often 480p for fast startup)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Segment Fetch:</span>
+                            <span class="detail-value">Download 2-3 segments ahead (buffer 12-18 seconds)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Playback Start:</span>
+                            <span class="detail-value">Once first segment loaded (~1-2 seconds)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ABR:</span>
+                            <span class="detail-value">Continuously monitor bandwidth, adjust quality</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">1-2s</div>
+                            <div class="metric-label">Time to First Frame</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">5-10s</div>
+                            <div class="metric-label">Total Latency (broadcaster → viewer)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Join Chat</div>
+                    </div>
+                    <div class="step-description">
+                        Establish WebSocket connection to chat server for real-time messages.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Connection:</span>
+                            <span class="detail-value">wss://irc-ws.chat.twitch.tv:443</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Protocol:</span>
+                            <span class="detail-value">IRC over WebSocket</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Authentication:</span>
+                            <span class="detail-value">OAuth token for logged-in users</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Join Channel:</span>
+                            <span class="detail-value">JOIN #{channel_name}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Analytics Tracking</div>
+                    </div>
+                    <div class="step-description">
+                        Track viewer join event and update real-time metrics.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Events Sent:</span>
+                            <span class="detail-value">player_started, quality_selected, buffer_events</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Viewer Count:</span>
+                            <span class="detail-value">Increment Redis counter, broadcast to all viewers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pipeline:</span>
+                            <span class="detail-value">Kinesis → Lambda → DynamoDB</span>
+                        </div>
+                    </div>
+                    <div class="success-box">
+                        <strong>Viewer Successfully Joined!</strong> Stream is playing, chat connected, analytics tracking.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat System Flow -->
+        <div id="chat" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Chat System Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">User Sends Message</div>
+                    </div>
+                    <div class="step-description">
+                        Viewer types message in chat and presses Enter.
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># IRC Command</span>
+PRIVMSG #channel_name :Hello, everyone!
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Rate Limiting Check</div>
+                    </div>
+                    <div class="step-description">
+                        Chat server checks if user is within rate limits.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Regular Users:</span>
+                            <span class="detail-value">20 messages per 30 seconds</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Moderators:</span>
+                            <span class="detail-value">100 messages per 30 seconds</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Verified Bots:</span>
+                            <span class="detail-value">50-100 messages per 30 seconds</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Implementation:</span>
+                            <span class="detail-value">Redis sliding window counter</span>
+                        </div>
+                    </div>
+                    <div class="warning-box">
+                        <strong>Rate Limited:</strong> If exceeded, message rejected with error: "Your message was not sent because you are sending messages too quickly."
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Content Moderation</div>
+                    </div>
+                    <div class="step-description">
+                        AutoMod analyzes message for prohibited content.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Checks:</span>
+                            <span class="detail-value">Banned words, spam patterns, phishing links, hate speech</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ML Model:</span>
+                            <span class="detail-value">NLP-based toxicity detection</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Channel Settings:</span>
+                            <span class="detail-value">AutoMod sensitivity (0-4), custom banned phrases</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Action:</span>
+                            <span class="detail-value">Block message, timeout user, or hold for moderator review</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Message Broadcasting</div>
+                    </div>
+                    <div class="step-description">
+                        Approved message broadcast to all viewers in channel.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Architecture:</span>
+                            <span class="detail-value">Elixir/Phoenix pub/sub (GenStage)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Sharding:</span>
+                            <span class="detail-value">Each channel = separate chat room process</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pub/Sub:</span>
+                            <span class="detail-value">Redis Pub/Sub for multi-server fanout</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Latency:</span>
+                            <span class="detail-value"><100ms from send to all viewers receive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Client Rendering</div>
+                    </div>
+                    <div class="step-description">
+                        Each viewer's client receives and displays message.
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># Message Received by Client</span>
+:username!username@username.tmi.twitch.tv PRIVMSG #channel :Hello, everyone!
+
+<span class="highlight"># Parsed and Displayed</span>
+[12:34] username: Hello, everyone!
+
+<span class="highlight"># With Badges (subscriber, mod, etc.)</span>
+[🔸] [12:34] username: Hello, everyone!
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Emote Rendering</div>
+                    </div>
+                    <div class="step-description">
+                        Replace emote codes with images.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Global Emotes:</span>
+                            <span class="detail-value">Kappa, PogChamp, LUL, etc. (available everywhere)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Channel Emotes:</span>
+                            <span class="detail-value">Custom emotes for subscribers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Third-party:</span>
+                            <span class="detail-value">BTTV, FFZ (browser extensions)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Format:</span>
+                            <span class="detail-value">28x28 PNG, 56x56, 112x112 (1×, 2×, 4× for retina)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Message Persistence</div>
+                    </div>
+                    <div class="step-description">
+                        Store chat messages for moderation review and VOD replay.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Storage:</span>
+                            <span class="detail-value">DynamoDB (time-series, TTL 30-60 days)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">VOD Replay:</span>
+                            <span class="detail-value">Chat messages timestamped, synced with video</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Moderation Logs:</span>
+                            <span class="detail-value">Deleted messages retained for audit</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">15B+</div>
+                            <div class="metric-label">Messages/Day</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value"><100ms</div>
+                            <div class="metric-label">Message Latency</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monetization Flow -->
+        <div id="monetization" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Monetization Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Subscription</div>
+                    </div>
+                    <div class="step-description">
+                        Viewer subscribes to channel for monthly recurring payment.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Tiers:</span>
+                            <span class="detail-value">Tier 1 ($4.99), Tier 2 ($9.99), Tier 3 ($24.99)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Benefits:</span>
+                            <span class="detail-value">Ad-free, custom emotes, subscriber badge, chat priority</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Revenue Split:</span>
+                            <span class="detail-value">50/50 (streamer/Twitch) for most, 70/30 for top streamers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Processing:</span>
+                            <span class="detail-value">Stripe, PayPal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Bits/Cheers</div>
+                    </div>
+                    <div class="step-description">
+                        Viewer purchases bits (virtual currency) and cheers in chat.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Pricing:</span>
+                            <span class="detail-value">100 bits = $1.40, 1000 bits = $10, 10K bits = $126</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Usage:</span>
+                            <span class="detail-value">Cheer in chat: "Cheer100" sends 100 bits</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Revenue:</span>
+                            <span class="detail-value">Streamer gets $0.01 per bit (1 cent per bit)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Display:</span>
+                            <span class="detail-value">Animated emote in chat + leaderboard</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Advertisements</div>
+                    </div>
+                    <div class="step-description">
+                        Streamer runs ads during stream, earns CPM-based revenue.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Types:</span>
+                            <span class="detail-value">Pre-roll (auto), Mid-roll (manual), Display ads</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span class="detail-value">15s, 30s, 60s, 90s, 180s</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">CPM:</span>
+                            <span class="detail-value">$2-$10 per 1000 impressions (varies by region)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ad-free:</span>
+                            <span class="detail-value">Turbo/Prime subscribers skip ads</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Third-party Donations</div>
+                    </div>
+                    <div class="step-description">
+                        Direct donations via StreamLabs, StreamElements, PayPal.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Platforms:</span>
+                            <span class="detail-value">StreamLabs, StreamElements, Patreon, Ko-fi</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Integration:</span>
+                            <span class="detail-value">Alerts shown on stream (overlay), TTS messages</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fees:</span>
+                            <span class="detail-value">PayPal (2.9% + $0.30), Stripe (2.9% + $0.30)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Payout:</span>
+                            <span class="detail-value">Direct to streamer (Twitch not involved)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Payout Processing</div>
+                    </div>
+                    <div class="step-description">
+                        Twitch pays streamers monthly for subscriptions, bits, and ads.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Schedule:</span>
+                            <span class="detail-value">Monthly, 15 days after month end</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Minimum:</span>
+                            <span class="detail-value">$100 threshold</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Methods:</span>
+                            <span class="detail-value">Direct deposit, PayPal, wire transfer, check</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Reporting:</span>
+                            <span class="detail-value">Dashboard with earnings breakdown</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">50/50</div>
+                            <div class="metric-label">Standard Sub Split</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">$0.01</div>
+                            <div class="metric-label">Per Bit</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Stream Flow -->
+        <div id="end-stream" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Stream End Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Broadcaster Stops Stream</div>
+                    </div>
+                    <div class="step-description">
+                        Streamer clicks "Stop Streaming" in OBS or closes software.
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">RTMP Disconnection</div>
+                    </div>
+                    <div class="step-description">
+                        OBS closes RTMP connection to ingest server.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Detection:</span>
+                            <span class="detail-value">Ingest server detects TCP connection closed</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Grace Period:</span>
+                            <span class="detail-value">30-60 seconds in case of temporary disconnection</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Auto-recovery:</span>
+                            <span class="detail-value">If reconnects within grace period, stream continues</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Finalize Segments</div>
+                    </div>
+                    <div class="step-description">
+                        Flush remaining video segments and close HLS playlists.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Action:</span>
+                            <span class="detail-value">Write remaining frames to final segment</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Playlist Update:</span>
+                            <span class="detail-value">Add #EXT-X-ENDLIST tag to m3u8</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">CDN Propagation:</span>
+                            <span class="detail-value">Final segments distributed to edges</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Update Stream Status</div>
+                    </div>
+                    <div class="step-description">
+                        Mark channel as offline in database and cache.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Database:</span>
+                            <span class="detail-value">SET status = 'offline', record end_time</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Redis:</span>
+                            <span class="detail-value">Clear viewer count, stream health metrics</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Search Index:</span>
+                            <span class="detail-value">Remove from "live channels" in Elasticsearch</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">VOD Processing</div>
+                    </div>
+                    <div class="step-description">
+                        Convert live stream to VOD for on-demand viewing.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Segments:</span>
+                            <span class="detail-value">Combine all HLS segments into single MP4</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Upload:</span>
+                            <span class="detail-value">Upload to S3 for long-term storage</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Thumbnails:</span>
+                            <span class="detail-value">Generate preview thumbnails every 10 seconds</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Chat Replay:</span>
+                            <span class="detail-value">Attach timestamped chat messages</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Retention:</span>
+                            <span class="detail-value">14 days (non-partners), 60 days (partners/affiliates)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Analytics Aggregation</div>
+                    </div>
+                    <div class="step-description">
+                        Calculate final stream statistics and store for dashboard.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Metrics:</span>
+                            <span class="detail-value">Peak viewers, average viewers, total views, watch time</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Revenue:</span>
+                            <span class="detail-value">Subs gained, bits received, ad revenue</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Engagement:</span>
+                            <span class="detail-value">Chat messages, followers gained, clips created</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Notify Viewers</div>
+                    </div>
+                    <div class="step-description">
+                        Inform viewers that stream has ended.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Player:</span>
+                            <span class="detail-value">Show "Stream Offline" screen with VOD preview</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Chat:</span>
+                            <span class="detail-value">Chat remains active for 10-15 minutes</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Recommendations:</span>
+                            <span class="detail-value">Suggest other live channels to watch</span>
+                        </div>
+                    </div>
+                    <div class="success-box">
+                        <strong>Stream Ended Successfully!</strong> VOD available for playback, analytics recorded.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
