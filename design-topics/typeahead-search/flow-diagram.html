@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typeahead Search - Flow Diagrams</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #9b59b6;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-left: 5px solid #9b59b6;
+        }
+        .flow-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .sequence-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .sequence-step {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #9b59b6;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .sequence-step.cache-hit { border-left-color: #27ae60; }
+        .sequence-step.cache-miss { border-left-color: #e74c3c; }
+        .sequence-step.client { border-left-color: #3498db; }
+        .sequence-step.async { border-left-color: #f39c12; }
+
+        .step-number {
+            background: #9b59b6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex-grow: 1;
+        }
+        .component-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .action {
+            color: #555;
+        }
+        .latency {
+            background: #e8f8f5;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #16a085;
+            margin-left: 10px;
+        }
+        .arrow-down {
+            text-align: center;
+            color: #95a5a6;
+            font-size: 24px;
+            margin: -10px 0;
+        }
+        .decision-box {
+            background: #fff3cd;
+            border: 2px dashed #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .parallel-flows {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .flow-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #9b59b6;
+        }
+        .flow-box.success { border-color: #27ae60; }
+        .flow-box.miss { border-color: #e74c3c; }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        .metrics-table th,
+        .metrics-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .metrics-table th {
+            background: #9b59b6;
+            color: white;
+        }
+        .metrics-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .note {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 50px;
+            margin: 20px 0;
+        }
+        .timeline-item {
+            position: relative;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #9b59b6;
+        }
+        .timeline-time {
+            position: absolute;
+            left: -50px;
+            top: 15px;
+            font-weight: bold;
+            color: #9b59b6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔄 Typeahead Search - Flow Diagrams</h1>
+
+    <h2>📝 Flow 1: User Types Query (Fast Path - Cache Hit 95%)</h2>
+    <div class="flow-container">
+        <div class="sequence-diagram">
+            <div class="sequence-step client">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="component-name">User / Browser</div>
+                    <div class="action">User types "ipho" in search box</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="component-name">Client JavaScript</div>
+                    <div class="action">Debounce: Wait 300ms after user stops typing</div>
+                    <span class="latency">300ms wait</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="component-name">Client JavaScript</div>
+                    <div class="action">Check browser localStorage for "ipho" suggestions</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="decision-box">
+                Local Cache Hit?
+            </div>
+
+            <div class="parallel-flows">
+                <div class="flow-box success">
+                    <h4>✅ Local Cache Hit (50%)</h4>
+                    <ol>
+                        <li>Return suggestions from localStorage</li>
+                        <li>Display immediately</li>
+                        <li>Total time: ~300ms (debounce only)</li>
+                        <li>No API call made!</li>
+                    </ol>
+                </div>
+                <div class="flow-box">
+                    <h4>❌ Local Cache Miss (50%)</h4>
+                    <ol>
+                        <li>Proceed to API call</li>
+                        <li>Continue to step 4</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="component-name">Client → API</div>
+                    <div class="action">Send GET /api/suggestions?q=ipho&limit=10</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="component-name">Load Balancer</div>
+                    <div class="action">Route to available typeahead service instance</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service</div>
+                    <div class="action">Normalize query: lowercase, trim → "ipho"</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step cache-hit">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service → Redis</div>
+                    <div class="action">GET suggestions:ipho → CACHE HIT! (95% of queries)</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step cache-hit">
+                <div class="step-number">8</div>
+                <div class="step-content">
+                    <div class="component-name">Response to Client</div>
+                    <div class="action">200 OK: ["iphone 15", "iphone 15 pro", "iphone 14", ...]</div>
+                    <span class="latency">Total: < 5ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">9</div>
+                <div class="step-content">
+                    <div class="component-name">Browser</div>
+                    <div class="action">Display suggestions dropdown, store in localStorage</div>
+                    <span class="latency">< 10ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">10</div>
+                <div class="step-content">
+                    <div class="component-name">Async: Log Query Event</div>
+                    <div class="action">Send query to Kafka for analytics (non-blocking)</div>
+                    <span class="latency">async</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Fast Path Performance (Cache Hit)</strong><br>
+            Debounce: 300ms<br>
+            API Response: < 5ms<br>
+            Browser Render: < 10ms<br>
+            <strong>Total User-Perceived Latency: ~315ms</strong><br>
+            Majority is intentional debounce delay!
+        </div>
+    </div>
+
+    <h2>💾 Flow 2: Cache Miss - Trie Lookup (5% of queries)</h2>
+    <div class="flow-container">
+        <div class="sequence-diagram">
+            <div class="sequence-step">
+                <div class="step-number">1-6</div>
+                <div class="step-content">
+                    <div class="component-name">Same as Flow 1</div>
+                    <div class="action">User types → Debounce → API call → Load balancer → Normalize</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step cache-miss">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service → Redis</div>
+                    <div class="action">GET suggestions:rare-query → CACHE MISS!</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step cache-miss">
+                <div class="step-number">8</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service → In-Memory Trie</div>
+                    <div class="action">trie.findByPrefix("rare-query") → O(k) where k = query length</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">9</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service</div>
+                    <div class="action">Trie returns pre-computed top 10 suggestions for prefix</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">10</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service → Redis</div>
+                    <div class="action">SET suggestions:rare-query [suggestions] EX 3600 (cache for 1 hour)</div>
+                    <span class="latency">< 1ms</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">11</div>
+                <div class="step-content">
+                    <div class="component-name">Response to Client</div>
+                    <div class="action">200 OK: [suggestions]</div>
+                    <span class="latency">Total: < 10ms</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Cache Miss Path Performance</strong><br>
+            Debounce: 300ms<br>
+            API Response (Trie lookup): < 10ms<br>
+            <strong>Total: ~310ms</strong><br>
+            Future requests for same query will be cache hits!
+        </div>
+    </div>
+
+    <h2>⚡ Flow 3: User Typing Real-Time (Multiple Requests)</h2>
+    <div class="flow-container">
+        <h3>Timeline of User Typing "iphone"</h3>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-time">0ms</div>
+                <strong>User types:</strong> "i"<br>
+                <em>Action:</em> Start debounce timer (300ms)
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">100ms</div>
+                <strong>User types:</strong> "ip"<br>
+                <em>Action:</em> Cancel previous timer, start new 300ms timer
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">200ms</div>
+                <strong>User types:</strong> "iph"<br>
+                <em>Action:</em> Cancel timer, start new 300ms timer
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">280ms</div>
+                <strong>User types:</strong> "ipho"<br>
+                <em>Action:</em> Cancel timer, start new 300ms timer
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">350ms</div>
+                <strong>User types:</strong> "iphon"<br>
+                <em>Action:</em> Cancel timer, start new 300ms timer
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">500ms</div>
+                <strong>User types:</strong> "iphone"<br>
+                <em>Action:</em> Cancel timer, start new 300ms timer
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">800ms</div>
+                <strong>User stops typing</strong><br>
+                <em>Action:</em> Timer expires! Send API request for "iphone"
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-time">805ms</div>
+                <strong>API Response:</strong> Suggestions returned (cache hit, 5ms)<br>
+                <em>Action:</em> Display dropdown with ["iphone 15", "iphone 15 pro", ...]
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>Without Debouncing:</strong> Would have sent 7 API requests<br>
+            <strong>With Debouncing:</strong> Sent only 1 API request<br>
+            <strong>Reduction:</strong> 85% fewer requests!
+        </div>
+    </div>
+
+    <h2>🔄 Flow 4: Request Cancellation (User Types Quickly)</h2>
+    <div class="flow-container">
+        <div class="sequence-diagram">
+            <div class="sequence-step client">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="component-name">User types "py"</div>
+                    <div class="action">Debounce timer: 300ms</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="component-name">300ms elapses → Send API request</div>
+                    <div class="action">GET /api/suggestions?q=py (Request ID: 001)</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="component-name">User immediately types "t"</div>
+                    <div class="action">Query now: "pyt" → Cancel Request 001 (AbortController)</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="component-name">Start new debounce for "pyt"</div>
+                    <div class="action">New 300ms timer</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step client">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="component-name">300ms elapses → Send API request</div>
+                    <div class="action">GET /api/suggestions?q=pyt (Request ID: 002)</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="component-name">Server may still process Request 001</div>
+                    <div class="action">But client ignores response (already cancelled)</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="component-name">Request 002 completes</div>
+                    <div class="action">Display suggestions for "pyt": ["python", "python tutorial", ...]</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Benefits of Request Cancellation:</strong><br>
+            • Prevents race conditions (old responses overwriting new ones)<br>
+            • Reduces unnecessary server processing<br>
+            • Improves user experience (always shows latest results)
+        </div>
+    </div>
+
+    <h2>🔧 Flow 5: Trie Update Pipeline (Offline Processing)</h2>
+    <div class="flow-container">
+        <div class="sequence-diagram">
+            <div class="sequence-step async">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="component-name">Search Events (Real-time)</div>
+                    <div class="action">Users perform searches → Log to Kafka stream</div>
+                    <span class="latency">continuous</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="component-name">Kafka</div>
+                    <div class="action">Store search events: {query, timestamp, user_id, result_clicked}</div>
+                    <span class="latency">real-time</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="component-name">Apache Spark Job (Hourly)</div>
+                    <div class="action">Process last hour of search logs</div>
+                    <span class="latency">Every hour at :00</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="component-name">Query Aggregator</div>
+                    <div class="action">Group by query, count frequencies, calculate relevance scores</div>
+                    <span class="latency">~5-10 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="component-name">Filter & Rank</div>
+                    <div class="action">Remove low-frequency queries (< 10), rank by score</div>
+                    <span class="latency">~1 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="component-name">Update Suggestions Database</div>
+                    <div class="action">UPSERT into suggestions table with new frequencies</div>
+                    <span class="latency">~2 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="component-name">Trie Builder Service</div>
+                    <div class="action">Read top 10M queries from database, build new Trie in memory</div>
+                    <span class="latency">~10 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">8</div>
+                <div class="step-content">
+                    <div class="component-name">Pre-compute Suggestions</div>
+                    <div class="action">At each Trie node, store top 10 suggestions (sorted by score)</div>
+                    <span class="latency">~5 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">9</div>
+                <div class="step-content">
+                    <div class="component-name">Serialize Trie</div>
+                    <div class="action">Save Trie to binary format, upload to S3</div>
+                    <span class="latency">~2 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">10</div>
+                <div class="step-content">
+                    <div class="component-name">Typeahead Service Nodes (50 nodes)</div>
+                    <div class="action">Download new Trie from S3, hot-reload (zero downtime)</div>
+                    <span class="latency">Rolling update: ~10 min</span>
+                </div>
+            </div>
+
+            <div class="arrow-down">⬇</div>
+
+            <div class="sequence-step async">
+                <div class="step-number">11</div>
+                <div class="step-content">
+                    <div class="component-name">Redis Cache</div>
+                    <div class="action">Auto-expires old entries (1hr TTL), new queries populate cache</div>
+                    <span class="latency">Automatic</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Total Update Pipeline Time:</strong> ~30-40 minutes<br>
+            <strong>Frequency:</strong> Hourly (at :00)<br>
+            <strong>Latency for new trending queries:</strong> Up to 1 hour<br>
+            <strong>Zero Downtime:</strong> Rolling update across service nodes
+        </div>
+    </div>
+
+    <h2>📈 Performance Metrics by Flow</h2>
+
+    <table class="metrics-table">
+        <tr>
+            <th>Flow</th>
+            <th>Frequency</th>
+            <th>Latency (User)</th>
+            <th>Latency (API)</th>
+            <th>Cache Hit</th>
+        </tr>
+        <tr>
+            <td>Local Cache Hit</td>
+            <td>50%</td>
+            <td>~300ms (debounce)</td>
+            <td>0ms (no API call)</td>
+            <td>100%</td>
+        </tr>
+        <tr>
+            <td>Redis Cache Hit</td>
+            <td>47.5% (95% of API calls)</td>
+            <td>~315ms</td>
+            <td>< 5ms</td>
+            <td>95%</td>
+        </tr>
+        <tr>
+            <td>Trie Lookup (Cache Miss)</td>
+            <td>2.5% (5% of API calls)</td>
+            <td>~320ms</td>
+            <td>< 10ms</td>
+            <td>0%</td>
+        </tr>
+        <tr>
+            <td>Trie Update Pipeline</td>
+            <td>Hourly</td>
+            <td>N/A (offline)</td>
+            <td>N/A</td>
+            <td>N/A</td>
+        </tr>
+    </table>
+
+    <h2>🎯 Key Optimizations Summary</h2>
+
+    <div class="flow-container">
+        <table class="metrics-table">
+            <tr>
+                <th>Optimization</th>
+                <th>Technique</th>
+                <th>Impact</th>
+            </tr>
+            <tr>
+                <td>Client Debouncing</td>
+                <td>300ms wait after typing stops</td>
+                <td>85% reduction in API calls</td>
+            </tr>
+            <tr>
+                <td>Local Storage Cache</td>
+                <td>Browser stores recent suggestions</td>
+                <td>50% of queries need no API call</td>
+            </tr>
+            <tr>
+                <td>Request Cancellation</td>
+                <td>AbortController for in-flight requests</td>
+                <td>Prevents race conditions, reduces load</td>
+            </tr>
+            <tr>
+                <td>Redis Caching</td>
+                <td>1hr TTL for query results</td>
+                <td>95% cache hit ratio, < 5ms response</td>
+            </tr>
+            <tr>
+                <td>In-Memory Trie</td>
+                <td>Full Trie loaded in RAM</td>
+                <td>O(k) lookup, < 1ms</td>
+            </tr>
+            <tr>
+                <td>Pre-computed Suggestions</td>
+                <td>Top 10 stored at each Trie node</td>
+                <td>No runtime sorting, instant results</td>
+            </tr>
+        </table>
+    </div>
+
+    <h2>💡 Key Takeaways</h2>
+
+    <div class="flow-container">
+        <ul>
+            <li><strong>Debouncing is Critical:</strong> Reduces API load by 85%, improves UX</li>
+            <li><strong>Multi-Level Caching:</strong> Browser → Redis → Trie (in-memory)</li>
+            <li><strong>Request Cancellation:</strong> Prevents race conditions, outdated results</li>
+            <li><strong>95% Cache Hit Ratio:</strong> Most queries served from Redis (< 5ms)</li>
+            <li><strong>Trie for Speed:</strong> O(k) lookups where k = query length</li>
+            <li><strong>Offline Updates:</strong> Hourly Trie rebuilds, zero downtime</li>
+            <li><strong>Pre-computed Results:</strong> Top 10 suggestions stored at each Trie node</li>
+            <li><strong>Total User Latency:</strong> ~315ms (mostly debounce delay)</li>
+        </ul>
+    </div>
+
+</body>
+</html>
