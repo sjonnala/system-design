@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Streaming System Design Blueprint - Twitch/YouTube Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .component {
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .component h3 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .component-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .component-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .component-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+            color: #4a5568;
+        }
+
+        .component-list li:last-child {
+            border-bottom: none;
+        }
+
+        .component-list li::before {
+            content: "▹";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #2d3748;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-item {
+            background: #f6f8fb;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .tech-description {
+            color: #718096;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔴 Live Streaming System Design</h1>
+            <div class="subtitle">Twitch, YouTube Live & Facebook Gaming Architecture</div>
+            <div class="tags">
+                <span class="tag">Real-time RTMP Ingest</span>
+                <span class="tag">Low-Latency Delivery</span>
+                <span class="tag">Live Chat</span>
+                <span class="tag">WebRTC</span>
+                <span class="tag">Live Transcoding</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">📊 Scale Metrics</h2>
+        <div class="architecture-grid">
+            <div class="metric-card">
+                <div class="metric-label">Concurrent Viewers</div>
+                <div class="metric-value">6-8M</div>
+                <div class="metric-label">Twitch Peak</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Streamers</div>
+                <div class="metric-value">8M+</div>
+                <div class="metric-label">Monthly on Twitch</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Peak Bandwidth</div>
+                <div class="metric-value">48 Tbps</div>
+                <div class="metric-label">Global Traffic</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Chat Messages</div>
+                <div class="metric-value">15B+</div>
+                <div class="metric-label">Daily on Twitch</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">🏗️ System Architecture Components</h2>
+        
+        <div class="architecture-grid">
+            <div class="component">
+                <h3><span class="component-icon">1</span>Broadcaster Client</h3>
+                <p>Streamer's software for capturing and sending video to ingest servers</p>
+                <ul class="component-list">
+                    <li><strong>OBS Studio:</strong> Most popular (open source)</li>
+                    <li><strong>Streamlabs:</strong> OBS fork with integrations</li>
+                    <li><strong>XSplit:</strong> Professional streaming software</li>
+                    <li><strong>Native Apps:</strong> Twitch Studio, YouTube app</li>
+                    <li><strong>Mobile:</strong> iOS/Android streaming apps</li>
+                    <li><strong>Protocol:</strong> RTMP, RTMPS, SRT</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">2</span>Ingest Servers</h3>
+                <p>Receive live video streams from broadcasters globally</p>
+                <ul class="component-list">
+                    <li><strong>Protocol:</strong> RTMP (Real-Time Messaging Protocol)</li>
+                    <li><strong>Alternative:</strong> SRT (Secure Reliable Transport)</li>
+                    <li><strong>WebRTC:</strong> For browser-based streaming</li>
+                    <li><strong>Global PoPs:</strong> 100+ ingest locations</li>
+                    <li><strong>Redundancy:</strong> Dual ingest (primary + backup)</li>
+                    <li><strong>Tools:</strong> Nginx-RTMP, Wowza, AWS MediaLive</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">3</span>Real-time Transcoding</h3>
+                <p>Convert live stream to multiple bitrates on-the-fly</p>
+                <ul class="component-list">
+                    <li><strong>Input:</strong> 1080p 60fps @ 6 Mbps (typical)</li>
+                    <li><strong>Outputs:</strong> 1080p60, 720p60, 720p, 480p, 360p, 160p</li>
+                    <li><strong>Latency Added:</strong> 2-5 seconds</li>
+                    <li><strong>Encoder:</strong> Hardware (NVIDIA GPU), FFmpeg</li>
+                    <li><strong>Codec:</strong> H.264 (primary), VP9, AV1</li>
+                    <li><strong>Audio:</strong> AAC, Opus</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">4</span>Stream Distribution</h3>
+                <p>Deliver live streams to millions of viewers</p>
+                <ul class="component-list">
+                    <li><strong>HLS (Standard):</strong> 6-10s segments, 20-30s latency</li>
+                    <li><strong>Low-Latency HLS:</strong> 1-2s segments, 3-8s latency</li>
+                    <li><strong>LL-DASH:</strong> Chunked transfer, 2-5s latency</li>
+                    <li><strong>WebRTC:</strong> Sub-second latency (<1s)</li>
+                    <li><strong>CMAF:</strong> Common Media Application Format</li>
+                    <li><strong>Twitch:</strong> Uses modified HLS protocol</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">5</span>CDN Layer</h3>
+                <p>Global edge network for video delivery</p>
+                <ul class="component-list">
+                    <li><strong>Twitch:</strong> Amazon CloudFront + custom edges</li>
+                    <li><strong>YouTube Live:</strong> Google Global Cache</li>
+                    <li><strong>Edge Locations:</strong> 200+ worldwide PoPs</li>
+                    <li><strong>Origin Shield:</strong> Protect ingest servers</li>
+                    <li><strong>Cache:</strong> Live segments (short TTL: 30s-2min)</li>
+                    <li><strong>Fallback:</strong> Multi-CDN for redundancy</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">6</span>Chat System</h3>
+                <p>Real-time messaging for viewer interaction</p>
+                <ul class="component-list">
+                    <li><strong>Protocol:</strong> IRC (Twitch), WebSocket</li>
+                    <li><strong>Architecture:</strong> Elixir/Phoenix (Twitch)</li>
+                    <li><strong>Sharding:</strong> By channel/room</li>
+                    <li><strong>Rate Limiting:</strong> Per user (20 msg/30s)</li>
+                    <li><strong>Moderation:</strong> AutoMod, ban lists, slow mode</li>
+                    <li><strong>Emotes:</strong> Custom images, GIFs, badges</li>
+                    <li><strong>Scale:</strong> 15+ billion messages/day (Twitch)</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">7</span>Stream Metadata Service</h3>
+                <p>Manage stream info, status, and discovery</p>
+                <ul class="component-list">
+                    <li><strong>Database:</strong> PostgreSQL (channels, users)</li>
+                    <li><strong>NoSQL:</strong> DynamoDB (stream state, viewers)</li>
+                    <li><strong>Redis:</strong> Real-time viewer count</li>
+                    <li><strong>Fields:</strong> Title, game, tags, category</li>
+                    <li><strong>Status:</strong> Live, offline, VOD processing</li>
+                    <li><strong>Discovery:</strong> Elasticsearch for search</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">8</span>VOD (Video on Demand)</h3>
+                <p>Archive streams for later viewing</p>
+                <ul class="component-list">
+                    <li><strong>DVR:</strong> Record while streaming</li>
+                    <li><strong>Storage:</strong> AWS S3, Google Cloud Storage</li>
+                    <li><strong>Processing:</strong> Generate highlights, clips</li>
+                    <li><strong>Retention:</strong> 14-60 days (varies by tier)</li>
+                    <li><strong>Clips:</strong> User-generated 5-60s highlights</li>
+                    <li><strong>Chapters:</strong> Automatic stream segmentation</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">9</span>Real-time Analytics</h3>
+                <p>Live metrics and viewer engagement tracking</p>
+                <ul class="component-list">
+                    <li><strong>Viewer Count:</strong> Real-time (Redis + WebSocket)</li>
+                    <li><strong>Bitrate/Quality:</strong> Per-viewer ABR tracking</li>
+                    <li><strong>Buffering Events:</strong> QoE monitoring</li>
+                    <li><strong>Chat Activity:</strong> Messages/second</li>
+                    <li><strong>Engagement:</strong> Follows, subs, bits, donations</li>
+                    <li><strong>Pipeline:</strong> Kinesis → Lambda → DynamoDB</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">10</span>Monetization Engine</h3>
+                <p>Revenue systems for streamers and platform</p>
+                <ul class="component-list">
+                    <li><strong>Subscriptions:</strong> Monthly recurring ($4.99-$24.99)</li>
+                    <li><strong>Bits/Cheers:</strong> Virtual currency for tips</li>
+                    <li><strong>Ads:</strong> Pre-roll, mid-roll (programmatic)</li>
+                    <li><strong>Donations:</strong> Third-party (StreamLabs, Patreon)</li>
+                    <li><strong>Sponsorships:</strong> Brand deals, affiliate links</li>
+                    <li><strong>Processing:</strong> Stripe, PayPal integration</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">11</span>Recommendation System</h3>
+                <p>Surface relevant live streams to viewers</p>
+                <ul class="component-list">
+                    <li><strong>Browse Page:</strong> Categorized by game/topic</li>
+                    <li><strong>Personalized:</strong> Based on watch history</li>
+                    <li><strong>Trending:</strong> Highest viewer growth rate</li>
+                    <li><strong>Following:</strong> Channels user follows (priority)</li>
+                    <li><strong>Discovery:</strong> Similar channels, new streamers</li>
+                    <li><strong>Algorithm:</strong> Collaborative filtering + ML</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">12</span>Content Moderation</h3>
+                <p>Automated and manual content filtering</p>
+                <ul class="component-list">
+                    <li><strong>AutoMod:</strong> ML-based chat filtering</li>
+                    <li><strong>Video Screening:</strong> Real-time content analysis</li>
+                    <li><strong>DMCA:</strong> Copyright detection (audio fingerprinting)</li>
+                    <li><strong>Reports:</strong> User flagging system</li>
+                    <li><strong>Human Review:</strong> Moderation team escalation</li>
+                    <li><strong>Actions:</strong> Warnings, timeouts, bans</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">13</span>Authentication & Auth</h3>
+                <p>User authentication and authorization</p>
+                <ul class="component-list">
+                    <li><strong>OAuth 2.0:</strong> Login with Twitch/Google/Facebook</li>
+                    <li><strong>JWT Tokens:</strong> Session management</li>
+                    <li><strong>Stream Keys:</strong> Broadcaster authentication</li>
+                    <li><strong>Permissions:</strong> Streamer, mod, VIP, subscriber</li>
+                    <li><strong>2FA:</strong> Two-factor authentication</li>
+                    <li><strong>API Keys:</strong> Third-party integrations</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">14</span>Notifications System</h3>
+                <p>Alert viewers when streams go live</p>
+                <ul class="component-list">
+                    <li><strong>Push Notifications:</strong> Mobile (FCM, APNs)</li>
+                    <li><strong>Email:</strong> Batch notifications (SES)</li>
+                    <li><strong>Discord Webhooks:</strong> Third-party integrations</li>
+                    <li><strong>In-app:</strong> Browser notifications</li>
+                    <li><strong>Preferences:</strong> Per-channel notification settings</li>
+                    <li><strong>Batching:</strong> Aggregate multiple go-live events</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">15</span>Extensions & Overlays</h3>
+                <p>Interactive features and broadcaster tools</p>
+                <ul class="component-list">
+                    <li><strong>Twitch Extensions:</strong> iFrame-based panels</li>
+                    <li><strong>Overlays:</strong> Alerts, donation goals, chat on stream</li>
+                    <li><strong>Widgets:</strong> StreamLabs, StreamElements</li>
+                    <li><strong>Polls:</strong> Real-time viewer voting</li>
+                    <li><strong>Predictions:</strong> Channel points betting</li>
+                    <li><strong>API:</strong> Third-party developer platform</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">16</span>Multi-streaming</h3>
+                <p>Broadcast to multiple platforms simultaneously</p>
+                <ul class="component-list">
+                    <li><strong>Restream.io:</strong> Stream to 30+ platforms</li>
+                    <li><strong>Architecture:</strong> Receive once, fanout to N platforms</li>
+                    <li><strong>Platforms:</strong> Twitch, YouTube, Facebook, Twitter</li>
+                    <li><strong>Chat Aggregation:</strong> Unified chat from all platforms</li>
+                    <li><strong>Analytics:</strong> Cross-platform metrics</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title">🔄 Live Stream Lifecycle</h2>
+        <div class="code-block">
+<span class="highlight">1. Stream Initiation</span>
+Broadcaster → OBS Studio → RTMP → Ingest Server (nearest PoP)
+Stream Key Authentication → Create Session → Allocate Transcoder
+
+<span class="highlight">2. Transcoding (2-5 seconds latency)</span>
+1080p60 Input → GPU Encoder → 6 Quality Variants → HLS Segments
+Segment Duration: 6s (standard) or 1-2s (low-latency)
+
+<span class="highlight">3. Distribution</span>
+Origin → CDN Edge Locations (200+ PoPs) → Viewers
+Cache TTL: 30-120 seconds (live segments)
+
+<span class="highlight">4. Viewer Playback</span>
+Request Manifest → Adaptive Bitrate Selection → Stream Segments
+Chat Connection: WebSocket → IRC Server → Real-time Messages
+
+<span class="highlight">5. DVR Recording</span>
+Parallel: Save Segments → S3 → VOD Processing → Clips Generation
+
+<span class="highlight">6. Stream Termination</span>
+Broadcaster Ends → Flush Segments → Finalize VOD → Notify Viewers
+        </div>
+
+        <h2 class="section-title">📡 Ingest Protocols</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Latency</th>
+                        <th>Reliability</th>
+                        <th>Use Case</th>
+                        <th>Used By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RTMP</strong></td>
+                        <td>3-5s</td>
+                        <td>Good (TCP)</td>
+                        <td>Standard streaming</td>
+                        <td>Twitch, Facebook</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RTMPS</strong></td>
+                        <td>3-5s</td>
+                        <td>Good (TCP + TLS)</td>
+                        <td>Secure streaming</td>
+                        <td>Most platforms</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SRT</strong></td>
+                        <td>2-3s</td>
+                        <td>Excellent (UDP + ARQ)</td>
+                        <td>Unreliable networks</td>
+                        <td>Professional broadcasts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebRTC</strong></td>
+                        <td><1s</td>
+                        <td>Good (UDP)</td>
+                        <td>Ultra low-latency</td>
+                        <td>Amazon IVS, YouTube</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HLS (Push)</strong></td>
+                        <td>10-30s</td>
+                        <td>Excellent (HTTP)</td>
+                        <td>VOD-like live</td>
+                        <td>Apple devices</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title">⚡ Latency Comparison</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Delivery Method</th>
+                        <th>Latency</th>
+                        <th>Scalability</th>
+                        <th>Cost</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Standard HLS</strong></td>
+                        <td>20-30s</td>
+                        <td>Excellent</td>
+                        <td>Low</td>
+                        <td>Large audiences, non-interactive</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Low-Latency HLS</strong></td>
+                        <td>3-8s</td>
+                        <td>Very Good</td>
+                        <td>Medium</td>
+                        <td>Twitch-style streaming</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LL-DASH</strong></td>
+                        <td>2-5s</td>
+                        <td>Very Good</td>
+                        <td>Medium</td>
+                        <td>Sports, esports</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebRTC</strong></td>
+                        <td><1s</td>
+                        <td>Good</td>
+                        <td>High</td>
+                        <td>Interactive, video calls</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CMAF</strong></td>
+                        <td>3-6s</td>
+                        <td>Excellent</td>
+                        <td>Medium</td>
+                        <td>Universal compatibility</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title">💬 Chat Architecture</h2>
+        <div class="code-block">
+<span class="highlight"># Twitch uses IRC protocol</span>
+
+Client Connection:
+wss://irc-ws.chat.twitch.tv:443
+
+Authentication:
+PASS oauth:your_oauth_token
+NICK your_username
+
+Join Channel:
+JOIN #channel_name
+
+Send Message:
+PRIVMSG #channel_name :Hello, chat!
+
+Receive Messages:
+:username!username@username.tmi.twitch.tv PRIVMSG #channel :Message text
+
+<span class="highlight"># Architecture</span>
+- Elixir/Phoenix for WebSocket handling
+- Horizontally scaled chat servers
+- Sharding by channel (each channel = separate room)
+- Redis Pub/Sub for message broadcasting
+- Rate limiting: 20 messages per 30 seconds (regular users)
+- Moderators bypass rate limits
+
+<span class="highlight"># Scale</span>
+- 15+ billion messages/day
+- 100K+ concurrent channels
+- 2-3 million concurrent chatters (peak)
+- <100ms message delivery
+        </div>
+
+        <h2 class="section-title">🎮 Quality Variants</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Quality</th>
+                        <th>Resolution</th>
+                        <th>Bitrate</th>
+                        <th>Frame Rate</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Source</strong></td>
+                        <td>1080p</td>
+                        <td>6000 Kbps</td>
+                        <td>60 fps</td>
+                        <td>Partners, affiliates</td>
+                    </tr>
+                    <tr>
+                        <td><strong>1080p60</strong></td>
+                        <td>1920×1080</td>
+                        <td>6000 Kbps</td>
+                        <td>60 fps</td>
+                        <td>Fast-paced gaming</td>
+                    </tr>
+                    <tr>
+                        <td><strong>720p60</strong></td>
+                        <td>1280×720</td>
+                        <td>4500 Kbps</td>
+                        <td>60 fps</td>
+                        <td>Competitive gaming</td>
+                    </tr>
+                    <tr>
+                        <td><strong>720p</strong></td>
+                        <td>1280×720</td>
+                        <td>3000 Kbps</td>
+                        <td>30 fps</td>
+                        <td>Standard streaming</td>
+                    </tr>
+                    <tr>
+                        <td><strong>480p</strong></td>
+                        <td>852×480</td>
+                        <td>1500 Kbps</td>
+                        <td>30 fps</td>
+                        <td>Mobile, slower connections</td>
+                    </tr>
+                    <tr>
+                        <td><strong>360p</strong></td>
+                        <td>640×360</td>
+                        <td>800 Kbps</td>
+                        <td>30 fps</td>
+                        <td>Very slow connections</td>
+                    </tr>
+                    <tr>
+                        <td><strong>160p (Audio Only)</strong></td>
+                        <td>N/A</td>
+                        <td>64 Kbps</td>
+                        <td>N/A</td>
+                        <td>Minimal bandwidth</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title">🔧 Tech Stack Examples</h2>
+        <div class="tech-stack">
+            <div class="tech-item">
+                <div class="tech-name">Twitch</div>
+                <div class="tech-description">Go, Elixir, PostgreSQL, DynamoDB, Redis, Kinesis, CloudFront</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">YouTube Live</div>
+                <div class="tech-description">C++, Java, Bigtable, Spanner, GGC, Borg, VP9</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">Facebook Gaming</div>
+                <div class="tech-description">Hack, C++, MySQL, Cassandra, Haystack, TAO</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">Ingest</div>
+                <div class="tech-description">Nginx-RTMP, Wowza, AWS MediaLive, GStreamer</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">Transcoding</div>
+                <div class="tech-description">FFmpeg, NVIDIA GPU (NVENC), x264, VP9</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">CDN</div>
+                <div class="tech-description">CloudFront, Akamai, Fastly, GGC, Custom</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">💰 Bandwidth Costs</h2>
+        <div class="code-block">
+<span class="highlight"># Twitch Scale (6M concurrent viewers)</span>
+Average bitrate: 3 Mbps (mixed qualities)
+Peak bandwidth: 6M × 3 Mbps = 18 Tbps
+
+Monthly data transfer:
+- 30 days × 24 hours × 6M viewers × 3 Mbps
+- = 5.18 million TB = 5.18 Exabytes
+
+<span class="highlight"># CDN Costs (CloudFront pricing)</span>
+$0.085/GB (first 10 TB)
+$0.080/GB (next 40 TB)
+$0.060/GB (next 100 TB)
+$0.040/GB (next 350 TB)
+$0.030/GB (500 TB - 5 PB)
+$0.025/GB (5 PB+)
+
+Blended rate for 5 EB: ~$0.025/GB
+Cost: 5.18M TB × $0.025 × 1000 = $129.5M/month
+
+<span class="highlight"># Own CDN Savings (like Netflix)</span>
+Own infrastructure: ~$10-15M/month (92% savings)
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming Flow Diagrams - Netflix/YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: #f7fafc;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #4a5568;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #edf2f7;
+            color: #667eea;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flow-container {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: "↓";
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .step-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .step-details {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 150px;
+        }
+
+        .detail-value {
+            color: #4a5568;
+            flex: 1;
+        }
+
+        .code-snippet {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Video Streaming Flow Diagrams</h1>
+            <div class="subtitle">End-to-end workflows for Netflix & YouTube</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('upload')">📤 Video Upload</button>
+            <button class="tab" onclick="showTab('transcoding')">⚙️ Transcoding</button>
+            <button class="tab" onclick="showTab('playback')">▶️ Video Playback</button>
+            <button class="tab" onclick="showTab('live')">🔴 Live Streaming</button>
+            <button class="tab" onclick="showTab('recommendation')">🎯 Recommendations</button>
+        </div>
+
+        <!-- Video Upload Flow -->
+        <div id="upload" class="tab-content active">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Video Upload & Processing Pipeline</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Upload Initiation</div>
+                    </div>
+                    <div class="step-description">
+                        User selects video file and initiates upload. Client requests upload URL from backend.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">API Endpoint:</span>
+                            <span class="detail-value">POST /api/v1/videos/initiate-upload</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Request Body:</span>
+                            <span class="detail-value">{ filename, size, content_type, title, description }</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response:</span>
+                            <span class="detail-value">{ video_id, upload_url, chunk_size: 5MB }</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight">// Client-side upload initiation</span>
+const response = await fetch('/api/v1/videos/initiate-upload', {
+    method: 'POST',
+    body: JSON.stringify({
+        filename: 'my-video.mp4',
+        size: 524288000,  // 500 MB
+        content_type: 'video/mp4',
+        title: 'My Awesome Video',
+        description: 'Check out this cool video!'
+    })
+});
+
+const { video_id, upload_url, chunk_size } = await response.json();
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Chunked Multipart Upload</div>
+                    </div>
+                    <div class="step-description">
+                        Video is split into 5-20MB chunks and uploaded in parallel to S3/Cloud Storage. Supports resume on failure.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Chunk Size:</span>
+                            <span class="detail-value">5-20 MB (optimal for network reliability)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Parallelization:</span>
+                            <span class="detail-value">Up to 10 concurrent chunk uploads</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Storage:</span>
+                            <span class="detail-value">AWS S3 / Google Cloud Storage / Azure Blob</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">500 MB</div>
+                            <div class="metric-label">Typical Upload</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">100 chunks</div>
+                            <div class="metric-label">@ 5MB each</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">~2 min</div>
+                            <div class="metric-label">Upload Time (50 Mbps)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Upload Completion & Validation</div>
+                    </div>
+                    <div class="step-description">
+                        After all chunks uploaded, S3 combines them. Backend validates file integrity and format.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Validation Checks:</span>
+                            <span class="detail-value">File format, codec support, malware scan, content policy</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Metadata Extraction:</span>
+                            <span class="detail-value">Duration, resolution, bitrate, codec, audio tracks</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tool:</span>
+                            <span class="detail-value">FFprobe for media analysis</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># FFprobe metadata extraction</span>
+ffprobe -v quiet -print_format json -show_format -show_streams video.mp4
+
+<span class="highlight"># Sample output:</span>
+{
+  "format": {
+    "duration": "620.5",
+    "size": "524288000",
+    "bit_rate": "6750000"
+  },
+  "streams": [
+    {"codec_type": "video", "codec_name": "h264", "width": 1920, "height": 1080},
+    {"codec_type": "audio", "codec_name": "aac", "sample_rate": "48000"}
+  ]
+}
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Job Queue Publication</div>
+                    </div>
+                    <div class="step-description">
+                        Transcoding job is published to Kafka/SQS queue. Multiple workers consume and process jobs in parallel.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Queue System:</span>
+                            <span class="detail-value">Apache Kafka (YouTube) / AWS SQS (smaller platforms)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Topic:</span>
+                            <span class="detail-value">video.uploaded</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Message Payload:</span>
+                            <span class="detail-value">{ video_id, s3_location, priority, requested_formats }</span>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <strong>Priority Queue:</strong> Premium users or viral content get higher priority. Standard uploads processed in FIFO order.
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">User Notification</div>
+                    </div>
+                    <div class="step-description">
+                        User receives confirmation that upload succeeded and transcoding has started.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Notification Channels:</span>
+                            <span class="detail-value">WebSocket (real-time), Email, Push notification</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status Updates:</span>
+                            <span class="detail-value">Uploading → Processing → Ready</span>
+                        </div>
+                    </div>
+                    <div class="success-box">
+                        <strong>Upload Complete!</strong> Your video is being processed. You'll be notified when it's ready (typically 5-30 minutes depending on length).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transcoding Flow -->
+        <div id="transcoding" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Video Transcoding Pipeline</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Job Acquisition</div>
+                    </div>
+                    <div class="step-description">
+                        Transcoding worker (EC2/GCE instance) pulls job from Kafka/SQS queue. Downloads original video from S3.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Worker Type:</span>
+                            <span class="detail-value">AWS EC2 c5.4xlarge (16 vCPU, 32 GB RAM) or GPU instance</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Scaling:</span>
+                            <span class="detail-value">Auto-scaling group based on queue depth</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Multi-Resolution Encoding</div>
+                    </div>
+                    <div class="step-description">
+                        Video is transcoded into multiple resolutions (4K, 1080p, 720p, 480p, 360p, 240p) in parallel.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Encoder:</span>
+                            <span class="detail-value">FFmpeg, AWS MediaConvert, Google Transcoder API</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Codecs:</span>
+                            <span class="detail-value">H.264 (primary), H.265/HEVC (premium), VP9 (YouTube), AV1 (future)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Parallelization:</span>
+                            <span class="detail-value">Each resolution encoded on separate CPU core/instance</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># FFmpeg command for 1080p encoding</span>
+ffmpeg -i input.mp4 \
+  -c:v libx264 -preset medium -crf 23 \
+  -vf scale=1920:1080 \
+  -b:v 5000k -maxrate 5350k -bufsize 7500k \
+  -c:a aac -b:a 128k \
+  -movflags +faststart \
+  -hls_time 6 -hls_playlist_type vod \
+  -hls_segment_filename "1080p_%03d.ts" \
+  1080p.m3u8
+
+<span class="highlight"># Netflix Per-Title Encoding:</span>
+# Analyzes each video's complexity
+# Adjusts bitrate for optimal quality vs size
+# Simple videos (cartoons): lower bitrate
+# Complex videos (action): higher bitrate
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Resolution</th>
+                                <th>Encoding Time</th>
+                                <th>Output Size (10 min video)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>4K (3840×2160)</td><td>~30 min</td><td>~900 MB</td></tr>
+                            <tr><td>1080p (1920×1080)</td><td>~15 min</td><td>~375 MB</td></tr>
+                            <tr><td>720p (1280×720)</td><td>~10 min</td><td>~225 MB</td></tr>
+                            <tr><td>480p (854×480)</td><td>~7 min</td><td>~113 MB</td></tr>
+                            <tr><td>360p (640×360)</td><td>~5 min</td><td>~60 MB</td></tr>
+                            <tr><td>240p (426×240)</td><td>~3 min</td><td>~38 MB</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Adaptive Streaming Preparation</div>
+                    </div>
+                    <div class="step-description">
+                        Generate HLS/DASH manifests with segment files for adaptive bitrate streaming.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">HLS (Apple):</span>
+                            <span class="detail-value">.m3u8 master playlist + variant playlists + .ts segments</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">DASH (MPEG):</span>
+                            <span class="detail-value">.mpd manifest + .m4s segments</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Segment Duration:</span>
+                            <span class="detail-value">6-10 seconds (standard), 2 seconds (low-latency)</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># HLS Master Playlist (master.m3u8)</span>
+#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=12000000,RESOLUTION=3840x2160
+4k.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+1080p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
+720p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=854x480
+480p.m3u8
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Thumbnail & Sprite Generation</div>
+                    </div>
+                    <div class="step-description">
+                        Generate thumbnail images and video sprite sheets for preview on hover.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Thumbnails:</span>
+                            <span class="detail-value">Extract 5-10 candidate frames, use ML to select best</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Video Sprites:</span>
+                            <span class="detail-value">100+ frames combined into sprite sheet (10x10 grid)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Format:</span>
+                            <span class="detail-value">WebP (smaller) or JPEG</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># Extract frames every 5 seconds</span>
+ffmpeg -i input.mp4 -vf "fps=1/5" -q:v 2 thumbnails/thumb_%03d.jpg
+
+<span class="highlight"># Create sprite sheet (10x10 grid)</span>
+ffmpeg -i input.mp4 -vf "select='not(mod(n,30))',scale=160:90,tile=10x10" sprite.jpg
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Upload to CDN Origin</div>
+                    </div>
+                    <div class="step-description">
+                        All encoded files uploaded to S3/Cloud Storage origin. CDN pulls from origin on first request.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Storage Structure:</span>
+                            <span class="detail-value">s3://videos/{video_id}/{quality}/{segment_number}.ts</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Size (10 min):</span>
+                            <span class="detail-value">~1.7 GB across all resolutions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Database Update & Indexing</div>
+                    </div>
+                    <div class="step-description">
+                        Update video status to "ready". Index in Elasticsearch. Trigger recommendation engine refresh.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Database:</span>
+                            <span class="detail-value">Cassandra/PostgreSQL: status = 'ready', available_qualities = [...]</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Search Index:</span>
+                            <span class="detail-value">Elasticsearch: title, description, tags, captions</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Processing Time:</span>
+                            <span class="detail-value">5-30 minutes for typical video (depends on length)</span>
+                        </div>
+                    </div>
+                    <div class="success-box">
+                        <strong>Transcoding Complete!</strong> Video is now available for streaming across all devices and quality levels.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playback Flow -->
+        <div id="playback" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Video Playback Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">User Clicks Play</div>
+                    </div>
+                    <div class="step-description">
+                        User clicks play button. Client sends playback request to API Gateway with video_id and user_id.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">API Call:</span>
+                            <span class="detail-value">GET /api/v1/videos/{video_id}/playback</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Headers:</span>
+                            <span class="detail-value">Authorization: Bearer {jwt_token}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Authentication & Authorization</div>
+                    </div>
+                    <div class="step-description">
+                        Verify user authentication. Check subscription status and content permissions.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Checks:</span>
+                            <span class="detail-value">Valid JWT token, Active subscription, Geographic availability, Parental controls</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response Time:</span>
+                            <span class="detail-value"><50ms (cached in Redis)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Manifest Generation</div>
+                    </div>
+                    <div class="step-description">
+                        Playback service generates HLS/DASH manifest with signed CDN URLs for all quality variants.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Format Detection:</span>
+                            <span class="detail-value">iOS/Safari → HLS, Android/Chrome → DASH or HLS</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">URL Signing:</span>
+                            <span class="detail-value">CloudFront signed URLs (valid 4 hours)</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight"># Sample HLS manifest response</span>
+{
+  "video_id": "abc-123",
+  "manifest_url": "https://cdn.example.com/videos/abc-123/master.m3u8?sig=...",
+  "drm_license_url": "https://license.example.com/widevine",
+  "analytics_endpoint": "https://analytics.example.com/events"
+}
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">CDN Routing & Selection</div>
+                    </div>
+                    <div class="step-description">
+                        GeoDNS routes client to nearest CDN edge location. Edge server serves cached content or fetches from origin.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Routing Logic:</span>
+                            <span class="detail-value">User location → Nearest PoP (Point of Presence)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cache Hit:</span>
+                            <span class="detail-value">95%+ for popular content</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cache Miss:</span>
+                            <span class="detail-value">Fetch from origin S3, cache for future requests</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">~20ms</div>
+                            <div class="metric-label">CDN Latency (Cache Hit)</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">~200ms</div>
+                            <div class="metric-label">Origin Latency (Cache Miss)</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value">95%+</div>
+                            <div class="metric-label">Cache Hit Ratio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">DRM License Acquisition (if protected)</div>
+                    </div>
+                    <div class="step-description">
+                        For premium content, player requests DRM license from license server.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">DRM Systems:</span>
+                            <span class="detail-value">Widevine (Android/Chrome), FairPlay (iOS/Safari), PlayReady (Windows)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Process:</span>
+                            <span class="detail-value">Player sends challenge → License server validates → Returns decryption key</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Key Validity:</span>
+                            <span class="detail-value">Tied to session, expires after playback</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Initial Quality Selection</div>
+                    </div>
+                    <div class="step-description">
+                        Player starts with lowest quality (fast startup), measures bandwidth, and switches to optimal quality.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Initial Quality:</span>
+                            <span class="detail-value">360p or 480p (fast startup)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Bandwidth Estimation:</span>
+                            <span class="detail-value">Measure download time of first 2-3 segments</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Quality Upgrade:</span>
+                            <span class="detail-value">Switch to 720p/1080p if bandwidth allows</span>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <strong>Startup Optimization:</strong> First 5-10 seconds preloaded on page load. Target: <1 second to first frame.
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Adaptive Bitrate Streaming</div>
+                    </div>
+                    <div class="step-description">
+                        Player continuously monitors bandwidth and buffer, adjusting quality dynamically to prevent buffering.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Buffer Target:</span>
+                            <span class="detail-value">20-30 seconds ahead</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Quality Switch:</span>
+                            <span class="detail-value">Seamless at segment boundaries</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Algorithm:</span>
+                            <span class="detail-value">Buffer-based (if buffer low → reduce quality, if buffer high → increase)</span>
+                        </div>
+                    </div>
+                    <div class="code-snippet">
+<span class="highlight">// ABR decision logic (simplified)</span>
+if (bufferLevel < 10 seconds) {
+    // Low buffer: be conservative
+    selectQuality(currentQuality - 1);
+} else if (bufferLevel > 30 seconds && estimatedBandwidth > currentBitrate * 1.5) {
+    // High buffer + good bandwidth: upgrade
+    selectQuality(currentQuality + 1);
+}
+
+<span class="highlight">// Typical quality switches during playback:</span>
+00:00 - Start at 360p (fast startup)
+00:05 - Upgrade to 720p (bandwidth measured)
+00:30 - Upgrade to 1080p (stable connection)
+02:15 - Drop to 720p (network congestion detected)
+02:45 - Back to 1080p (congestion cleared)
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">8</div>
+                        <div class="step-title">Analytics & QoE Tracking</div>
+                    </div>
+                    <div class="step-description">
+                        Player sends playback events to analytics pipeline for quality monitoring and debugging.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Events Tracked:</span>
+                            <span class="detail-value">play, pause, seek, buffer, quality_change, error, complete</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">QoE Metrics:</span>
+                            <span class="detail-value">Startup time, buffering ratio, average bitrate, completion rate</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Destination:</span>
+                            <span class="detail-value">Kafka → Flink/Spark → Elasticsearch → Grafana</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Streaming Flow -->
+        <div id="live" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Live Streaming Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Stream Ingest</div>
+                    </div>
+                    <div class="step-description">
+                        Broadcaster sends live video feed to ingest server using RTMP, SRT, or WebRTC protocol.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Protocols:</span>
+                            <span class="detail-value">RTMP (traditional), SRT (low-latency), WebRTC (sub-second)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ingest Servers:</span>
+                            <span class="detail-value">Nginx-RTMP, Wowza, AWS MediaLive</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Redundancy:</span>
+                            <span class="detail-value">Dual ingest (primary + backup)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Real-time Transcoding</div>
+                    </div>
+                    <div class="step-description">
+                        Live feed transcoded in real-time to multiple bitrates (1080p, 720p, 480p, 360p).
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Latency Added:</span>
+                            <span class="detail-value">2-5 seconds (transcoding overhead)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Encoder:</span>
+                            <span class="detail-value">Hardware encoders (NVIDIA GPU) for low latency</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Segment Creation</div>
+                    </div>
+                    <div class="step-description">
+                        Stream segmented into 2-6 second chunks. Manifests updated in real-time.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Standard HLS:</span>
+                            <span class="detail-value">6-second segments, 18-30 second latency</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Low-Latency HLS:</span>
+                            <span class="detail-value">0.5-1 second segments, 2-5 second latency</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">LL-DASH:</span>
+                            <span class="detail-value">Chunked transfer encoding, <2 second latency</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">CDN Distribution</div>
+                    </div>
+                    <div class="step-description">
+                        Live segments pushed to CDN edge locations globally. Viewers pull from nearest edge.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Distribution:</span>
+                            <span class="detail-value">Origin → Regional PoPs → Edge servers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Concurrent Viewers:</span>
+                            <span class="detail-value">Millions supported (World Cup, major events)</span>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-value">2-5s</div>
+                            <div class="metric-label">Standard Latency</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value"><1s</div>
+                            <div class="metric-label">Ultra Low Latency (WebRTC)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">DVR & Recording</div>
+                    </div>
+                    <div class="step-description">
+                        Live stream simultaneously recorded for on-demand playback (DVR functionality).
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Storage:</span>
+                            <span class="detail-value">S3 for archive, available immediately after stream ends</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Seek Back:</span>
+                            <span class="detail-value">Users can rewind to any point during live broadcast</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation Flow -->
+        <div id="recommendation" class="tab-content">
+            <div class="flow-container">
+                <h2 style="color: #2d3748; margin-bottom: 20px;">Recommendation Engine Flow</h2>
+                
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Data Collection</div>
+                    </div>
+                    <div class="step-description">
+                        Collect user interaction data: watch history, searches, ratings, hover time, completion rate.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Explicit Signals:</span>
+                            <span class="detail-value">Ratings, likes, watchlist additions</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Implicit Signals:</span>
+                            <span class="detail-value">Watch duration, completion rate, rewatch, time of day</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Storage:</span>
+                            <span class="detail-value">Kafka → Cassandra (long-term) + Redis (recent activity)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Feature Engineering</div>
+                    </div>
+                    <div class="step-description">
+                        Transform raw data into features for ML models: user embeddings, video embeddings, contextual features.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">User Features:</span>
+                            <span class="detail-value">Watch history vector, genre preferences, viewing time patterns</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Video Features:</span>
+                            <span class="detail-value">Genre, cast, director, popularity score, engagement metrics</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Context:</span>
+                            <span class="detail-value">Time of day, device type, day of week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Model Training (Offline)</div>
+                    </div>
+                    <div class="step-description">
+                        Train ML models on historical data. Multiple models for different recommendation contexts.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Netflix Approach:</span>
+                            <span class="detail-value">Deep neural networks, matrix factorization, ensemble methods</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">YouTube Approach:</span>
+                            <span class="detail-value">Two-stage: candidate generation + ranking</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Training Frequency:</span>
+                            <span class="detail-value">Daily batch jobs on Spark/TensorFlow</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Real-time Inference</div>
+                    </div>
+                    <div class="step-description">
+                        When user opens app, recommendation service generates personalized suggestions in real-time.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Latency Target:</span>
+                            <span class="detail-value"><100ms for recommendations</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Caching:</span>
+                            <span class="detail-value">Pre-computed recommendations in Redis (TTL: 1 hour)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fallback:</span>
+                            <span class="detail-value">If cache miss, serve trending/popular content</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">A/B Testing & Evaluation</div>
+                    </div>
+                    <div class="step-description">
+                        Continuously test new algorithms. Measure impact on engagement, watch time, retention.
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Metrics:</span>
+                            <span class="detail-value">Click-through rate (CTR), watch time, completion rate, retention</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Experiment Platform:</span>
+                            <span class="detail-value">Random assignment, statistical significance testing</span>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <strong>Netflix A/B Testing:</strong> 75% of viewing comes from recommendations. Even 1% improvement = millions more hours watched.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
