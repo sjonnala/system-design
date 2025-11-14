@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming System Design Blueprint - Netflix/YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .component {
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .component h3 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .component-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .component-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .component-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+            color: #4a5568;
+        }
+
+        .component-list li:last-child {
+            border-bottom: none;
+        }
+
+        .component-list li::before {
+            content: "▹";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #2d3748;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .flow-diagram {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            border-radius: 10px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .step-description {
+            color: #718096;
+            font-size: 0.95em;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-item {
+            background: #f6f8fb;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .tech-description {
+            color: #718096;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Video Streaming System Design</h1>
+            <div class="subtitle">Netflix & YouTube Architecture Blueprint</div>
+            <div class="tags">
+                <span class="tag">Adaptive Bitrate Streaming</span>
+                <span class="tag">CDN Distribution</span>
+                <span class="tag">Video Transcoding</span>
+                <span class="tag">Real-time Analytics</span>
+                <span class="tag">Recommendation Engine</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">📊 Scale Metrics</h2>
+        <div class="architecture-grid">
+            <div class="metric-card">
+                <div class="metric-label">Daily Active Users</div>
+                <div class="metric-value">300M+</div>
+                <div class="metric-label">Netflix Scale</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Video Watch Hours</div>
+                <div class="metric-value">1B+</div>
+                <div class="metric-label">Daily on YouTube</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Peak Bandwidth</div>
+                <div class="metric-value">100 Tbps</div>
+                <div class="metric-label">Global Traffic</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Video Catalog</div>
+                <div class="metric-value">800M+</div>
+                <div class="metric-label">YouTube Videos</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">🏗️ System Architecture Components</h2>
+        
+        <div class="architecture-grid">
+            <div class="component">
+                <h3><span class="component-icon">1</span>Client Layer</h3>
+                <p>Multi-platform video playback with adaptive streaming</p>
+                <ul class="component-list">
+                    <li><strong>Web Player:</strong> HLS/DASH, MSE, EME for DRM</li>
+                    <li><strong>Mobile Apps:</strong> iOS (AVPlayer), Android (ExoPlayer)</li>
+                    <li><strong>Smart TVs:</strong> Native apps, WebOS, Tizen</li>
+                    <li><strong>Game Consoles:</strong> PlayStation, Xbox apps</li>
+                    <li><strong>Streaming Devices:</strong> Roku, Fire TV, Chromecast</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">2</span>API Gateway</h3>
+                <p>Netflix Zuul / YouTube API Gateway</p>
+                <ul class="component-list">
+                    <li><strong>Authentication:</strong> OAuth 2.0, JWT tokens</li>
+                    <li><strong>Rate Limiting:</strong> Token bucket, Redis-based</li>
+                    <li><strong>Request Routing:</strong> Path-based microservice routing</li>
+                    <li><strong>Circuit Breaker:</strong> Hystrix pattern</li>
+                    <li><strong>API Versioning:</strong> Header/path-based versioning</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">3</span>Microservices Layer</h3>
+                <p>Domain-driven service architecture</p>
+                <ul class="component-list">
+                    <li><strong>User Service:</strong> Profiles, preferences, watch history</li>
+                    <li><strong>Video Metadata Service:</strong> Titles, descriptions, thumbnails</li>
+                    <li><strong>Playback Service:</strong> Manifest generation, DRM</li>
+                    <li><strong>Recommendation Service:</strong> ML-based suggestions</li>
+                    <li><strong>Search Service:</strong> Elasticsearch indexing</li>
+                    <li><strong>Analytics Service:</strong> Real-time event processing</li>
+                    <li><strong>Subscription Service:</strong> Billing, plans</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">4</span>Video Upload Pipeline</h3>
+                <p>Multi-stage upload and validation</p>
+                <ul class="component-list">
+                    <li><strong>Chunked Upload:</strong> Resumable uploads (5-20MB chunks)</li>
+                    <li><strong>Upload Service:</strong> Direct to S3 with presigned URLs</li>
+                    <li><strong>Validation Service:</strong> Format check, malware scan</li>
+                    <li><strong>Metadata Extraction:</strong> Duration, resolution, codec</li>
+                    <li><strong>Queue System:</strong> Kafka for transcoding jobs</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">5</span>Video Transcoding Engine</h3>
+                <p>Adaptive bitrate encoding pipeline</p>
+                <ul class="component-list">
+                    <li><strong>Codec:</strong> H.264 (AVC), H.265 (HEVC), VP9, AV1</li>
+                    <li><strong>Resolutions:</strong> 4K, 1080p, 720p, 480p, 360p, 240p</li>
+                    <li><strong>Bitrates:</strong> 12 Mbps (4K) to 300 Kbps (240p)</li>
+                    <li><strong>Container:</strong> MP4, WebM, TS segments</li>
+                    <li><strong>Tools:</strong> FFmpeg, MediaConvert, custom encoders</li>
+                    <li><strong>Audio:</strong> AAC, Opus, multi-language tracks</li>
+                    <li><strong>Subtitles:</strong> WebVTT, SRT, burned-in captions</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">6</span>Adaptive Streaming</h3>
+                <p>Dynamic quality adjustment protocols</p>
+                <ul class="component-list">
+                    <li><strong>HLS (Apple):</strong> .m3u8 playlists, TS segments</li>
+                    <li><strong>DASH (MPEG):</strong> .mpd manifests, MP4 segments</li>
+                    <li><strong>Smooth Streaming:</strong> Microsoft protocol</li>
+                    <li><strong>Segment Duration:</strong> 2-10 seconds</li>
+                    <li><strong>ABR Algorithm:</strong> Bandwidth estimation, buffer monitoring</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">7</span>CDN Distribution</h3>
+                <p>Global content delivery network</p>
+                <ul class="component-list">
+                    <li><strong>Netflix Open Connect:</strong> Custom CDN, 17K+ servers</li>
+                    <li><strong>YouTube:</strong> Google Global Cache (GGC)</li>
+                    <li><strong>Third-party CDNs:</strong> Akamai, Cloudflare, Fastly</li>
+                    <li><strong>Edge Locations:</strong> 200+ worldwide PoPs</li>
+                    <li><strong>Cache Strategy:</strong> Hot content prefetch, LRU eviction</li>
+                    <li><strong>Origin Shield:</strong> Reduce origin load</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">8</span>Storage Layer</h3>
+                <p>Multi-tier video storage system</p>
+                <ul class="component-list">
+                    <li><strong>Origin Storage:</strong> AWS S3, Google Cloud Storage</li>
+                    <li><strong>Hot Tier:</strong> Recently uploaded, trending videos</li>
+                    <li><strong>Warm Tier:</strong> S3 Infrequent Access</li>
+                    <li><strong>Cold Tier:</strong> Glacier for archives</li>
+                    <li><strong>Replication:</strong> Multi-region for disaster recovery</li>
+                    <li><strong>Total Storage:</strong> Exabytes (Netflix: 100+ PB)</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">9</span>Database Architecture</h3>
+                <p>Polyglot persistence strategy</p>
+                <ul class="component-list">
+                    <li><strong>PostgreSQL:</strong> User data, subscriptions (sharded)</li>
+                    <li><strong>Cassandra:</strong> Video metadata, watch history</li>
+                    <li><strong>MySQL:</strong> Transactional data (Netflix uses it)</li>
+                    <li><strong>DynamoDB:</strong> Session data, device info</li>
+                    <li><strong>Redis:</strong> Caching layer, session store</li>
+                    <li><strong>Elasticsearch:</strong> Search index, logs</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">10</span>Message Queue System</h3>
+                <p>Asynchronous event processing</p>
+                <ul class="component-list">
+                    <li><strong>Apache Kafka:</strong> Event streaming platform</li>
+                    <li><strong>Topics:</strong> video.uploaded, video.encoded, play.events</li>
+                    <li><strong>RabbitMQ:</strong> Task queues for encoding jobs</li>
+                    <li><strong>AWS SQS:</strong> Decoupling services</li>
+                    <li><strong>Throughput:</strong> Millions of events/second</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">11</span>Recommendation Engine</h3>
+                <p>Machine learning personalization</p>
+                <ul class="component-list">
+                    <li><strong>Collaborative Filtering:</strong> User-user, item-item</li>
+                    <li><strong>Content-based:</strong> Video metadata, genres</li>
+                    <li><strong>Deep Learning:</strong> Neural networks (Netflix)</li>
+                    <li><strong>Features:</strong> Watch history, ratings, demographics</li>
+                    <li><strong>A/B Testing:</strong> Multiple algorithm variants</li>
+                    <li><strong>Real-time:</strong> Spark Streaming for live updates</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">12</span>Analytics & Monitoring</h3>
+                <p>Real-time metrics and observability</p>
+                <ul class="component-list">
+                    <li><strong>Play Events:</strong> Start, pause, seek, quality change</li>
+                    <li><strong>QoE Metrics:</strong> Buffering ratio, startup time</li>
+                    <li><strong>Business Metrics:</strong> Watch time, completion rate</li>
+                    <li><strong>Tools:</strong> Kafka → Flink → Elasticsearch</li>
+                    <li><strong>Dashboards:</strong> Grafana, Kibana</li>
+                    <li><strong>Alerting:</strong> PagerDuty, Opsgenie</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">13</span>DRM & Security</h3>
+                <p>Content protection and encryption</p>
+                <ul class="component-list">
+                    <li><strong>Widevine:</strong> Google DRM (L1/L2/L3)</li>
+                    <li><strong>FairPlay:</strong> Apple DRM for iOS/tvOS</li>
+                    <li><strong>PlayReady:</strong> Microsoft DRM</li>
+                    <li><strong>Encryption:</strong> AES-128 segment encryption</li>
+                    <li><strong>License Server:</strong> Token-based key delivery</li>
+                    <li><strong>Watermarking:</strong> Forensic tracking</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">14</span>Live Streaming</h3>
+                <p>Real-time broadcast infrastructure</p>
+                <ul class="component-list">
+                    <li><strong>Ingest:</strong> RTMP, SRT, WebRTC protocols</li>
+                    <li><strong>Transcoding:</strong> Real-time multi-bitrate</li>
+                    <li><strong>Latency:</strong> 2-5 seconds (standard), <1s (low-latency)</li>
+                    <li><strong>LHLS:</strong> Low-latency HLS with 0.5s segments</li>
+                    <li><strong>LL-DASH:</strong> Low-latency DASH</li>
+                    <li><strong>WebRTC:</strong> Sub-second latency for interactive</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">15</span>Thumbnail Generation</h3>
+                <p>Preview images and video sprites</p>
+                <ul class="component-list">
+                    <li><strong>Static Thumbnails:</strong> Multiple resolutions</li>
+                    <li><strong>Video Sprites:</strong> Hover preview (storyboards)</li>
+                    <li><strong>AI Selection:</strong> ML-based best frame detection</li>
+                    <li><strong>Storage:</strong> Separate CDN distribution</li>
+                    <li><strong>Format:</strong> WebP, JPEG with optimization</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3><span class="component-icon">16</span>Search & Discovery</h3>
+                <p>Content indexing and retrieval</p>
+                <ul class="component-list">
+                    <li><strong>Elasticsearch:</strong> Full-text search engine</li>
+                    <li><strong>Indexing:</strong> Titles, descriptions, tags, captions</li>
+                    <li><strong>Ranking:</strong> Relevance score, popularity, recency</li>
+                    <li><strong>Autocomplete:</strong> Typeahead suggestions</li>
+                    <li><strong>Filters:</strong> Duration, upload date, quality</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title">🔄 Video Upload & Processing Flow</h2>
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Client Upload Request</div>
+                    <div class="step-description">User selects video → Request presigned S3 URL from Upload Service → Receive upload URL with metadata form</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Chunked Upload to S3</div>
+                    <div class="step-description">Split video into 5-20MB chunks → Parallel multipart upload → S3 combines chunks → Upload complete callback</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Validation & Metadata Extraction</div>
+                    <div class="step-description">Validate format (MP4, AVI, MOV) → Virus scan → Extract metadata (duration, resolution, codec, bitrate)</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Publish Transcoding Job</div>
+                    <div class="step-description">Create job metadata → Publish to Kafka topic "video.uploaded" → Transcoding workers consume job</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">Multi-Resolution Transcoding</div>
+                    <div class="step-description">Parallel encoding: 4K/1080p/720p/480p/360p/240p → Each resolution: multiple bitrates → Generate HLS/DASH manifests</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="step-title">Thumbnail & Sprite Generation</div>
+                    <div class="step-description">Extract frames at intervals → Generate static thumbnails → Create video sprite sheet for hover preview</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="step-title">CDN Distribution</div>
+                    <div class="step-description">Upload all variants to origin S3 → Sync to CDN edge locations → Prefetch popular content</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">8</div>
+                <div class="step-content">
+                    <div class="step-title">Indexing & Notification</div>
+                    <div class="step-description">Index in Elasticsearch → Update Cassandra metadata → Notify user (email/push) → Video ready for playback</div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">▶️ Video Playback Flow</h2>
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">User Clicks Play</div>
+                    <div class="step-description">Request video metadata → Authenticate user → Check subscription/permissions</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Generate Manifest</div>
+                    <div class="step-description">Playback Service creates HLS/DASH manifest → Include all quality variants → Add DRM info if protected</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">CDN Selection</div>
+                    <div class="step-description">GeoDNS routes to nearest CDN → Client requests manifest from edge → Edge returns playlist with signed URLs</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">DRM License Acquisition</div>
+                    <div class="step-description">Player requests license from DRM server → Validate device/user → Return decryption key</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">Adaptive Bitrate Streaming</div>
+                    <div class="step-description">Start with lowest quality → Measure bandwidth → Request higher quality segments → Adjust based on buffer</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="step-title">Analytics & QoE</div>
+                    <div class="step-description">Send play events to Kafka → Track buffering, quality switches → Calculate QoE score → Real-time dashboards</div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">🎯 Adaptive Bitrate Algorithm</h2>
+        <div class="code-block">
+<span class="highlight"># Simplified ABR (Adaptive Bitrate) Algorithm</span>
+
+class ABRController:
+    def __init__(self):
+        self.buffer_threshold_high = 30  # seconds
+        self.buffer_threshold_low = 10   # seconds
+        self.bitrate_ladder = [300, 700, 1500, 3000, 6000, 12000]  # Kbps
+        self.current_bitrate_index = 0
+        
+    def select_next_quality(self, bandwidth_estimate, buffer_level):
+        """
+        Select optimal quality based on bandwidth and buffer
+        
+        Args:
+            bandwidth_estimate: Measured bandwidth in Kbps
+            buffer_level: Current buffer in seconds
+            
+        Returns:
+            Selected bitrate in Kbps
+        """
+        
+        # Buffer-based logic
+        if buffer_level < self.buffer_threshold_low:
+            # Low buffer: be conservative, drop quality
+            self.current_bitrate_index = max(0, self.current_bitrate_index - 1)
+        elif buffer_level > self.buffer_threshold_high:
+            # High buffer: safe to increase quality
+            max_bitrate = bandwidth_estimate * 0.85  # 85% safety margin
+            
+            for i in range(len(self.bitrate_ladder) - 1, -1, -1):
+                if self.bitrate_ladder[i] <= max_bitrate:
+                    self.current_bitrate_index = i
+                    break
+        
+        return self.bitrate_ladder[self.current_bitrate_index]
+    
+    def estimate_bandwidth(self, segment_size_bytes, download_time_ms):
+        """Calculate bandwidth from segment download"""
+        segment_size_kbits = (segment_size_bytes * 8) / 1000
+        download_time_s = download_time_ms / 1000
+        return segment_size_kbits / download_time_s
+
+<span class="highlight"># Example Usage:</span>
+abr = ABRController()
+
+# Segment downloaded: 2MB in 1.5 seconds, buffer at 15 seconds
+bandwidth = abr.estimate_bandwidth(2 * 1024 * 1024, 1500)  # ~10.9 Mbps
+next_quality = abr.select_next_quality(bandwidth, 15)  # Returns 6000 Kbps
+        </div>
+
+        <h2 class="section-title">📊 Quality Ladder & Encoding Settings</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Quality</th>
+                        <th>Resolution</th>
+                        <th>Video Bitrate</th>
+                        <th>Audio Bitrate</th>
+                        <th>Codec</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>4K Ultra HD</strong></td>
+                        <td>3840×2160</td>
+                        <td>12-25 Mbps</td>
+                        <td>192 Kbps AAC</td>
+                        <td>H.265/VP9</td>
+                        <td>Premium, high-speed WiFi</td>
+                    </tr>
+                    <tr>
+                        <td><strong>1080p Full HD</strong></td>
+                        <td>1920×1080</td>
+                        <td>4-8 Mbps</td>
+                        <td>128 Kbps AAC</td>
+                        <td>H.264</td>
+                        <td>Standard streaming</td>
+                    </tr>
+                    <tr>
+                        <td><strong>720p HD</strong></td>
+                        <td>1280×720</td>
+                        <td>2-4 Mbps</td>
+                        <td>128 Kbps AAC</td>
+                        <td>H.264</td>
+                        <td>HD quality, mobile</td>
+                    </tr>
+                    <tr>
+                        <td><strong>480p SD</strong></td>
+                        <td>854×480</td>
+                        <td>1-1.5 Mbps</td>
+                        <td>96 Kbps AAC</td>
+                        <td>H.264</td>
+                        <td>Standard definition</td>
+                    </tr>
+                    <tr>
+                        <td><strong>360p</strong></td>
+                        <td>640×360</td>
+                        <td>500-800 Kbps</td>
+                        <td>96 Kbps AAC</td>
+                        <td>H.264</td>
+                        <td>Slow connections</td>
+                    </tr>
+                    <tr>
+                        <td><strong>240p</strong></td>
+                        <td>426×240</td>
+                        <td>300-500 Kbps</td>
+                        <td>64 Kbps AAC</td>
+                        <td>H.264</td>
+                        <td>Very slow/2G mobile</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title">🗄️ Database Schema</h2>
+        <div class="code-block">
+<span class="highlight">-- Users Table (PostgreSQL - Sharded by user_id)</span>
+CREATE TABLE users (
+    user_id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    subscription_tier VARCHAR(50),  -- free, basic, premium
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP
+);
+
+<span class="highlight">-- Videos Table (Cassandra - Distributed)</span>
+CREATE TABLE videos (
+    video_id UUID PRIMARY KEY,
+    uploader_id BIGINT,
+    title TEXT,
+    description TEXT,
+    duration INT,  -- seconds
+    original_resolution VARCHAR(20),
+    upload_date TIMESTAMP,
+    view_count BIGINT,
+    like_count INT,
+    status VARCHAR(20),  -- processing, ready, failed
+    visibility VARCHAR(20)  -- public, private, unlisted
+);
+
+<span class="highlight">-- Video Variants Table (Cassandra)</span>
+CREATE TABLE video_variants (
+    video_id UUID,
+    quality VARCHAR(20),  -- 4k, 1080p, 720p, etc.
+    codec VARCHAR(20),    -- h264, h265, vp9
+    bitrate INT,          -- Kbps
+    manifest_url TEXT,
+    storage_location TEXT,
+    file_size BIGINT,
+    PRIMARY KEY (video_id, quality, codec)
+);
+
+<span class="highlight">-- Watch History (Cassandra - Time-series)</span>
+CREATE TABLE watch_history (
+    user_id BIGINT,
+    video_id UUID,
+    watched_at TIMESTAMP,
+    watch_duration INT,  -- seconds watched
+    completion_rate FLOAT,
+    device_type VARCHAR(50),
+    PRIMARY KEY ((user_id), watched_at, video_id)
+) WITH CLUSTERING ORDER BY (watched_at DESC);
+
+<span class="highlight">-- Recommendations Cache (Redis)</span>
+Key: user:{user_id}:recommendations
+Value: JSON list of video_ids with scores
+TTL: 3600 seconds (1 hour)
+
+<span class="highlight">-- Playback Sessions (DynamoDB)</span>
+{
+    "session_id": "uuid",
+    "user_id": 12345,
+    "video_id": "uuid",
+    "start_time": "2024-11-14T10:00:00Z",
+    "events": [
+        {"type": "play", "timestamp": "...", "quality": "1080p"},
+        {"type": "buffer", "timestamp": "...", "duration_ms": 500},
+        {"type": "quality_change", "from": "1080p", "to": "720p"}
+    ]
+}
+        </div>
+
+        <h2 class="section-title">🌐 CDN Architecture</h2>
+        <div class="architecture-grid">
+            <div class="component">
+                <h3>Netflix Open Connect</h3>
+                <ul class="component-list">
+                    <li>17,000+ servers in 1,000+ locations</li>
+                    <li>Deployed at ISP data centers</li>
+                    <li>95%+ traffic served from cache</li>
+                    <li>Custom FreeBSD-based appliances</li>
+                    <li>Overnight prefetch of popular content</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>YouTube GGC (Google Global Cache)</h3>
+                <ul class="component-list">
+                    <li>Free cache nodes for ISPs</li>
+                    <li>200+ edge locations worldwide</li>
+                    <li>Integration with Google's network</li>
+                    <li>Smart routing based on latency</li>
+                    <li>90%+ cache hit ratio</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>Multi-CDN Strategy</h3>
+                <ul class="component-list">
+                    <li>Primary: Own CDN (Open Connect/GGC)</li>
+                    <li>Fallback: Akamai, Cloudflare, Fastly</li>
+                    <li>GeoDNS for optimal routing</li>
+                    <li>Real-time CDN performance monitoring</li>
+                    <li>Automatic failover on issues</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title">🧠 Recommendation Algorithm</h2>
+        <div class="code-block">
+<span class="highlight"># Simplified Recommendation System</span>
+
+class RecommendationEngine:
+    def __init__(self):
+        self.user_item_matrix = None  # Sparse matrix
+        self.item_features = None     # Video metadata embeddings
+        
+    def collaborative_filtering(self, user_id, k=10):
+        """Find similar users and recommend their watched videos"""
+        # Netflix uses matrix factorization (SVD)
+        similar_users = self.find_similar_users(user_id, top_n=100)
+        
+        candidate_videos = []
+        for similar_user in similar_users:
+            watched = self.get_user_history(similar_user)
+            candidate_videos.extend(watched)
+        
+        # Filter out already watched
+        user_watched = self.get_user_history(user_id)
+        candidates = [v for v in candidate_videos if v not in user_watched]
+        
+        # Rank by popularity among similar users
+        ranked = self.rank_by_frequency(candidates)
+        return ranked[:k]
+    
+    def content_based(self, user_id, k=10):
+        """Recommend based on video features"""
+        user_watched = self.get_user_history(user_id)
+        
+        # Create user profile from watched videos
+        user_profile = self.aggregate_features(user_watched)
+        
+        # Find videos similar to user profile
+        all_videos = self.get_all_videos()
+        scored = []
+        
+        for video in all_videos:
+            if video in user_watched:
+                continue
+            similarity = self.cosine_similarity(user_profile, video.features)
+            scored.append((video, similarity))
+        
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return [v[0] for v in scored[:k]]
+    
+    def hybrid_recommendations(self, user_id, k=10):
+        """Combine multiple strategies"""
+        collab_recs = self.collaborative_filtering(user_id, k*2)
+        content_recs = self.content_based(user_id, k*2)
+        trending = self.get_trending_videos(k)
+        
+        # Weighted combination
+        final_recs = (
+            collab_recs[:k//2] +  # 50% collaborative
+            content_recs[:k//3] +  # 33% content-based
+            trending[:k//6]        # 17% trending
+        )
+        
+        return self.deduplicate_and_rank(final_recs, k)
+
+<span class="highlight"># Netflix uses deep learning models trained on:</span>
+# - Watch history (explicit feedback)
+# - Search queries, browsing behavior (implicit)
+# - Time of day, device type (contextual)
+# - Title metadata, cast, genres (content features)
+        </div>
+
+        <h2 class="section-title">⚡ Performance Optimizations</h2>
+        <div class="architecture-grid">
+            <div class="component">
+                <h3>Video Preloading</h3>
+                <ul class="component-list">
+                    <li>Prefetch first 30 seconds on page load</li>
+                    <li>Reduce startup time to <1 second</li>
+                    <li>Smart preloading based on user intent</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>CDN Prefetching</h3>
+                <ul class="component-list">
+                    <li>Predict popular content overnight</li>
+                    <li>Push to edge before demand spike</li>
+                    <li>95%+ cache hit ratio achieved</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>Encoding Optimization</h3>
+                <ul class="component-list">
+                    <li>Per-title encoding (Netflix)</li>
+                    <li>Optimize bitrate for each video</li>
+                    <li>30% bandwidth savings vs fixed ladder</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>Thumbnail Optimization</h3>
+                <ul class="component-list">
+                    <li>WebP format (30% smaller than JPEG)</li>
+                    <li>Lazy loading below fold</li>
+                    <li>Responsive images (srcset)</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>Database Sharding</h3>
+                <ul class="component-list">
+                    <li>User data: shard by user_id</li>
+                    <li>Video metadata: shard by video_id</li>
+                    <li>Consistent hashing for distribution</li>
+                </ul>
+            </div>
+
+            <div class="component">
+                <h3>Caching Strategy</h3>
+                <ul class="component-list">
+                    <li>Redis: User sessions, hot metadata</li>
+                    <li>Memcached: Query result cache</li>
+                    <li>Browser cache: Static assets (24h)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title">🔐 Security & DRM</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DRM System</th>
+                        <th>Platform</th>
+                        <th>Security Level</th>
+                        <th>Key Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Widevine</strong></td>
+                        <td>Android, Web, Chrome</td>
+                        <td>L1 (hardware), L2, L3 (software)</td>
+                        <td>Most widely supported, Google ecosystem</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FairPlay</strong></td>
+                        <td>iOS, macOS, tvOS, Safari</td>
+                        <td>Hardware-backed</td>
+                        <td>Apple ecosystem, mandatory for iOS</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PlayReady</strong></td>
+                        <td>Windows, Xbox, Edge</td>
+                        <td>Hardware/software</td>
+                        <td>Microsoft ecosystem, enterprise support</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title">📈 Real-time Analytics Pipeline</h2>
+        <div class="code-block">
+<span class="highlight"># Event-driven analytics architecture</span>
+
+Client → Play Event → Kafka Topic "play.events"
+                          ↓
+                    Kafka Consumer Groups
+                          ↓
+            ┌─────────────┼─────────────┐
+            ↓             ↓             ↓
+    Apache Flink    Apache Spark   Elasticsearch
+    (Real-time)     (Batch)        (Search/Analytics)
+            ↓             ↓             ↓
+    PostgreSQL      Data Lake      Kibana Dashboards
+    (Metrics)       (S3/HDFS)      (Visualization)
+
+<span class="highlight"># Example play event schema:</span>
+{
+    "event_type": "play",
+    "timestamp": "2024-11-14T10:15:30Z",
+    "user_id": 12345,
+    "video_id": "abc-123",
+    "session_id": "xyz-789",
+    "device": {
+        "type": "mobile",
+        "os": "iOS 17",
+        "app_version": "8.2.1"
+    },
+    "playback": {
+        "quality": "1080p",
+        "bitrate_kbps": 5000,
+        "codec": "h264",
+        "position_seconds": 120,
+        "buffer_level_seconds": 15
+    },
+    "network": {
+        "connection_type": "wifi",
+        "bandwidth_estimate_mbps": 25.5
+    },
+    "qoe": {
+        "startup_time_ms": 850,
+        "buffering_events": 0,
+        "quality_switches": 2
+    }
+}
+
+<span class="highlight"># Real-time aggregations (Flink):</span>
+- Concurrent viewers per video
+- Average quality of experience (QoE)
+- Buffering ratio by region/ISP
+- Popular content trending now
+- Bandwidth consumption per datacenter
+        </div>
+
+    </div>
+</body>
+</html>
