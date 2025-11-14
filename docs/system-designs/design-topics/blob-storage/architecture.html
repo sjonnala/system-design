@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blob Storage System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.storage { background: #dbeafe; color: #1e40af; }
+        .tag.sync { background: #dcfce7; color: #15803d; }
+        .tag.scale { background: #fef3c7; color: #92400e; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 12;
+        }
+
+        .cdn-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .lb-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 12;
+        }
+
+        .services-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 12;
+        }
+
+        .chunking-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .dedup-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .metadata-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 8;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .sync-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+            grid-column: span 6;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 12;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📦 Blob Storage System Design Blueprint</h1>
+        <div class="subtitle">Dropbox + Google Drive + OneDrive Architecture</div>
+        <div class="tags">
+            <span class="tag storage">Petabyte Scale</span>
+            <span class="tag sync">Real-time Sync</span>
+            <span class="tag scale">Globally Distributed</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">💻 CLIENT LAYER</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <div class="component">
+                    <div class="component-name">🖥️ Desktop Client</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>Windows/Mac/Linux</li>
+                            <li>File system monitoring</li>
+                            <li>Background sync daemon</li>
+                            <li>Local cache</li>
+                            <li>Conflict resolution UI</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">📱 Mobile App</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>iOS / Android</li>
+                            <li>Selective sync</li>
+                            <li>Offline access</li>
+                            <li>Photo auto-upload</li>
+                            <li>Push notifications</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">🌐 Web App</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>React / Vue.js</li>
+                            <li>WebSockets for sync</li>
+                            <li>Progressive Web App</li>
+                            <li>Online-only mode</li>
+                            <li>Collaborative editing</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">🔌 API/SDK</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>RESTful API</li>
+                            <li>OAuth 2.0</li>
+                            <li>Third-party integrations</li>
+                            <li>Developer SDKs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS / WebSocket Connections</div>
+        </div>
+
+        <!-- CDN -->
+        <div class="section cdn-section">
+            <div class="section-title">⚡ CDN / EDGE NETWORK</div>
+            <div class="component">
+                <div class="component-name">CloudFront / Fastly / Akamai</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>File Downloads:</strong> Cached file chunks</li>
+                        <li><strong>Static Assets:</strong> Web UI, thumbnails</li>
+                        <li><strong>Edge Locations:</strong> 200+ globally</li>
+                        <li><strong>SSL/TLS:</strong> Termination at edge</li>
+                        <li><strong>DDoS Protection:</strong> AWS Shield</li>
+                        <li><strong>Smart Routing:</strong> Latency-based</li>
+                    </ul>
+                    <div class="code-snippet">
+Cache-Control: public, max-age=31536000
+X-Cache: HIT
+Content-Encoding: gzip</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section lb-section">
+            <div class="section-title">⚖️ LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Layer 7 load balancing</li>
+                        <li>Sticky sessions (user affinity)</li>
+                        <li>Health checks (every 10s)</li>
+                        <li>Auto-scaling integration</li>
+                        <li>SSL offloading</li>
+                        <li>WebSocket support</li>
+                    </ul>
+                    <strong>Routing:</strong>
+                    <ul>
+                        <li>/api/upload → Upload cluster</li>
+                        <li>/api/download → Download cluster</li>
+                        <li>/api/sync → Sync cluster</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to API Gateway</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT tokens, OAuth 2.0</li>
+                        <li><strong>Authorization:</strong> User permissions, file access control</li>
+                        <li><strong>Rate Limiting:</strong>
+                            <div class="code-snippet">
+Free: 2GB storage, 10 uploads/hour
+Pro: 2TB storage, unlimited uploads
+Business: Unlimited storage</div>
+                        </li>
+                        <li><strong>Request Routing:</strong> Route to microservices</li>
+                        <li><strong>API Versioning:</strong> /v1, /v2 endpoints</li>
+                        <li><strong>Compression:</strong> Gzip response compression</li>
+                        <li><strong>Throttling:</strong> Prevent abuse</li>
+                        <li><strong>Metrics:</strong> Request tracking, latency monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Microservices -->
+        <div class="section services-section">
+            <div class="section-title">🔧 MICROSERVICES LAYER</div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="component">
+                    <div class="component-name">📤 Upload Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Handle file uploads</li>
+                            <li>Chunking (4MB blocks)</li>
+                            <li>Checksum validation (SHA-256)</li>
+                            <li>Resumable uploads</li>
+                            <li>Parallel chunk upload</li>
+                        </ul>
+                        <div class="code-snippet">
+POST /api/upload/init
+POST /api/upload/chunk
+POST /api/upload/complete</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">📥 Download Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Serve file downloads</li>
+                            <li>Range requests (HTTP 206)</li>
+                            <li>Streaming support</li>
+                            <li>Bandwidth throttling</li>
+                            <li>CDN integration</li>
+                        </ul>
+                        <div class="code-snippet">
+GET /api/download/{fileId}
+Range: bytes=0-4194303</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">📋 Metadata Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>File/folder metadata</li>
+                            <li>Permissions management</li>
+                            <li>Version history</li>
+                            <li>File organization</li>
+                            <li>Quota tracking</li>
+                        </ul>
+                        <div class="code-snippet">
+GET /api/metadata/{fileId}
+PUT /api/metadata/{fileId}</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">🔄 Sync Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Real-time sync coordination</li>
+                            <li>Delta sync algorithm</li>
+                            <li>Conflict detection</li>
+                            <li>WebSocket connections</li>
+                            <li>Client state management</li>
+                        </ul>
+                        <div class="code-snippet">
+WS /sync
+GET /api/sync/delta?since=123456</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">🔗 Sharing Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Share links generation</li>
+                            <li>Permission management</li>
+                            <li>Public/private sharing</li>
+                            <li>Expiration dates</li>
+                            <li>Password protection</li>
+                        </ul>
+                        <div class="code-snippet">
+POST /api/share
+GET /api/share/{token}</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">📚 Version Control Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>File versioning</li>
+                            <li>Version history</li>
+                            <li>Rollback support</li>
+                            <li>Diff calculation</li>
+                            <li>Version cleanup</li>
+                        </ul>
+                        <div class="code-snippet">
+GET /api/versions/{fileId}
+POST /api/restore/{versionId}</div>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">👥 Collaboration Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Real-time collaboration</li>
+                            <li>Presence (who's viewing)</li>
+                            <li>Comments & annotations</li>
+                            <li>Lock management</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">🔍 Search Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Full-text file search</li>
+                            <li>Metadata search</li>
+                            <li>Content indexing</li>
+                            <li>OCR for images</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">🖼️ Preview Service</div>
+                    <div class="component-details">
+                        <strong>Responsibilities:</strong>
+                        <ul>
+                            <li>Thumbnail generation</li>
+                            <li>Document preview</li>
+                            <li>Video transcoding</li>
+                            <li>Format conversion</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chunking Engine -->
+        <div class="section chunking-section">
+            <div class="section-title">✂️ CHUNKING ENGINE</div>
+            <div class="component">
+                <div class="component-name">Intelligent Chunking Algorithm</div>
+                <div class="component-details">
+                    <strong>Fixed-Size Chunking:</strong>
+                    <div class="code-snippet">
+// Split file into 4MB chunks
+chunk_size = 4 * 1024 * 1024  # 4MB
+chunks = []
+for i in range(0, file_size, chunk_size):
+    chunk = file.read(chunk_size)
+    chunk_hash = sha256(chunk)
+    chunks.append({
+        'index': i // chunk_size,
+        'hash': chunk_hash,
+        'size': len(chunk)
+    })</div>
+                    <strong>Content-Defined Chunking (Rabin Fingerprint):</strong>
+                    <ul>
+                        <li>Variable chunk sizes (avg 4MB)</li>
+                        <li>Better deduplication</li>
+                        <li>Rolling hash algorithm</li>
+                        <li>Insert/delete friendly</li>
+                    </ul>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>Resumable uploads</li>
+                        <li>Parallel transfers</li>
+                        <li>Efficient updates (only changed chunks)</li>
+                        <li>Deduplication</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deduplication -->
+        <div class="section dedup-section">
+            <div class="section-title">🔬 DEDUPLICATION ENGINE</div>
+            <div class="component">
+                <div class="component-name">Content-Based Deduplication</div>
+                <div class="component-details">
+                    <strong>Strategy:</strong>
+                    <div class="code-snippet">
+// Check if chunk already exists
+chunk_hash = sha256(chunk_data)
+
+if block_storage.exists(chunk_hash):
+    # Reference existing chunk
+    return chunk_hash
+else:
+    # Store new chunk
+    block_storage.put(chunk_hash, chunk_data)
+    return chunk_hash</div>
+                    <strong>Dedup Levels:</strong>
+                    <ul>
+                        <li><strong>File-level:</strong> Same file → one copy</li>
+                        <li><strong>Chunk-level:</strong> Same chunks → reference count</li>
+                        <li><strong>Cross-user:</strong> Global dedup (privacy-aware)</li>
+                    </ul>
+                    <strong>Storage Savings:</strong>
+                    <ul>
+                        <li>Dropbox: ~50% storage reduction</li>
+                        <li>Google Drive: ~40% reduction</li>
+                        <li>Enterprise: ~60-70% reduction</li>
+                    </ul>
+                    <strong>Reference Counting:</strong>
+                    <div class="code-snippet">
+// Track chunk references
+chunk_refs = {
+    'sha256_hash': {
+        'count': 5,  # 5 files reference this
+        'size': 4194304,
+        'storage_location': 's3://bucket/...'
+    }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metadata Database -->
+        <div class="section metadata-section">
+            <div class="section-title">🗄️ METADATA DATABASE</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL / MySQL (Sharded)</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+-- Files Table
+CREATE TABLE files (
+    file_id UUID PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    parent_folder_id UUID,
+    name VARCHAR(255) NOT NULL,
+    size BIGINT NOT NULL,
+    mime_type VARCHAR(100),
+    created_at TIMESTAMP,
+    modified_at TIMESTAMP,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    version INT DEFAULT 1
+);
+
+-- Chunks Table
+CREATE TABLE chunks (
+    chunk_hash VARCHAR(64) PRIMARY KEY,
+    size INT NOT NULL,
+    storage_location TEXT,
+    reference_count INT DEFAULT 1,
+    created_at TIMESTAMP
+);
+
+-- File Chunks Mapping
+CREATE TABLE file_chunks (
+    file_id UUID,
+    chunk_index INT,
+    chunk_hash VARCHAR(64),
+    PRIMARY KEY (file_id, chunk_index)
+);
+
+-- Sharing Table
+CREATE TABLE shares (
+    share_id UUID PRIMARY KEY,
+    file_id UUID,
+    shared_by BIGINT,
+    shared_with BIGINT,
+    permission VARCHAR(20),  -- read, write
+    expires_at TIMESTAMP
+);</div>
+                    <strong>Sharding Strategy:</strong>
+                    <ul>
+                        <li>Shard by user_id (user data locality)</li>
+                        <li>64 shards initially → scale to 256+</li>
+                        <li>Consistent hashing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <ul>
+                        <li><strong>User Sessions:</strong> TTL: 24 hours</li>
+                        <li><strong>File Metadata:</strong> TTL: 1 hour</li>
+                        <li><strong>Folder Structure:</strong> TTL: 30 min</li>
+                        <li><strong>Permissions:</strong> TTL: 15 min</li>
+                        <li><strong>Chunk Hashes:</strong> TTL: 7 days</li>
+                        <li><strong>Recent Files:</strong> TTL: 10 min</li>
+                    </ul>
+                    <div class="code-snippet">
+# Redis Data Structures
+HSET file:{fileId} metadata {json}
+SMEMBERS user:{userId}:files
+GET chunk:{hash}:exists
+ZADD recent:{userId} {timestamp} {fileId}</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 500K ops/sec</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Hit rate: 90%+ for metadata</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Block Storage -->
+        <div class="section storage-section">
+            <div class="section-title">📦 BLOCK STORAGE LAYER</div>
+            <div class="component">
+                <div class="component-name">Object Storage (S3 / GCS / Azure Blob)</div>
+                <div class="component-details">
+                    <strong>Storage Architecture:</strong>
+                    <div class="code-snippet">
+s3://dropbox-blocks/
+  ├── user-{userId}/
+  │   └── {chunk_hash[0:2]}/{chunk_hash}.blob
+  └── dedup-pool/
+      └── {chunk_hash[0:2]}/{chunk_hash}.blob</div>
+                    <strong>Storage Classes:</strong>
+                    <ul>
+                        <li><strong>Hot (S3 Standard):</strong> Recently accessed files</li>
+                        <li><strong>Warm (S3 IA):</strong> Accessed 1-6 months ago</li>
+                        <li><strong>Cold (S3 Glacier):</strong> Archive (>6 months)</li>
+                        <li><strong>Lifecycle Policies:</strong> Auto-tiering based on access</li>
+                    </ul>
+                    <strong>Redundancy:</strong>
+                    <ul>
+                        <li>99.999999999% (11 9's) durability</li>
+                        <li>3× replication minimum</li>
+                        <li>Cross-region replication for critical data</li>
+                        <li>Erasure coding (6+3 scheme)</li>
+                    </ul>
+                    <strong>Encryption:</strong>
+                    <ul>
+                        <li>At-rest: AES-256</li>
+                        <li>In-transit: TLS 1.3</li>
+                        <li>Client-side encryption option</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Custom Block Storage (Optional)</div>
+                <div class="component-details">
+                    <strong>For ultimate control (like Dropbox Magic Pocket):</strong>
+                    <ul>
+                        <li>Custom-built storage system</li>
+                        <li>SMR drives (high density)</li>
+                        <li>Reed-Solomon erasure coding</li>
+                        <li>50% cost reduction vs S3</li>
+                        <li>Full control over hardware</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka / AWS SQS</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>file.uploaded:</strong> New file event</li>
+                        <li><strong>file.modified:</strong> File change event</li>
+                        <li><strong>file.deleted:</strong> Deletion event</li>
+                        <li><strong>sync.trigger:</strong> Trigger client sync</li>
+                        <li><strong>thumbnail.generate:</strong> Async preview</li>
+                        <li><strong>index.document:</strong> Search indexing</li>
+                    </ul>
+                    <div class="code-snippet">
+// Event Example
+{
+  "eventType": "file.uploaded",
+  "fileId": "abc123",
+  "userId": "user456",
+  "fileName": "photo.jpg",
+  "size": 5242880,
+  "chunks": ["hash1", "hash2", ...],
+  "timestamp": "2025-11-14T10:00:00Z"
+}</div>
+                    <strong>Consumers:</strong>
+                    <ul>
+                        <li>Sync coordinator</li>
+                        <li>Thumbnail generator</li>
+                        <li>Search indexer</li>
+                        <li>Analytics processor</li>
+                        <li>Notification service</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Coordinator -->
+        <div class="section sync-section">
+            <div class="section-title">🔄 SYNC COORDINATOR</div>
+            <div class="component">
+                <div class="component-name">Real-time Synchronization Engine</div>
+                <div class="component-details">
+                    <strong>Sync Algorithm:</strong>
+                    <div class="code-snippet">
+// Client polls for changes
+GET /api/sync/delta?cursor=123456
+
+Response:
+{
+  "cursor": 123458,
+  "has_more": false,
+  "entries": [
+    {
+      "type": "file",
+      "action": "modified",
+      "file_id": "abc",
+      "version": 2,
+      "chunks": [...]
+    }
+  ]
+}</div>
+                    <strong>Conflict Resolution:</strong>
+                    <ul>
+                        <li><strong>Last-Writer-Wins:</strong> Timestamp-based</li>
+                        <li><strong>Version Vector:</strong> Distributed versioning</li>
+                        <li><strong>Manual:</strong> User chooses (conflict copy)</li>
+                        <li><strong>Operational Transform:</strong> For collaborative editing</li>
+                    </ul>
+                    <strong>WebSocket for Real-time:</strong>
+                    <div class="code-snippet">
+WS /sync/ws
+→ Client: {"type": "subscribe", "userId": "123"}
+← Server: {"type": "file.modified", "fileId": "abc"}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="section search-section">
+            <div class="section-title">🔍 SEARCH & INDEXING</div>
+            <div class="component">
+                <div class="component-name">Elasticsearch</div>
+                <div class="component-details">
+                    <strong>Indexed Fields:</strong>
+                    <ul>
+                        <li>File names & paths</li>
+                        <li>File content (text extraction)</li>
+                        <li>Metadata (tags, dates)</li>
+                        <li>OCR results (images)</li>
+                        <li>Shared users</li>
+                    </ul>
+                    <div class="code-snippet">
+POST /files/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "quarterly report 2024",
+      "fields": ["name", "content", "tags"]
+    }
+  },
+  "highlight": {
+    "fields": {"content": {}}
+  }
+}</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Full-text search</li>
+                        <li>Fuzzy matching</li>
+                        <li>Filters (date, type, size)</li>
+                        <li>Autocomplete suggestions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING, LOGGING & OBSERVABILITY</div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="component">
+                    <div class="component-name">Prometheus + Grafana</div>
+                    <div class="component-details">
+                        <strong>Metrics:</strong>
+                        <ul>
+                            <li>Upload/download throughput</li>
+                            <li>API latency (P50, P95, P99)</li>
+                            <li>Storage usage per user</li>
+                            <li>Cache hit ratio</li>
+                            <li>Sync lag time</li>
+                            <li>Dedup ratio</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">ELK Stack</div>
+                    <div class="component-details">
+                        <strong>Logs:</strong>
+                        <ul>
+                            <li>Upload/download logs</li>
+                            <li>Error tracking</li>
+                            <li>Audit trails</li>
+                            <li>Security events</li>
+                            <li>Sync conflicts</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="component">
+                    <div class="component-name">Distributed Tracing</div>
+                    <div class="component-details">
+                        <strong>Tools:</strong>
+                        <ul>
+                            <li>Jaeger / Zipkin</li>
+                            <li>Request flow tracking</li>
+                            <li>Latency breakdown</li>
+                            <li>Dependency mapping</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & SCALE</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">500M</div>
+                <div class="metric-label">Registered Users (Dropbox scale)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">2+ Exabytes</div>
+                <div class="metric-label">Total storage (2 billion GB)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1M QPS</div>
+                <div class="metric-label">Metadata read requests</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100K QPS</div>
+                <div class="metric-label">Upload/download throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">Metadata query latency (P95)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;3 seconds</div>
+                <div class="metric-label">Sync propagation time</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">50%</div>
+                <div class="metric-label">Storage saved via deduplication</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 CRITICAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Chunking & Deduplication</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Fixed-Size Chunking:</strong> Simple, 4MB chunks, good for small edits</li>
+                    <li><strong>Content-Defined:</strong> Rabin fingerprint, better dedup, variable size</li>
+                    <li><strong>Dedup Levels:</strong> File-level (easy), chunk-level (complex), cross-user (privacy concerns)</li>
+                    <li><strong>Reference Counting:</strong> Track chunk usage, garbage collection</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Sync Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Long Polling:</strong> Client polls every 30s, simple but inefficient</li>
+                    <li><strong>WebSocket:</strong> Real-time bi-directional, push updates instantly</li>
+                    <li><strong>Delta Sync:</strong> Only sync changes since last cursor</li>
+                    <li><strong>Conflict Resolution:</strong> Last-writer-wins, version vectors, user choice</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security & Privacy</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Encryption:</strong> AES-256 at rest, TLS 1.3 in transit</li>
+                    <li><strong>Zero-Knowledge:</strong> Client-side encryption (Tresorit, SpiderOak)</li>
+                    <li><strong>Access Control:</strong> Fine-grained permissions (read, write, share)</li>
+                    <li><strong>Audit Logs:</strong> Track all file operations</li>
+                    <li><strong>2FA:</strong> Multi-factor authentication</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Performance Optimizations</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Parallel Uploads:</strong> Multiple chunks simultaneously</li>
+                    <li><strong>Resumable Uploads:</strong> Resume from failure point</li>
+                    <li><strong>Smart Sync:</strong> Prioritize recently modified files</li>
+                    <li><strong>Bandwidth Throttling:</strong> Limit impact on network</li>
+                    <li><strong>Local Caching:</strong> Client-side cache for offline access</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Patterns</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services, auto-scaling</li>
+                    <li><strong>Database Sharding:</strong> Shard by user_id for data locality</li>
+                    <li><strong>Multi-Region:</strong> Data residency, latency optimization</li>
+                    <li><strong>CDN:</strong> Global file distribution</li>
+                    <li><strong>Rate Limiting:</strong> Prevent abuse, fair usage</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Failure Scenarios</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Upload Failure:</strong> Resume from last successful chunk</li>
+                    <li><strong>Sync Conflict:</strong> Create conflict copy, user resolves</li>
+                    <li><strong>Storage Failure:</strong> Replicate to backup region</li>
+                    <li><strong>Metadata Loss:</strong> Rebuild from block storage checksums</li>
+                    <li><strong>Network Partition:</strong> Queue operations, sync when reconnected</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Blob Storage at Scale:</strong> Chunking + Deduplication + Sync = The foundation of cloud storage</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Java/Go • Python • PostgreSQL • Redis • S3/GCS • Kafka • Kubernetes • React</p>
+    </div>
+</div>
+</body>
+</html>

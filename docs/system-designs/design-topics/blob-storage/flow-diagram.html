@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blob Storage Architecture Flow Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #6366f1;
+            color: white;
+        }
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .diagram-container.active {
+            display: block;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+        }
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #6366f1;
+        }
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+        .flow-description strong {
+            color: #6366f1;
+        }
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #6366f1;
+        }
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📦 Blob Storage Architecture Flow Diagram</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('upload')">📤 File Upload Flow</button>
+            <button class="tab" onclick="showDiagram('download')">📥 File Download Flow</button>
+            <button class="tab" onclick="showDiagram('sync')">🔄 Sync Flow</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System</button>
+        </div>
+    </div>
+
+    <!-- Upload Flow (placeholder with text description for now due to size) -->
+    <div id="upload-diagram" class="diagram-container active">
+        <div class="flow-description">
+            <h3>📤 File Upload Flow (Chunked & Deduplicated)</h3>
+            <ol>
+                <li><strong>User Selects File:</strong> User drags file to desktop client or web UI</li>
+                <li><strong>Client Chunks File:</strong> Split file into 4MB chunks using content-defined chunking (Rabin fingerprint)</li>
+                <li><strong>Calculate Checksums:</strong> SHA-256 hash for each chunk</li>
+                <li><strong>Check Existing Chunks:</strong> Query metadata service: which chunks already exist?
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>✅ Chunk exists → Skip upload (deduplication)</li>
+                        <li>❌ Chunk new → Upload to block storage</li>
+                    </ul>
+                </li>
+                <li><strong>Parallel Upload:</strong> Upload new chunks in parallel (10 concurrent connections)</li>
+                <li><strong>Resumable:</strong> If connection fails, resume from last successful chunk</li>
+                <li><strong>Create Metadata:</strong> Save file metadata + chunk mapping to database</li>
+                <li><strong>Publish Event:</strong> Kafka event triggers: thumbnail generation, search indexing, sync notification</li>
+                <li><strong>Notify Clients:</strong> Push notification to all synced devices via WebSocket</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Key Optimization:</strong> Deduplication can reduce storage by 50%. If user uploads file that already exists, only metadata is created!
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding: 20px; background: #f0f9ff; border-radius: 10px;">
+            <h4 style="color: #0369a1; margin-bottom: 10px;">Example: 100MB File Upload</h4>
+            <pre style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto;">
+File: report.pdf (100MB)
+Chunks: 25 chunks × 4MB = 100MB
+
+Chunking: ~2 seconds
+Hash calculation: ~3 seconds
+Dedup check: ~500ms (Redis)
+Upload new chunks (assume 10 new): 10 × 4MB / 10 Mbps = ~3 seconds
+Metadata save: ~100ms
+Total: ~9 seconds for 100MB file
+
+With 100% dedup (file exists): ~3 seconds (no upload!)
+            </pre>
+        </div>
+    </div>
+
+    <!-- Download Flow -->
+    <div id="download-diagram" class="diagram-container">
+        <div class="flow-description">
+            <h3>📥 File Download Flow</h3>
+            <ol>
+                <li><strong>User Requests File:</strong> Click download in web UI or sync request from desktop client</li>
+                <li><strong>Authenticate & Authorize:</strong> Verify user has permission to access file</li>
+                <li><strong>Fetch Metadata:</strong> Query metadata service for file chunks list</li>
+                <li><strong>Generate Signed URLs:</strong> Create time-limited S3/CDN URLs for each chunk (valid 1 hour)</li>
+                <li><strong>Parallel Download:</strong> Client downloads chunks in parallel from CDN (if cached) or S3</li>
+                <li><strong>Streaming:</strong> Client can start displaying/playing file while downloading (progressive download)</li>
+                <li><strong>Reassemble:</strong> Client concatenates chunks in correct order</li>
+                <li><strong>Verify Integrity:</strong> Validate SHA-256 checksums match</li>
+                <li><strong>Cache Locally:</strong> Store in client local cache for offline access</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dcfce7; border-left: 4px solid #16a34a; border-radius: 5px;">
+                <strong>🚀 CDN Advantage:</strong> 99% of downloads served from CDN edge (10-50ms latency), only 1% hit origin S3 (200-500ms)
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding: 20px; background: #fef3c7; border-radius: 10px;">
+            <h4 style="color: #92400e; margin-bottom: 10px;">Download Performance</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr style="background: #fbbf24; color: white;">
+                    <th style="padding: 10px; text-align: left;">File Size</th>
+                    <th style="padding: 10px; text-align: left;">CDN (99% hit)</th>
+                    <th style="padding: 10px; text-align: left;">Origin S3 (1% miss)</th>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">10MB</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~2 seconds</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~5 seconds</td>
+                </tr>
+                <tr style="background: #fef3c7;">
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">100MB</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~8 seconds</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~25 seconds</td>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">1GB</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~80 seconds</td>
+                    <td style="padding: 10px; border: 1px solid #fbbf24;">~4 minutes</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sync Flow -->
+    <div id="sync-diagram" class="diagram-container">
+        <div class="flow-description">
+            <h3>🔄 Real-time Synchronization Flow</h3>
+            <ol>
+                <li><strong>File Modified Locally:</strong> Desktop client detects file system change (via inotify/FSEvents)</li>
+                <li><strong>Calculate Delta:</strong> Compare with last synced version
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Only changed chunks need re-upload</li>
+                        <li>Delta sync saves bandwidth</li>
+                    </ul>
+                </li>
+                <li><strong>Upload Changes:</strong> Upload only modified chunks to block storage</li>
+                <li><strong>Update Metadata:</strong> Increment file version, update modified timestamp</li>
+                <li><strong>Publish Sync Event:</strong> Kafka event: <code>file.modified</code></li>
+                <li><strong>Sync Coordinator:</strong> Determines which clients need notification</li>
+                <li><strong>WebSocket Push:</strong> Push notification to all active clients
+                    <div style="background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 5px;">
+                        WS Message: {"type": "file.modified", "fileId": "abc", "version": 2}
+                    </div>
+                </li>
+                <li><strong>Clients Pull Changes:</strong> Active clients fetch delta: <code>GET /sync/delta?since=version1</code></li>
+                <li><strong>Download New Chunks:</strong> Only download chunks that changed</li>
+                <li><strong>Apply Changes:</strong> Update local file system</li>
+                <li><strong>Conflict Resolution:</strong> If multiple clients modified simultaneously:
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Last-Writer-Wins:</strong> Use timestamp</li>
+                        <li><strong>Create Conflict Copy:</strong> Save both versions (file.txt vs file_conflict_2025-11-14.txt)</li>
+                        <li><strong>Manual Resolution:</strong> User chooses which version to keep</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        <div style="margin-top: 20px; padding: 20px; background: #dbeafe; border-radius: 10px;">
+            <h4 style="color: #1e40af; margin-bottom: 10px;">Sync Strategies Comparison</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr style="background: #3b82f6; color: white;">
+                    <th style="padding: 10px; text-align: left;">Strategy</th>
+                    <th style="padding: 10px; text-align: left;">Latency</th>
+                    <th style="padding: 10px; text-align: left;">Pros</th>
+                    <th style="padding: 10px; text-align: left;">Cons</th>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 10px; border: 1px solid #3b82f6;"><strong>Long Polling</strong></td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">~30 seconds</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">Simple, works everywhere</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">High latency, inefficient</td>
+                </tr>
+                <tr style="background: #dbeafe;">
+                    <td style="padding: 10px; border: 1px solid #3b82f6;"><strong>WebSocket</strong></td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">~1 second</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">Real-time, efficient</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">Complex, connection management</td>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 10px; border: 1px solid #3b82f6;"><strong>Hybrid</strong></td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">~2-5 seconds</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">Balance of both</td>
+                    <td style="padding: 10px; border: 1px solid #3b82f6;">Medium complexity</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Full System -->
+    <div id="full-diagram" class="diagram-container">
+        <div style="padding: 20px; background: #f8fafc; border-radius: 10px;">
+            <h3 style="color: #2d3748; margin-bottom: 15px;">🏗️ Complete Blob Storage System Architecture</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #3b82f6;">
+                    <h4 style="color: #1e40af; margin-bottom: 8px;">Client Layer</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>Desktop: Windows, Mac, Linux clients</li>
+                        <li>Mobile: iOS, Android apps</li>
+                        <li>Web: React/Vue.js Progressive Web App</li>
+                        <li>API: RESTful API + SDKs</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #22d3ee;">
+                    <h4 style="color: #0891b2; margin-bottom: 8px;">Edge & Gateway</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>CDN: CloudFront, Fastly (200+ POPs)</li>
+                        <li>Load Balancer: AWS ALB, NGINX</li>
+                        <li>API Gateway: Kong, authentication/rate limiting</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #84cc16;">
+                    <h4 style="color: #65a30d; margin-bottom: 8px;">Core Services</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>Upload/Download: Handle file transfers</li>
+                        <li>Metadata: PostgreSQL sharded by user_id</li>
+                        <li>Sync: Real-time coordination</li>
+                        <li>Sharing: Permission management</li>
+                        <li>Search: Elasticsearch full-text</li>
+                        <li>Preview: Thumbnail/transcoding</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #facc15;">
+                    <h4 style="color: #ca8a04; margin-bottom: 8px;">Storage Layer</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>Block Storage: S3, GCS, Azure Blob</li>
+                        <li>Chunking: 4MB fixed-size or content-defined</li>
+                        <li>Deduplication: 50% storage savings</li>
+                        <li>Tiering: Hot/Warm/Cold (S3 IA, Glacier)</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #a78bfa;">
+                    <h4 style="color: #7c3aed; margin-bottom: 8px;">Caching & Queue</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>Redis: Metadata cache, sessions</li>
+                        <li>Kafka: Event streaming, async processing</li>
+                        <li>Topics: file.uploaded, file.modified, sync.trigger</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #2dd4bf;">
+                    <h4 style="color: #0d9488; margin-bottom: 8px;">Observability</h4>
+                    <ul style="line-height: 1.8; color: #4a5568; font-size: 0.9em;">
+                        <li>Metrics: Prometheus + Grafana</li>
+                        <li>Logs: ELK Stack (Elasticsearch, Logstash, Kibana)</li>
+                        <li>Tracing: Jaeger distributed tracing</li>
+                        <li>Alerts: PagerDuty, OpsGenie</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 10px;">
+            <h4 style="color: #1e40af; margin-bottom: 10px;">Data Flow Summary</h4>
+            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                <p style="line-height: 1.8; color: #1e293b;">
+                    <strong>Upload:</strong> Client → API Gateway → Upload Service → Chunking → Dedup Check → S3 → Metadata DB → Kafka → Sync Notification<br>
+                    <strong>Download:</strong> Client → API Gateway → Metadata Service → Generate S3 URLs → CDN/S3 → Client<br>
+                    <strong>Sync:</strong> File Change → Client Upload → Metadata Update → Kafka Event → WebSocket Push → Other Clients Pull Delta
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">~9 sec</div>
+                <div class="metric-label">100MB file upload (with dedup)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">~3 sec</div>
+                <div class="metric-label">100% dedup (file exists)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">~2 sec</div>
+                <div class="metric-label">10MB download (CDN)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">~1 sec</div>
+                <div class="metric-label">Real-time sync latency (WebSocket)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">50%</div>
+                <div class="metric-label">Storage saved via deduplication</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99%</div>
+                <div class="metric-label">CDN cache hit rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        document.getElementById(type + '-diagram').classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>
