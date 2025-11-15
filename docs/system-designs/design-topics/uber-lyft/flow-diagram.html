@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uber/Lyft Flow Diagrams</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0ea5e9;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 25px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #0ea5e9;
+            color: white;
+        }
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .diagram-container.active {
+            display: block;
+        }
+        .flow-box {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 2px solid #0ea5e9;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .flow-step {
+            background: #f0f9ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0ea5e9;
+            border-radius: 5px;
+        }
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🚗 Uber/Lyft Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Request/Response Flow Visualization</p>
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('ride-request')">🚕 Ride Request Flow</button>
+            <button class="tab" onclick="showDiagram('location')">📍 Location Update Flow</button>
+            <button class="tab" onclick="showDiagram('matching')">🎯 Driver Matching Flow</button>
+            <button class="tab" onclick="showDiagram('trip')">🛣️ Trip Lifecycle Flow</button>
+        </div>
+    </div>
+
+    <!-- Ride Request Flow -->
+    <div id="ride-request-diagram" class="diagram-container active">
+        <div class="flow-box">
+            <h2 style="color: #0369a1; margin-bottom: 20px;">🚕 Ride Request Flow</h2>
+            
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 1: Rider Requests Ride</h3>
+                <p><strong>Client Action:</strong> User opens app, selects pickup & dropoff locations</p>
+                <div class="code-snippet">
+POST /api/v1/rides/request
+{
+  "pickup": {"lat": 37.7749, "lon": -122.4194, "address": "123 Market St"},
+  "dropoff": {"lat": 37.7849, "lon": -122.4094, "address": "456 Mission St"},
+  "car_type": "uberx",
+  "payment_method": "card_ending_1234"
+}
+                </div>
+                <p style="margin-top: 10px;"><strong>Backend:</strong> API Gateway validates token, checks rate limit → forwards to Ride Service</p>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 2: Calculate Fare Estimate</h3>
+                <p><strong>Pricing Service:</strong> Calculates fare based on:</p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Distance (Google Maps API)</li>
+                    <li>Estimated time (traffic data)</li>
+                    <li>Base fare + per mile/minute rates</li>
+                    <li>Surge multiplier (if high demand)</li>
+                </ul>
+                <div class="code-snippet">
+base_fare = 2.50
+distance_fare = distance_km * 1.50
+time_fare = duration_min * 0.25
+surge_multiplier = calculate_surge(pickup_location)
+
+estimated_fare = (base_fare + distance_fare + time_fare) * surge_multiplier
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 3: Find Nearby Drivers</h3>
+                <p><strong>Location Service:</strong> Query Redis Geo index</p>
+                <div class="code-snippet">
+GEORADIUS drivers:online -122.4194 37.7749 5 km WITHDIST ASC
+→ Returns: [driver_123, driver_456, driver_789]
+                </div>
+                <p style="margin-top: 10px;"><strong>Filter:</strong> car_type=uberx, rating>4.5, status=available</p>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 4: Create Trip & Match Driver</h3>
+                <p><strong>Matching Service:</strong> Triggers driver matching algorithm</p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Calculate ETA for each candidate driver</li>
+                    <li>Score drivers (distance, ETA, rating, acceptance rate)</li>
+                    <li>Dispatch to top 3 drivers in parallel</li>
+                    <li>First to accept wins</li>
+                </ul>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 5: Response to Rider</h3>
+                <div class="code-snippet">
+Response: 201 Created
+{
+  "trip_id": "trip_abc123",
+  "state": "REQUESTED",
+  "estimated_fare": {
+    "base": 8.50,
+    "surge_multiplier": 1.5,
+    "total": 12.75
+  },
+  "estimated_wait_time": 3,  // minutes
+  "nearby_drivers_count": 5
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Update Flow -->
+    <div id="location-diagram" class="diagram-container">
+        <div class="flow-box">
+            <h2 style="color: #0369a1; margin-bottom: 20px;">📍 Location Update Flow</h2>
+            
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Background Location Updates (Driver App)</h3>
+                <p><strong>Frequency:</strong> Every 5 seconds when driver is online</p>
+                <div class="code-snippet">
+// Driver app (background service)
+setInterval(async () => {
+  const position = await navigator.geolocation.getCurrentPosition({
+    enableHighAccuracy: true,
+    timeout: 5000
+  });
+
+  // Send to backend via WebSocket
+  websocket.send(JSON.stringify({
+    type: 'location_update',
+    lat: position.coords.latitude,
+    lon: position.coords.longitude,
+    heading: position.coords.heading,
+    speed: position.coords.speed,
+    timestamp: Date.now()
+  }));
+}, 5000);
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Location Service Processing</h3>
+                <p><strong>Receive 400K updates/sec from 2M active drivers</strong></p>
+                <div class="code-snippet">
+# Update Redis Geo index
+GEOADD drivers:online {lon} {lat} {driver_id}
+
+# Update driver metadata
+HMSET driver:{driver_id} lat {lat} lon {lon} heading {heading} speed {speed} updated_at {timestamp}
+EXPIRE driver:{driver_id} 30  # Auto-expire if no update in 30s
+
+# Publish to Kafka (for analytics)
+kafka.send('location.driver.updated', {
+  driver_id, lat, lon, heading, speed, timestamp
+})
+                </div>
+                <p style="margin-top: 10px;"><strong>Performance:</strong> Updates processed in <5ms (P99)</p>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Broadcast to Tracking Riders</h3>
+                <p><strong>WebSocket Push:</strong> If driver has active trip, push location to rider</p>
+                <div class="code-snippet">
+# Get active trip for driver
+trip = redis.hgetall(f"driver:{driver_id}:active_trip")
+
+if trip:
+  # Send location update to rider via WebSocket
+  websocket_manager.send_to_user(trip['rider_id'], {
+    "type": "driver_location",
+    "lat": lat,
+    "lon": lon,
+    "heading": heading,
+    "eta_minutes": calculate_eta(driver, trip['pickup_location'])
+  })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Matching Flow -->
+    <div id="matching-diagram" class="diagram-container">
+        <div class="flow-box">
+            <h2 style="color: #0369a1; margin-bottom: 20px;">🎯 Driver Matching Flow</h2>
+            
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 1: Get Nearby Drivers</h3>
+                <div class="code-snippet">
+# Redis Geo query (5km radius)
+candidates = GEORADIUS drivers:online {pickup_lon} {pickup_lat} 5 km WITHDIST ASC
+
+# Result: [
+#   {driver_id: 'driver_123', distance: 0.8},
+#   {driver_id: 'driver_456', distance: 1.2},
+#   {driver_id: 'driver_789', distance: 2.5}
+# ]
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 2: Filter Candidates</h3>
+                <p><strong>Criteria:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Car type matches request (uberx, uberxl, etc.)</li>
+                    <li>Driver rating ≥ 4.5 stars</li>
+                    <li>Driver is available (not on another trip)</li>
+                    <li>Driver acceptance rate > 80%</li>
+                </ul>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 3: Calculate ETA for Each Driver</h3>
+                <div class="code-snippet">
+for driver in candidates:
+  # Get route from driver location to pickup
+  route = google_maps.get_directions(
+    origin=driver.location,
+    destination=pickup_location,
+    mode='driving',
+    traffic_model='best_guess'
+  )
+  
+  driver.eta = route.duration_in_traffic
+  driver.route_polyline = route.overview_polyline
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 4: Score & Rank Drivers</h3>
+                <div class="code-snippet">
+for driver in candidates:
+  score = (
+    100 / (1 + driver.distance) +           # 40% weight
+    50 / (1 + driver.eta / 60) +            # 25% weight (ETA in minutes)
+    driver.rating * 10 +                    # 25% weight
+    driver.acceptance_rate * 10 +           # 10% weight
+    (10 if is_heading_towards(driver, pickup) else 0)  # Bonus
+  )
+  driver.match_score = score
+
+candidates.sort(key=lambda d: d.match_score, reverse=True)
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">Step 5: Dispatch to Top Drivers (Parallel)</h3>
+                <p><strong>Send ride request to top 3 drivers simultaneously</strong></p>
+                <div class="code-snippet">
+top_drivers = candidates[:3]
+
+for driver in top_drivers:
+  # Send push notification
+  fcm.send({
+    to: driver.fcm_token,
+    priority: 'high',
+    notification: {
+      title: 'New Ride Request',
+      body: f'{eta} min away • ${fare} fare'
+    },
+    data: {
+      trip_id, pickup_lat, pickup_lon, 
+      dropoff_lat, dropoff_lon, fare
+    }
+  })
+
+# Wait for first acceptance (15s timeout)
+accepted_driver = await wait_for_acceptance(trip_id, timeout=15)
+
+if accepted_driver:
+  # Cancel other requests
+  for d in top_drivers:
+    if d.id != accepted_driver.id:
+      cancel_request(d.id, trip_id)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Lifecycle Flow -->
+    <div id="trip-diagram" class="diagram-container">
+        <div class="flow-box">
+            <h2 style="color: #0369a1; margin-bottom: 20px;">🛣️ Trip Lifecycle Flow</h2>
+            
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">State Transition Diagram</h3>
+                <div class="code-snippet">
+REQUESTED
+    ↓ (driver accepts)
+DRIVER_ASSIGNED
+    ↓ (driver arrives at pickup)
+DRIVER_ARRIVED
+    ↓ (rider gets in car, driver taps "Start Trip")
+TRIP_STARTED
+    ↓ (destination reached, driver taps "End Trip")
+TRIP_COMPLETED
+    ↓ (payment processed)
+PAYMENT_PROCESSED
+    ↓ (both parties rate each other)
+RATED
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">State: DRIVER_ASSIGNED</h3>
+                <p><strong>Actions:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Update trip state in PostgreSQL & Redis</li>
+                    <li>Send push notification to rider (driver details)</li>
+                    <li>Start ETA tracking (update every 10 seconds)</li>
+                    <li>Enable real-time location tracking for rider</li>
+                </ul>
+                <div class="code-snippet">
+db.update_trip(trip_id, {
+  state: 'DRIVER_ASSIGNED',
+  driver_id: driver_id,
+  assigned_at: now()
+})
+
+websocket.send_to_rider(rider_id, {
+  event: 'driver_assigned',
+  driver: {
+    name, photo, rating, car_make, car_model, license_plate
+  },
+  eta_minutes: 3
+})
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">State: TRIP_STARTED</h3>
+                <p><strong>Actions:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Start fare meter (distance + time tracking)</li>
+                    <li>Record trip route (polyline for receipt)</li>
+                    <li>Update both apps with "Trip in Progress"</li>
+                </ul>
+                <div class="code-snippet">
+# Start fare calculation
+trip.start_time = now()
+trip.start_location = driver.current_location
+
+# Track route in background
+setInterval(() => {
+  trip.route_polyline.append(driver.current_location)
+  trip.distance_traveled += distance_since_last_update()
+}, 10000)  # Every 10 seconds
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <h3 style="color: #0c4a6e; margin-bottom: 10px;">State: TRIP_COMPLETED → Payment</h3>
+                <p><strong>Calculate Final Fare:</strong></p>
+                <div class="code-snippet">
+base_fare = 2.50
+distance_fare = trip.distance_traveled_km * 1.50  // per km
+time_fare = trip.duration_minutes * 0.25           // per minute
+surge_multiplier = trip.surge_multiplier
+tip = rider_selected_tip
+
+final_fare = (base_fare + distance_fare + time_fare) * surge_multiplier + tip
+
+# Process payment via Stripe
+payment_result = stripe.charge.create({
+  amount: final_fare * 100,  // cents
+  currency: 'usd',
+  customer: rider.stripe_customer_id,
+  idempotency_key: f'trip:{trip_id}',
+  metadata: {trip_id, rider_id, driver_id}
+})
+
+# Update trip & notify both parties
+db.update_trip(trip_id, {
+  state: 'PAYMENT_PROCESSED',
+  final_fare: final_fare,
+  payment_id: payment_result.id
+})
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        document.getElementById(type + '-diagram').classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>
