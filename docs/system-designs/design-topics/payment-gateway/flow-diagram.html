@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway Flow Diagrams</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #7c3aed;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #7c3aed;
+        }
+
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #7c3aed;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -1000; }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #cbd5e0;
+        }
+
+        .code-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💳 Payment Gateway Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Payment Processing Flows</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('authorization')">💰 Authorization Flow</button>
+            <button class="tab" onclick="showDiagram('3ds')">🔐 3DS Authentication</button>
+            <button class="tab" onclick="showDiagram('refund')">↩️ Refund Flow</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System Flow</button>
+        </div>
+    </div>
+
+    <!-- Authorization Flow -->
+    <div id="authorization-diagram" class="diagram-container active">
+        <div style="background: white; padding: 30px; border-radius: 15px; border: 2px solid #e2e8f0;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 20px;">💰 Payment Authorization & Capture Flow</h2>
+
+            <div style="font-family: monospace; font-size: 0.9em; line-height: 2;">
+<pre style="color: #1e293b;">
+┌─────────────┐
+│  Merchant   │ Creates payment intent
+│ Application │
+└──────┬──────┘
+       │ POST /v1/payment-intents
+       │ {amount: 1999, currency: "usd", payment_method: "pm_xxx"}
+       │ Idempotency-Key: uuid-v4
+       ▼
+┌──────────────────────────────────────┐
+│       API Gateway                    │
+│  1. Validate API key                 │
+│  2. Check idempotency key            │────────┐
+│  3. Rate limit check (1000/min)      │        │ Redis Cache
+│  4. Request schema validation        │◀───────┘ GET idempotency:uuid
+└──────┬───────────────────────────────┘        │ → Return cached if exists
+       │                                         │ → Continue if new
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service (Core Engine)     │
+│                                      │
+│  Step 1: Create Payment Intent      │
+│  ────────────────────────────────    │
+│  • Generate UUID                     │
+│  • Set status = PENDING              │
+│  • Store in PostgreSQL               │
+│                                      │
+│  Step 2: Fraud Check (Async)        │───────┐
+│  ────────────────────────────────    │       │
+│  • Enqueue fraud.check event         │       ▼
+└──────┬───────────────────────────────┘  ┌─────────────────┐
+       │                                  │ Fraud Service   │
+       │                                  │ • Velocity check│
+       │                                  │ • ML model      │
+       │                                  │ • Risk score    │
+       │                                  └────────┬────────┘
+       │ Return payment_intent                    │
+       │ {id: pi_xxx, status: "requires_confirmation"}
+       ▼                                           │
+┌─────────────┐                                   │
+│  Merchant   │ Display payment UI                │
+└──────┬──────┘                                   │
+       │ Customer enters card details             │
+       │ (Tokenized by Stripe.js - PCI compliant) │
+       │                                           │
+       │ POST /v1/payment-intents/{id}/confirm    │
+       │ {payment_method: "pm_card_visa"}         │
+       ▼                                           │
+┌──────────────────────────────────────┐          │
+│    Payment Service                   │          │
+│                                      │◀─────────┘
+│  Step 3: Authorize Payment           │ Fraud result (risk_score: 0.15)
+│  ────────────────────────────────    │
+│  • Validate fraud score (< 0.5)      │
+│  • Update status = AUTHORIZING       │
+│  • Call processor API                │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│  Payment Processor Adapter           │
+│  (Circuit Breaker Pattern)           │
+│                                      │
+│  • Timeout: 10s connect, 30s read    │
+│  • Retry: 3 attempts with jitter     │
+│  • Fallback: Route to backup         │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│         Stripe API                   │
+│  POST /v1/charges                    │
+│                                      │
+│  • Validate card (Luhn algorithm)    │
+│  • Check available balance           │
+│  • Contact issuing bank              │
+│  • Reserve funds (authorization)     │
+│  • Return authorization code         │
+└──────┬───────────────────────────────┘
+       │
+       │ Response: {status: "succeeded", auth_code: "123456"}
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service                   │
+│                                      │
+│  Step 4: Update Transaction (ACID)  │
+│  ────────────────────────────────    │
+│  BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+│                                      │
+│  UPDATE payment_transactions SET     │
+│    status = 'AUTHORIZED',            │
+│    authorized_amount = 19.99,        │
+│    authorization_code = '123456',    │
+│    authorization_expires_at = NOW() + INTERVAL '7 days',
+│    version = version + 1             │
+│  WHERE                               │
+│    id = 'pi_xxx'                     │
+│    AND status = 'PENDING'            │
+│    AND version = 1;                  │
+│                                      │
+│  INSERT INTO transaction_events (...); -- Audit log
+│                                      │
+│  COMMIT;                             │
+└──────┬───────────────────────────────┘
+       │
+       │ Enqueue webhook event
+       ▼
+┌──────────────────────────────────────┐
+│         Kafka                        │
+│  Topic: payment.authorized           │
+│  {id: pi_xxx, status: "authorized"}  │
+└──────┬──────────┬────────────────────┘
+       │          │
+       │          └─────────────────────┐
+       ▼                                ▼
+┌──────────────┐              ┌─────────────────┐
+│   Webhook    │              │   Analytics     │
+│   Service    │              │   Consumer      │
+│              │              │                 │
+│ • Deliver to │              │ • Store in      │
+│   merchant   │              │   ClickHouse    │
+│ • Retry 5x   │              │ • Update metrics│
+└──────────────┘              └─────────────────┘
+
+
+═══════════════════════════════════════════════════════════
+PHASE 2: CAPTURE (Transfer Funds)
+═══════════════════════════════════════════════════════════
+
+[Time passes: Hours to days later]
+
+┌─────────────┐
+│  Merchant   │ Ready to capture funds (ship product)
+└──────┬──────┘
+       │ POST /v1/payment-intents/{id}/capture
+       │ {amount: 1999}  // Optional: can capture less
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service                   │
+│                                      │
+│  Step 1: Validate Can Capture        │
+│  ────────────────────────────────    │
+│  • Check status = AUTHORIZED         │
+│  • Check not expired (< 7 days)      │
+│  • Check amount <= authorized_amount │
+│  • Check version (optimistic lock)   │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│  Payment Processor (Stripe)          │
+│  POST /v1/charges/{ch_xxx}/capture   │
+│                                      │
+│  • Transfer reserved funds           │
+│  • Debit customer account            │
+│  • Credit merchant account           │
+└──────┬───────────────────────────────┘
+       │
+       │ Response: {status: "succeeded", captured: true}
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service (ACID Update)     │
+│                                      │
+│  BEGIN TRANSACTION;                  │
+│                                      │
+│  UPDATE payment_transactions SET     │
+│    status = 'CAPTURED',              │
+│    captured_amount = 19.99,          │
+│    captured_at = NOW(),              │
+│    version = version + 1             │
+│  WHERE                               │
+│    id = 'pi_xxx'                     │
+│    AND status = 'AUTHORIZED'         │
+│    AND version = 2;                  │
+│                                      │
+│  INSERT INTO transaction_events (...); -- Audit
+│                                      │
+│  COMMIT;                             │
+└──────┬───────────────────────────────┘
+       │
+       │ Send webhook: payment_intent.succeeded
+       ▼
+┌─────────────┐
+│  Merchant   │ Receive confirmation, fulfill order
+└─────────────┘
+
+</pre>
+            </div>
+        </div>
+
+        <div class="flow-description">
+            <h3>💰 Authorization & Capture Flow Explanation</h3>
+            <ol>
+                <li><strong>Payment Intent Creation:</strong> Merchant creates a payment intent with amount and currency. API Gateway validates the request, checks idempotency key in Redis to prevent duplicates.</li>
+                <li><strong>Fraud Detection:</strong> Async fraud check runs in parallel using ML model + rule engine. Risk score calculated based on velocity, geography, amount anomalies.</li>
+                <li><strong>Authorization:</strong> Payment service calls Stripe API which contacts issuing bank to reserve funds on customer's card. Funds are held for 7 days.</li>
+                <li><strong>ACID Transaction Update:</strong> PostgreSQL transaction updates payment status to AUTHORIZED with authorization code. Uses optimistic locking (version field) to prevent race conditions.</li>
+                <li><strong>Webhook Notification:</strong> Kafka event published, webhook service delivers async notification to merchant with retry logic (exponential backoff).</li>
+                <li><strong>Capture Phase:</strong> When merchant is ready to ship product, they call capture endpoint. This transfers the reserved funds from customer to merchant.</li>
+                <li><strong>Settlement:</strong> Captured payments are batched daily and settled to merchant's bank account (T+2 settlement cycle).</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Key Insight:</strong> Two-phase commit (authorize then capture) allows merchants to validate orders before charging. Authorization can be voided if order is canceled, preventing unnecessary refunds.
+            </div>
+        </div>
+    </div>
+
+    <!-- 3DS Authentication Flow -->
+    <div id="3ds-diagram" class="diagram-container">
+        <div style="background: white; padding: 30px; border-radius: 15px; border: 2px solid #e2e8f0;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 20px;">🔐 3D Secure (3DS) Authentication Flow</h2>
+
+            <div style="font-family: monospace; font-size: 0.9em; line-height: 2;">
+<pre style="color: #1e293b;">
+3DS 2.0: Strong Customer Authentication (SCA) - Required by PSD2 in EU
+
+┌─────────────┐
+│  Customer   │ Initiates payment
+└──────┬──────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service                   │
+│                                      │
+│  • Create payment intent             │
+│  • Determine if 3DS required         │
+│    - Transaction amount > €30        │
+│    - Card issuer requires 3DS        │
+│    - Merchant risk settings          │
+└──────┬───────────────────────────────┘
+       │
+       │ 3DS Required
+       ▼
+┌──────────────────────────────────────┐
+│    3DS Server (Stripe/Adyen)         │
+│                                      │
+│  Step 1: Method URL Call             │
+│  ────────────────────────────────    │
+│  • Collect browser fingerprint       │
+│  • Device info, timezone, screen res │
+│  • Send to card issuer ACS           │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│  Card Issuer ACS (Access Control)    │
+│  (Bank's authentication server)      │
+│                                      │
+│  • Perform frictionless risk check   │
+│  • Analyze transaction patterns      │
+│  • Determine challenge required?     │
+│    - Low risk: Approve (frictionless)│
+│    - High risk: Challenge customer   │
+└──────┬───────────────────────────────┘
+       │
+       ├─────────────────┬──────────────┐
+       │ Low Risk        │ High Risk    │
+       ▼                 ▼              │
+┌──────────────┐  ┌─────────────────────┴────┐
+│ Frictionless │  │  Challenge Flow           │
+│ Approval     │  │                           │
+│ (85% cases)  │  │  • Customer redirected    │
+│              │  │  • Bank's mobile app      │
+│              │  │  • Enter OTP/PIN/biometric│
+│              │  │  • Verify identity        │
+└──────┬───────┘  └────────────┬──────────────┘
+       │                       │
+       └───────────┬───────────┘
+                   ▼
+┌──────────────────────────────────────┐
+│  Card Issuer Response                │
+│                                      │
+│  {                                   │
+│    "authentication_status": "Y",     │  // Y = Success
+│    "eci": "05",                      │  // E-commerce Indicator
+│    "cavv": "base64_encoded",         │  // Auth value
+│    "xid": "transaction_id"           │
+│  }                                   │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│    Payment Service                   │
+│                                      │
+│  • Receive 3DS result                │
+│  • Attach auth data to payment       │
+│  • Proceed with authorization        │
+│  • Liability shift to issuer!        │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│  Payment Processor (Stripe)          │
+│  POST /v1/charges                    │
+│  {                                   │
+│    "three_d_secure": {               │
+│      "authenticated": true,          │
+│      "eci": "05",                    │
+│      "cavv": "..."                   │
+│    }                                 │
+│  }                                   │
+│                                      │
+│  • Lower interchange fees            │
+│  • Reduced fraud liability           │
+│  • Higher authorization rate         │
+└──────────────────────────────────────┘
+
+
+KEY BENEFITS OF 3DS 2.0:
+═══════════════════════════════════════
+✅ Liability Shift: Fraud chargebacks → Issuing bank (not merchant)
+✅ Lower Fees: Interchange fees reduced for authenticated transactions
+✅ Better UX: Frictionless flow for 85% of transactions (vs 3DS 1.0)
+✅ SCA Compliance: Required by PSD2 for EU transactions
+✅ Higher Auth Rate: Banks approve more 3DS-authenticated payments
+
+EXEMPTIONS (Can skip 3DS):
+═══════════════════════════════════════
+• Low value: < €30
+• Recurring payments (subscription after first auth)
+• Trusted beneficiary (customer whitelisted merchant)
+• Low-risk transaction (based on fraud scoring)
+• Corporate cards
+• Merchant-initiated transactions (MIT)
+</pre>
+            </div>
+        </div>
+
+        <div class="flow-description">
+            <h3>🔐 3D Secure Authentication Explanation</h3>
+            <ol>
+                <li><strong>3DS Trigger:</strong> Payment service determines if 3DS is required based on amount (>€30), card issuer rules, or merchant settings for SCA compliance.</li>
+                <li><strong>Frictionless Flow (85%):</strong> Bank analyzes device fingerprint, transaction patterns, and risk signals to approve without customer action. Seamless UX!</li>
+                <li><strong>Challenge Flow (15%):</strong> For high-risk transactions, customer is redirected to bank's page/app to enter OTP, PIN, or biometric authentication.</li>
+                <li><strong>Liability Shift:</strong> Once 3DS authentication succeeds, fraud liability shifts from merchant to issuing bank. Massive risk reduction!</li>
+                <li><strong>Lower Fees:</strong> Authenticated transactions qualify for lower interchange fees from card networks (Visa/Mastercard).</li>
+                <li><strong>Higher Authorization Rate:</strong> Banks approve 3DS-authenticated transactions at higher rates (95%+ vs 85% for non-3DS).</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dcfce7; border-left: 4px solid #10b981; border-radius: 5px;">
+                <strong>💡 Pro Tip:</strong> Implement adaptive 3DS - only trigger when required by regulation or fraud rules. Over-using 3DS reduces conversion (7-10% drop in checkout completion).
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Flow -->
+    <div id="refund-diagram" class="diagram-container">
+        <div style="background: white; padding: 30px; border-radius: 15px; border: 2px solid #e2e8f0;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 20px;">↩️ Refund Processing Flow</h2>
+
+            <div style="font-family: monospace; font-size: 0.9em; line-height: 2;">
+<pre style="color: #1e293b;">
+┌─────────────┐
+│  Merchant   │ Customer requests refund
+└──────┬──────┘
+       │ POST /v1/refunds
+       │ {
+       │   "payment_intent": "pi_xxx",
+       │   "amount": 1999,  // Full or partial
+       │   "reason": "requested_by_customer"
+       │ }
+       │ Idempotency-Key: uuid-v4
+       ▼
+┌──────────────────────────────────────┐
+│       API Gateway                    │
+│  • Validate API key & idempotency    │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│    Refund Service                    │
+│                                      │
+│  Step 1: Validation                  │
+│  ────────────────────────────────    │
+│  • Payment exists & captured?        │
+│  • Refund amount valid?              │
+│  • Not already fully refunded?       │
+│                                      │
+│  SELECT                              │
+│    status,                           │
+│    captured_amount,                  │
+│    refunded_amount                   │
+│  FROM payment_transactions           │
+│  WHERE id = 'pi_xxx';                │
+│                                      │
+│  Validation checks:                  │
+│  ✓ status = 'CAPTURED'               │
+│  ✓ refund_amount <= (captured - refunded)
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│  Payment Processor (Stripe)          │
+│  POST /v1/refunds                    │
+│                                      │
+│  • Initiate refund with card network │
+│  • Debit merchant account            │
+│  • Credit customer account           │
+│  • Returns refund ID                 │
+└──────┬───────────────────────────────┘
+       │
+       │ Response: {id: re_xxx, status: "succeeded"}
+       ▼
+┌──────────────────────────────────────┐
+│    Refund Service (ACID Update)      │
+│                                      │
+│  BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+│                                      │
+│  -- Update original payment          │
+│  UPDATE payment_transactions SET     │
+│    refunded_amount = refunded_amount + 19.99,
+│    status = CASE                     │
+│      WHEN (refunded_amount + 19.99) = captured_amount
+│        THEN 'REFUNDED'               │
+│      ELSE 'PARTIALLY_REFUNDED'       │
+│    END,                              │
+│    version = version + 1             │
+│  WHERE                               │
+│    id = 'pi_xxx'                     │
+│    AND status IN ('CAPTURED', 'PARTIALLY_REFUNDED')
+│    AND version = 3                   │
+│    AND (refunded_amount + 19.99) <= captured_amount;  -- Safety!
+│                                      │
+│  IF @@ROWCOUNT = 0 THEN              │
+│    ROLLBACK;                         │
+│    RAISE 'Concurrent modification or invalid refund amount';
+│  END IF;                             │
+│                                      │
+│  -- Create refund record             │
+│  INSERT INTO refunds (               │
+│    id, payment_transaction_id,       │
+│    amount, reason, status            │
+│  ) VALUES (                          │
+│    're_xxx', 'pi_xxx',               │
+│    19.99, 'requested_by_customer', 'SUCCEEDED'
+│  );                                  │
+│                                      │
+│  -- Audit log                        │
+│  INSERT INTO transaction_events (    │
+│    transaction_id, event_type, event_data
+│  ) VALUES (                          │
+│    'pi_xxx', 'refund.created', {...} │
+│  );                                  │
+│                                      │
+│  COMMIT;                             │
+└──────┬───────────────────────────────┘
+       │
+       │ Publish event
+       ▼
+┌──────────────────────────────────────┐
+│         Kafka                        │
+│  Topic: payment.refunded             │
+└──────┬───────────────────────────────┘
+       │
+       ├──────────────┬────────────────┐
+       │              │                │
+       ▼              ▼                ▼
+┌──────────┐  ┌───────────┐  ┌─────────────┐
+│ Webhook  │  │ Analytics │  │ Settlement  │
+│ Service  │  │ Service   │  │ Service     │
+│          │  │           │  │             │
+│ Notify   │  │ Track     │  │ Adjust next │
+│ merchant │  │ refund    │  │ payout      │
+│          │  │ metrics   │  │             │
+└──────────┘  └───────────┘  └─────────────┘
+
+
+REFUND TIMELINE:
+═══════════════════════════════════════
+• Instant: Refund initiated in system
+• 5-10 seconds: Card network processes
+• 5-10 days: Customer sees credit on statement
+  (Varies by issuing bank)
+
+
+PARTIAL REFUND EXAMPLE:
+═══════════════════════════════════════
+Original charge: $99.99
+
+Refund #1: $20.00
+  → Status: PARTIALLY_REFUNDED
+  → Refunded amount: $20.00
+  → Remaining: $79.99
+
+Refund #2: $79.99
+  → Status: REFUNDED (fully refunded)
+  → Refunded amount: $99.99
+  → Remaining: $0.00
+
+
+REFUND CONSTRAINTS (Enforced in DB):
+═══════════════════════════════════════
+✓ Can only refund CAPTURED payments
+✓ Total refunds <= captured amount
+✓ Refund window: 180 days from capture
+✗ Cannot refund AUTHORIZED (use void instead)
+✗ Cannot exceed captured amount
+</pre>
+            </div>
+        </div>
+
+        <div class="flow-description">
+            <h3>↩️ Refund Flow Explanation</h3>
+            <ol>
+                <li><strong>Refund Request:</strong> Merchant initiates refund with payment intent ID and amount (full or partial). Idempotency key prevents duplicate refunds.</li>
+                <li><strong>Validation:</strong> System checks payment is captured, not already fully refunded, and refund amount doesn't exceed remaining balance.</li>
+                <li><strong>Processor Call:</strong> Stripe API debits merchant account and credits customer's card through card network.</li>
+                <li><strong>ACID Update:</strong> Database transaction atomically updates refunded amount and payment status (PARTIALLY_REFUNDED or REFUNDED). Optimistic locking prevents race conditions.</li>
+                <li><strong>Settlement Adjustment:</strong> If refund happens before settlement, it's netted from the batch. If after, merchant's next payout is reduced.</li>
+                <li><strong>Customer Timeline:</strong> Customer sees refund on their statement in 5-10 business days (bank-dependent, not instant).</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>⚠️ Important:</strong> Refunds have a 180-day window from capture. After that, must issue credit/store credit. Also, refunds incur processor fees even though money is returned!
+            </div>
+        </div>
+    </div>
+
+    <!-- Full System Flow -->
+    <div id="full-diagram" class="diagram-container">
+        <div style="background: white; padding: 30px; border-radius: 15px; border: 2px solid #e2e8f0;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 20px;">🏗️ Complete Payment Gateway System Flow</h2>
+
+            <div style="font-family: monospace; font-size: 0.85em; line-height: 1.8;">
+<pre style="color: #1e293b;">
+┌──────────────────────────────────────────────────────────────────────┐
+│                    PAYMENT GATEWAY ECOSYSTEM                         │
+└──────────────────────────────────────────────────────────────────────┘
+
+LAYER 1: CLIENT & EDGE
+═══════════════════════════════════════════════════════════════════════
+
+┌────────────┐  ┌────────────┐  ┌────────────┐
+│ Web App    │  │ Mobile App │  │ Server API │
+│ (React)    │  │ (iOS/And.) │  │ (Node.js)  │
+└─────┬──────┘  └─────┬──────┘  └─────┬──────┘
+      │               │               │
+      └───────────────┼───────────────┘
+                      │ HTTPS POST
+                      │ Authorization: Bearer sk_live_...
+                      │ Idempotency-Key: uuid-v4
+                      ▼
+         ┌────────────────────────────┐
+         │   CloudFlare CDN / WAF     │
+         │  • DDoS protection         │
+         │  • TLS termination         │
+         │  • Rate limiting (L7)      │
+         └────────────┬───────────────┘
+                      │
+                      ▼
+         ┌────────────────────────────┐
+         │   API Gateway (Kong)       │
+         │  • API key validation      │
+         │  • JWT verification        │
+         │  • Request validation      │
+         │  • Rate limiting (merchant)│
+         │  • Circuit breaker         │
+         └────────────┬───────────────┘
+                      │
+                      ▼
+
+
+LAYER 2: CORE SERVICES
+═══════════════════════════════════════════════════════════════════════
+
+      ┌───────────────┼────────────────┐
+      │               │                │
+      ▼               ▼                ▼
+┌──────────┐   ┌──────────┐    ┌───────────┐
+│ Payment  │   │  Fraud   │    │  Webhook  │
+│ Service  │──▶│ Service  │    │  Service  │
+└────┬─────┘   └────┬─────┘    └─────┬─────┘
+     │              │                 │
+     │         ┌────▼────┐            │
+     │         │   ML    │            │
+     │         │  Model  │            │
+     │         └─────────┘            │
+     │                                │
+     ▼                                │
+┌────────────────────────────────┐   │
+│ Payment Processor Adapter      │   │
+│  • Circuit breaker             │   │
+│  • Retry with jitter           │   │
+│  • Smart routing               │   │
+│  • Timeout handling            │   │
+└────┬───────────────────────────┘   │
+     │                                │
+     ├─────────┬──────────┬──────────┤
+     ▼         ▼          ▼          │
+┌────────┐ ┌──────┐  ┌────────┐     │
+│ Stripe │ │ Visa │  │ PayPal │     │
+│  (80%) │ │Direct│  │  (15%) │     │
+└────────┘ └──────┘  └────────┘     │
+     │         │          │          │
+     └─────────┴──────────┴──────────┘
+                  │
+                  ▼
+
+
+LAYER 3: DATA & MESSAGING
+═══════════════════════════════════════════════════════════════════════
+
+     ┌────────────┴────────────┐
+     │                         │
+     ▼                         ▼
+┌──────────────┐      ┌────────────────┐
+│ PostgreSQL   │      │     Redis      │
+│ (Primary)    │      │    Cluster     │
+│              │      │                │
+│ • ACID       │      │ • Idempotency  │
+│ • Txn events │      │ • Rate limits  │
+│ • SERIALIZED │      │ • Sessions     │
+└──────┬───────┘      └────────────────┘
+       │
+       │ Replication
+       ▼
+┌──────────────┐      ┌────────────────┐
+│ Read Replicas│◀─┐   │     Kafka      │
+│   (3x)       │  │   │                │
+└──────────────┘  │   │ Topics:        │
+                  │   │ • payment.*    │
+┌──────────────┐  │   │ • fraud.*      │
+│   Backups    │◀─┘   │ • webhook.*    │
+│              │      └────────┬───────┘
+│ • Daily snap │               │
+│ • WAL archive│               │
+│ • PITR       │               │
+└──────────────┘               │
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                    ▼                     ▼
+           ┌─────────────┐      ┌─────────────┐
+           │  ClickHouse │      │  Settlement │
+           │    (OLAP)   │      │   Service   │
+           │             │      │             │
+           │ • Analytics │      │ • Daily     │
+           │ • Metrics   │      │   batches   │
+           │ • Dashboards│      │ • Reconcile │
+           └─────────────┘      └─────────────┘
+
+
+LAYER 4: OBSERVABILITY
+═══════════════════════════════════════════════════════════════════════
+
+┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+│  Prometheus    │  │     Jaeger     │  │  ELK Stack     │
+│   + Grafana    │  │   (Tracing)    │  │   (Logs)       │
+│                │  │                │  │                │
+│ • Metrics      │  │ • Distributed  │  │ • Centralized  │
+│ • Alerts       │  │   traces       │  │   logging      │
+│ • Dashboards   │  │ • Performance  │  │ • PII redacted │
+└────────────────┘  └────────────────┘  └────────────────┘
+
+
+CRITICAL DATA FLOWS:
+═══════════════════════════════════════════════════════════════════════
+
+1. HAPPY PATH (Authorization):
+   Client → API GW → Payment Service → Fraud Check (OK)
+   → Stripe → PostgreSQL (ACID) → Kafka → Webhook → Merchant
+
+2. FRAUD DETECTED:
+   Client → API GW → Payment Service → Fraud Check (HIGH RISK)
+   → Decline payment → Kafka → Analytics (fraud metrics)
+
+3. PROCESSOR FAILOVER:
+   Client → API GW → Payment Service → Stripe (DOWN)
+   → Circuit breaker OPEN → Route to PayPal → Success
+
+4. IDEMPOTENCY HIT:
+   Client → API GW → Redis check (key exists)
+   → Return cached response (no processing)
+
+5. SETTLEMENT:
+   Daily cron (2 AM UTC) → Settlement Service
+   → Batch captured payments → Reconcile with processor
+   → Initiate ACH payout → Update merchant balance
+
+
+KEY PATTERNS IMPLEMENTED:
+═══════════════════════════════════════════════════════════════════════
+
+✓ ACID Transactions      (PostgreSQL SERIALIZABLE)
+✓ Idempotency            (Redis cache + SHA-256)
+✓ Circuit Breaker        (Hystrix pattern)
+✓ Retry with Backoff     (Exponential jitter)
+✓ Event Sourcing         (Immutable transaction_events)
+✓ CQRS                   (Write to PG, Read from replicas)
+✓ Saga Pattern           (Authorization → Capture)
+✓ Two-Phase Commit       (Auth + Capture phases)
+✓ Optimistic Locking     (Version field)
+✓ Rate Limiting          (Token bucket in Redis)
+✓ Smart Routing          (Health-based processor selection)
+✓ Async Webhooks         (Kafka + retry queue)
+</pre>
+            </div>
+        </div>
+
+        <div class="flow-description">
+            <h3>🏗️ Full System Architecture Explanation</h3>
+            <ol>
+                <li><strong>Edge Layer:</strong> CloudFlare provides DDoS protection, TLS termination, and L7 rate limiting. API Gateway (Kong) handles authentication, validation, and circuit breaking.</li>
+                <li><strong>Core Services:</strong> Payment service orchestrates the payment flow. Fraud service runs ML model + rules. Webhook service delivers async notifications with retry.</li>
+                <li><strong>Processor Integration:</strong> Adapter pattern abstracts different processors. Smart routing based on health checks. Circuit breaker prevents cascading failures.</li>
+                <li><strong>Data Layer:</strong> PostgreSQL with SERIALIZABLE isolation for ACID guarantees. Redis for idempotency, rate limiting, sessions. Read replicas for analytics queries.</li>
+                <li><strong>Event Streaming:</strong> Kafka decouples services. Consumers for webhooks, analytics, settlement. Replay capability for debugging.</li>
+                <li><strong>Observability:</strong> Prometheus for metrics, Jaeger for distributed tracing, ELK for centralized logging with PII redaction.</li>
+                <li><strong>Settlement:</strong> Daily batch job reconciles captured payments, calculates fees, initiates ACH payouts to merchants.</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dcfce7; border-left: 4px solid #10b981; border-radius: 5px;">
+                <strong>💡 Architecture Principles:</strong> This design prioritizes financial integrity (ACID), fault tolerance (circuit breakers), observability (full tracing), and scalability (event-driven, stateless services).
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #065f46;">⚡ Payment Processing Performance</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">&lt;500ms</div>
+                <div class="metric-label">P95 Authorization</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.95%</div>
+                <div class="metric-label">Authorization Success</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0.5%</div>
+                <div class="metric-label">False Positive Fraud</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Frictionless 3DS</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">T+2</div>
+                <div class="metric-label">Settlement Cycle</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Uptime SLA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #10b981;"></div>
+            <span>Success Path</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ef4444;"></div>
+            <span>Error/Decline</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f59e0b;"></div>
+            <span>Async Process</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #7c3aed;"></div>
+            <span>External Service</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #06b6d4;"></div>
+            <span>Database/Cache</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>
