@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location-Based Services System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #10b981;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.geo { background: #dbeafe; color: #1e40af; }
+        .tag.scale { background: #dcfce7; color: #166534; }
+        .tag.performance { background: #fef3c7; color: #92400e; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .cdn-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 4;
+        }
+
+        .geo-router-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 4;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .auth-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 4;
+        }
+
+        .search-service-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .business-service-section {
+            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+            grid-column: span 6;
+        }
+
+        .review-service-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .photo-section {
+            background: linear-gradient(135deg, #fecdd3 0%, #fb7185 100%);
+            grid-column: span 4;
+        }
+
+        .elasticsearch-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .postgis-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .mongodb-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 4;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .s3-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+            grid-column: span 4;
+        }
+
+        .kafka-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+            grid-column: span 4;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+            grid-column: span 6;
+        }
+
+        .geospatial-section {
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #10b981;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #ecfdf5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #10b981;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .geo-visual {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #10b981;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📍 Location-Based Services System Design</h1>
+        <div class="subtitle">Yelp / Google Places Architecture Blueprint</div>
+        <div class="tags">
+            <span class="tag geo">Geospatial Intelligence</span>
+            <span class="tag scale">Globally Distributed</span>
+            <span class="tag performance">Sub-200ms Latency</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👤 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Mobile Apps (iOS/Android)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Native GPS integration</li>
+                        <li>Real-time location updates</li>
+                        <li>Offline maps cache</li>
+                        <li>Push notifications</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="component">
+                <div class="component-name">Web Application</div>
+                <div class="component-details">
+                    <ul>
+                        <li>HTML5 Geolocation API</li>
+                        <li>Interactive maps (Leaflet/Mapbox)</li>
+                        <li>Responsive design</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Location + Search Query</div>
+        </div>
+
+        <!-- CDN Layer -->
+        <div class="section cdn-section">
+            <div class="section-title">🌐 CDN / EDGE</div>
+            <div class="component">
+                <div class="component-name">CloudFront / Fastly</div>
+                <div class="component-details">
+                    <strong>Cached Content:</strong>
+                    <ul>
+                        <li>Business photos (80% of traffic)</li>
+                        <li>Map tiles (static/vector)</li>
+                        <li>Profile images</li>
+                        <li>Static assets (CSS, JS)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        Cache-Control: public, max-age=86400
+                        Vary: Accept-Encoding, User-Agent
+                        X-Content-Type-Options: nosniff</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>200+ edge locations</li>
+                        <li>95% cache hit rate</li>
+                        <li>~20ms edge latency</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geo Router -->
+        <div class="section geo-router-section">
+            <div class="section-title">🗺️ GEO ROUTER</div>
+            <div class="component">
+                <div class="component-name">Route 53 Geo-Routing</div>
+                <div class="component-details">
+                    <strong>Regional Routing:</strong>
+                    <ul>
+                        <li><strong>US-West:</strong> California, Oregon, Washington</li>
+                        <li><strong>US-East:</strong> New York, Virginia, Florida</li>
+                        <li><strong>Europe:</strong> UK, Germany, France</li>
+                        <li><strong>Asia:</strong> Tokyo, Singapore, Mumbai</li>
+                    </ul>
+                    <strong>Latency-Based:</strong>
+                    <ul>
+                        <li>Route to nearest healthy region</li>
+                        <li>Health checks every 30s</li>
+                        <li>Automatic failover <30s</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # DNS Response
+                        api.yelp.com -> 52.12.34.56 (us-west-2)
+                        TTL: 60 seconds</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Routed to Regional Cluster</div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>Algorithm: Least Outstanding Requests</li>
+                        <li>Sticky sessions: IP hash (for user context)</li>
+                        <li>Health checks: /health every 10s</li>
+                        <li>Timeout: 60s</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>SSL/TLS termination (TLS 1.3)</li>
+                        <li>HTTP/2 support</li>
+                        <li>WebSocket proxying</li>
+                        <li>Path-based routing:
+                            <div class="code-snippet">
+                                /api/search   → Search Service
+                                /api/business → Business Service
+                                /api/reviews  → Review Service</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Core Functions:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong>
+                            <ul>
+                                <li>JWT token validation</li>
+                                <li>API key management</li>
+                                <li>OAuth2 / SSO integration</li>
+                            </ul>
+                        </li>
+                        <li><strong>Rate Limiting:</strong>
+                            <div class="code-snippet">
+                                Free:      100 requests/hour
+                                Basic:     1,000 requests/hour
+                                Premium:   10,000 requests/hour
+                                Enterprise: Unlimited</div>
+                        </li>
+                        <li><strong>Request Validation:</strong>
+                            <ul>
+                                <li>Lat/Lon bounds check (-90/90, -180/180)</li>
+                                <li>Radius max: 50km</li>
+                                <li>Pagination limits</li>
+                            </ul>
+                        </li>
+                        <li><strong>Response Transformation:</strong> JSON → GraphQL</li>
+                        <li><strong>Circuit Breaker:</strong> 50% errors → open for 30s</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Service -->
+        <div class="section auth-section">
+            <div class="section-title">🔐 AUTHENTICATION</div>
+            <div class="component">
+                <div class="component-name">Auth Service</div>
+                <div class="component-details">
+                    <strong>Providers:</strong>
+                    <ul>
+                        <li>Email/Password (bcrypt hashing)</li>
+                        <li>OAuth: Google, Facebook, Apple</li>
+                        <li>SSO for business accounts</li>
+                    </ul>
+                    <strong>Session Management:</strong>
+                    <ul>
+                        <li>JWT tokens (HS256)</li>
+                        <li>Refresh tokens (30 days)</li>
+                        <li>Redis session store</li>
+                    </ul>
+                    <div class="code-snippet">
+                        {
+                        "user_id": "u_12345",
+                        "tier": "premium",
+                        "exp": 1699999999,
+                        "iat": 1699996399
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Service -->
+        <div class="section search-service-section">
+            <div class="section-title">🔍 SEARCH SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Proximity Search Engine</div>
+                <div class="component-details">
+                    <strong>Core Algorithm:</strong>
+                    <div class="code-snippet">
+                        1. Get user location (lat, lon)
+                        2. Calculate geohash at precision 6 (~610m)
+                        3. Query geohash + 8 neighbors (9 cells total)
+                        4. Filter by exact distance (Haversine formula)
+                        5. Apply category/rating/price filters
+                        6. Rank by multi-factor score
+                        7. Paginate and return top N results</div>
+
+                    <strong>Geohash Indexing:</strong>
+                    <ul>
+                        <li>Precision 4: ~20 km (city-level)</li>
+                        <li>Precision 5: ~2.4 km (neighborhood)</li>
+                        <li>Precision 6: ~610 m (street-level)</li>
+                        <li>Precision 7: ~76 m (building-level)</li>
+                    </ul>
+
+                    <strong>Ranking Formula:</strong>
+                    <div class="code-snippet">
+                        score = w1 × distance_score +
+                                w2 × rating_score +
+                                w3 × popularity_score +
+                                w4 × recency_score +
+                                w5 × personalization_score
+
+                        Weights: [0.4, 0.25, 0.15, 0.1, 0.1]</div>
+
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>P50 latency: 50ms</li>
+                        <li>P95 latency: 150ms</li>
+                        <li>P99 latency: 250ms</li>
+                        <li>Throughput: 10,000 QPS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Service -->
+        <div class="section business-service-section">
+            <div class="section-title">🏢 BUSINESS SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Business CRUD & Details</div>
+                <div class="component-details">
+                    <strong>Operations:</strong>
+                    <ul>
+                        <li><strong>Create:</strong> Owner registration, verification</li>
+                        <li><strong>Read:</strong> Get full business details</li>
+                        <li><strong>Update:</strong> Hours, photos, amenities</li>
+                        <li><strong>Delete:</strong> Soft delete (mark inactive)</li>
+                    </ul>
+
+                    <strong>Business Verification:</strong>
+                    <ul>
+                        <li>Phone verification (Twilio)</li>
+                        <li>Postcard with code (address verify)</li>
+                        <li>Document upload (business license)</li>
+                        <li>Manual review by operations team</li>
+                    </ul>
+
+                    <strong>Real-Time Features:</strong>
+                    <ul>
+                        <li>Live hours updates</li>
+                        <li>Temporary closures</li>
+                        <li>Wait times (crowd-sourced)</li>
+                        <li>Popular times graph (ML prediction)</li>
+                    </ul>
+
+                    <div class="code-snippet">
+                        // Business Hours Format
+                        {
+                        "monday": {
+                        "open": "09:00", "close": "17:00",
+                        "is_open": true
+                        },
+                        "tuesday": { ... },
+                        // Special hours
+                        "2025-12-25": { "is_open": false }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Service -->
+        <div class="section review-service-section">
+            <div class="section-title">⭐ REVIEW SERVICE</div>
+            <div class="component">
+                <div class="component-name">Ratings & Reviews Engine</div>
+                <div class="component-details">
+                    <strong>Write Path:</strong>
+                    <ul>
+                        <li>User submits review (text + rating)</li>
+                        <li>Spam detection (ML model)</li>
+                        <li>Store in MongoDB</li>
+                        <li>Publish event to Kafka</li>
+                        <li>Async update business aggregate rating</li>
+                    </ul>
+
+                    <strong>Spam Detection:</strong>
+                    <ul>
+                        <li>Duplicate content check</li>
+                        <li>Suspicious patterns (same IP, rapid posts)</li>
+                        <li>Sentiment analysis (extremely positive/negative)</li>
+                        <li>User reputation score</li>
+                    </ul>
+
+                    <strong>Aggregation:</strong>
+                    <div class="code-snippet">
+                        weighted_rating =
+                        (Σ rating × weight) / Σ weight
+
+                        Weights:
+                        - Recency: Recent reviews weighted 2x
+                        - User tier: Premium users 1.5x
+                        - Helpfulness: Helpful reviews 1.2x</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Service -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS</div>
+            <div class="component">
+                <div class="component-name">Analytics & Insights</div>
+                <div class="component-details">
+                    <strong>Business Analytics:</strong>
+                    <ul>
+                        <li>Page views & impressions</li>
+                        <li>Search appearances</li>
+                        <li>Direction requests</li>
+                        <li>Call clicks</li>
+                        <li>Photo views</li>
+                    </ul>
+
+                    <strong>Trending Detection:</strong>
+                    <ul>
+                        <li>Search volume spikes</li>
+                        <li>Check-in surges</li>
+                        <li>Review velocity</li>
+                        <li>Social media mentions</li>
+                    </ul>
+
+                    <strong>Recommendation Engine:</strong>
+                    <div class="code-snippet">
+                        // Collaborative Filtering
+                        Users who liked A also liked B
+
+                        // Content-Based
+                        Similar cuisine + price range
+
+                        // Hybrid Model
+                        Combine both + user history</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Service -->
+        <div class="section photo-section">
+            <div class="section-title">📸 PHOTO SERVICE</div>
+            <div class="component">
+                <div class="component-name">Image Processing Pipeline</div>
+                <div class="component-details">
+                    <strong>Upload Flow:</strong>
+                    <ul>
+                        <li>Client uploads to pre-signed S3 URL</li>
+                        <li>Lambda trigger on S3 PUT</li>
+                        <li>Image validation (format, size, content)</li>
+                        <li>Generate thumbnails (100x100, 300x300, 800x800)</li>
+                        <li>Convert to WebP (30-40% smaller)</li>
+                        <li>Extract EXIF data (location, camera)</li>
+                        <li>Virus/malware scan</li>
+                        <li>Update business metadata</li>
+                    </ul>
+
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Responsive images (srcset)</li>
+                        <li>Lazy loading</li>
+                        <li>Progressive JPEG</li>
+                        <li>CDN cache (1 year TTL)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elasticsearch -->
+        <div class="section elasticsearch-section">
+            <div class="section-title">🔎 ELASTICSEARCH</div>
+            <div class="component">
+                <div class="component-name">Geospatial + Full-Text Search</div>
+                <div class="component-details">
+                    <strong>Index Structure:</strong>
+                    <div class="code-snippet">
+                        {
+                        "business_id": 12345,
+                        "name": "Blue Bottle Coffee",
+                        "location": {
+                        "lat": 37.7749,
+                        "lon": -122.4194
+                        },
+                        "category": ["cafe", "coffee"],
+                        "rating_avg": 4.5,
+                        "price_range": 2
+                        }</div>
+
+                    <strong>Geo Queries:</strong>
+                    <ul>
+                        <li><code>geo_distance</code>: Radius search</li>
+                        <li><code>geo_bounding_box</code>: Map viewport</li>
+                        <li><code>geo_polygon</code>: Custom shapes</li>
+                    </ul>
+
+                    <strong>Cluster Config:</strong>
+                    <ul>
+                        <li>9 nodes (3 master, 6 data)</li>
+                        <li>3 shards, 2 replicas</li>
+                        <li>16GB heap per node</li>
+                        <li>SSD storage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PostGIS -->
+        <div class="section postgis-section">
+            <div class="section-title">🗺️ POSTGIS</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL + Geospatial Extension</div>
+                <div class="component-details">
+                    <strong>Spatial Data Types:</strong>
+                    <ul>
+                        <li><code>POINT</code>: Business location</li>
+                        <li><code>POLYGON</code>: Service areas, neighborhoods</li>
+                        <li><code>LINESTRING</code>: Routes, paths</li>
+                    </ul>
+
+                    <strong>Key Functions:</strong>
+                    <div class="code-snippet">
+                        -- Distance (meters)
+                        ST_Distance(geom1, geom2)
+
+                        -- Within radius
+                        ST_DWithin(geom, point, radius)
+
+                        -- Nearest neighbors
+                        ORDER BY geom <-> point
+
+                        -- Bounding box
+                        ST_MakeEnvelope(xmin, ymin, xmax, ymax)</div>
+
+                    <strong>Indexes:</strong>
+                    <ul>
+                        <li>GIST index on location column</li>
+                        <li>B-tree on geohash</li>
+                        <li>Partial indexes per category</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MongoDB -->
+        <div class="section mongodb-section">
+            <div class="section-title">📚 MONGODB</div>
+            <div class="component">
+                <div class="component-name">Review & User-Generated Content</div>
+                <div class="component-details">
+                    <strong>Collections:</strong>
+                    <ul>
+                        <li><strong>reviews:</strong> User reviews & ratings</li>
+                        <li><strong>check_ins:</strong> User location history</li>
+                        <li><strong>tips:</strong> Short recommendations</li>
+                        <li><strong>photos:</strong> User-uploaded images metadata</li>
+                    </ul>
+
+                    <strong>Sharding Strategy:</strong>
+                    <div class="code-snippet">
+                        // Shard key: business_id
+                        // Ensures all reviews for a business
+                        // are on the same shard
+
+                        sh.shardCollection(
+                        "yelp.reviews",
+                        { "business_id": 1 }
+                        )</div>
+
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Write throughput: 100K writes/sec</li>
+                        <li>Read from secondaries (eventual consistency)</li>
+                        <li>Change streams for real-time updates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis Cache -->
+        <div class="section cache-section">
+            <div class="section-title">💾 REDIS CACHE</div>
+            <div class="component">
+                <div class="component-name">Multi-Tier Caching</div>
+                <div class="component-details">
+                    <strong>Cache Layers:</strong>
+                    <div class="code-snippet">
+                        # L1: Search results (geohash-based)
+                        SET search:9q8yy:restaurant:5km [results] EX 3600
+
+                        # L2: Business details
+                        SET business:12345 {json} EX 86400
+
+                        # L3: Aggregated ratings
+                        SET rating:12345 4.5 EX 3600
+
+                        # L4: Hot locations (sorted set)
+                        ZADD trending 1500 "business:12345"</div>
+
+                    <strong>Eviction Policy:</strong>
+                    <ul>
+                        <li>allkeys-lru (Least Recently Used)</li>
+                        <li>Max memory: 64 GB per instance</li>
+                        <li>Hit rate target: 85%</li>
+                    </ul>
+
+                    <strong>Cluster Config:</strong>
+                    <ul>
+                        <li>6 nodes (3 master, 3 replica)</li>
+                        <li>Hash slots: 16384</li>
+                        <li>Sentinel for failover</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- S3 -->
+        <div class="section s3-section">
+            <div class="section-title">☁️ OBJECT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3</div>
+                <div class="component-details">
+                    <strong>Bucket Structure:</strong>
+                    <div class="code-snippet">
+                        s3://yelp-media/
+                        ├── photos/
+                        │   ├── businesses/
+                        │   │   └── {business_id}/
+                        │   │       ├── thumb_{id}.webp
+                        │   │       ├── medium_{id}.webp
+                        │   │       └── large_{id}.webp
+                        │   └── users/
+                        ├── videos/
+                        └── backups/</div>
+
+                    <strong>Lifecycle Policies:</strong>
+                    <ul>
+                        <li>Hot (S3 Standard): 0-30 days</li>
+                        <li>Warm (S3 IA): 30-90 days</li>
+                        <li>Cold (Glacier): >90 days</li>
+                    </ul>
+
+                    <strong>Access:</strong>
+                    <ul>
+                        <li>CloudFront CDN integration</li>
+                        <li>Pre-signed URLs (1 hour TTL)</li>
+                        <li>Cross-region replication</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kafka -->
+        <div class="section kafka-section">
+            <div class="section-title">📬 EVENT STREAMING</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>review.created:</strong> New review submitted</li>
+                        <li><strong>business.updated:</strong> Business info changed</li>
+                        <li><strong>search.performed:</strong> User search event</li>
+                        <li><strong>check_in.created:</strong> User check-in</li>
+                        <li><strong>photo.uploaded:</strong> New photo added</li>
+                    </ul>
+
+                    <strong>Consumers:</strong>
+                    <ul>
+                        <li>Analytics aggregation service</li>
+                        <li>Recommendation engine</li>
+                        <li>Email notification service</li>
+                        <li>Business dashboard updates</li>
+                    </ul>
+
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>Partitions: 12 per topic</li>
+                        <li>Replication factor: 3</li>
+                        <li>Retention: 7 days</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li>Search latency (P50, P95, P99)</li>
+                        <li>Geospatial query performance</li>
+                        <li>Cache hit/miss ratio</li>
+                        <li>Database connection pool</li>
+                        <li>API gateway throughput</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ELK Stack (Logging)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Centralized logging (JSON format)</li>
+                        <li>Search query logs (for ML)</li>
+                        <li>Error tracking & alerting</li>
+                        <li>User behavior analytics</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing (Jaeger)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>End-to-end request tracing</li>
+                        <li>Service dependency mapping</li>
+                        <li>Performance bottleneck identification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geospatial Algorithms -->
+        <div class="section geospatial-section">
+            <div class="section-title">🌍 GEOSPATIAL ALGORITHMS</div>
+
+            <div class="component">
+                <div class="component-name">Geohashing</div>
+                <div class="component-details">
+                    <strong>How it works:</strong>
+                    <div class="code-snippet">
+                        Lat: 37.7749, Lon: -122.4194
+                        → Geohash: "9q8yy9"
+
+                        Precision levels:
+                        4 chars: ~20 km (city)
+                        5 chars: ~2.4 km (neighborhood)
+                        6 chars: ~610 m (street)
+                        7 chars: ~76 m (building)</div>
+                    <ul>
+                        <li>Fast string prefix matching</li>
+                        <li>Easy to cache & shard</li>
+                        <li>Check 9 cells (center + 8 neighbors)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Haversine Distance</div>
+                <div class="component-details">
+                    <strong>Formula (great-circle distance):</strong>
+                    <div class="code-snippet">
+                        a = sin²(Δlat/2) + cos(lat1) ×
+                        cos(lat2) × sin²(Δlon/2)
+                        c = 2 × atan2(√a, √(1-a))
+                        d = R × c  (R = Earth radius 6371 km)</div>
+                    <ul>
+                        <li>Accurate for spherical Earth</li>
+                        <li>Used for final distance filtering</li>
+                        <li>Error: <0.5% for short distances</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">S2 Geometry (Google)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Hierarchical cell decomposition</li>
+                        <li>64-bit cell IDs</li>
+                        <li>Handles complex regions</li>
+                        <li>Used by: Google Maps, Uber, Lyft</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">200M</div>
+                <div class="metric-label">Total Businesses Indexed</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">5,000 QPS</div>
+                <div class="metric-label">Search Throughput (Avg)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10,000 QPS</div>
+                <div class="metric-label">Peak Search Traffic</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;150ms</div>
+                <div class="metric-label">P95 Search Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.95%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1.2 PB</div>
+                <div class="metric-label">Total Storage (Photos + Data)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10m</div>
+                <div class="metric-label">Location Accuracy</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geohash Visual -->
+    <div class="geo-visual">
+        <h2 style="color: #059669; margin-bottom: 20px;">🗺️ GEOHASH VISUALIZATION</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #10b981; margin-bottom: 10px;">Precision Levels</h3>
+                <div style="font-family: monospace; background: #f0fdf4; padding: 15px; border-radius: 8px; line-height: 2;">
+                    <div style="color: #065f46;">1: <span style="color: #dc2626;">±2500 km</span> (continent)</div>
+                    <div style="color: #065f46;">2: <span style="color: #ea580c;">±630 km</span> (large region)</div>
+                    <div style="color: #065f46;">3: <span style="color: #f59e0b;">±78 km</span> (metro area)</div>
+                    <div style="color: #065f46;">4: <span style="color: #fbbf24;">±20 km</span> (city)</div>
+                    <div style="color: #065f46;">5: <span style="color: #84cc16;">±2.4 km</span> (neighborhood)</div>
+                    <div style="color: #065f46;">6: <span style="color: #10b981;">±610 m</span> (street) ✓</div>
+                    <div style="color: #065f46;">7: <span style="color: #0891b2;">±76 m</span> (building)</div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="color: #10b981; margin-bottom: 10px;">Example: San Francisco</h3>
+                <div style="font-family: monospace; background: #f0fdf4; padding: 15px; border-radius: 8px; line-height: 2;">
+                    <div style="color: #065f46;"><strong>Lat:</strong> 37.7749, <strong>Lon:</strong> -122.4194</div>
+                    <div style="color: #dc2626;">9 (North America)</div>
+                    <div style="color: #ea580c;">9q (California)</div>
+                    <div style="color: #f59e0b;">9q8 (Bay Area)</div>
+                    <div style="color: #fbbf24;">9q8y (San Francisco)</div>
+                    <div style="color: #84cc16;">9q8yy (Financial District)</div>
+                    <div style="color: #10b981; font-weight: bold;">9q8yy9 (Market St) ← Used for search</div>
+                    <div style="color: #0891b2;">9q8yy9m (Specific building)</div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="color: #10b981; margin-bottom: 10px;">Neighbor Search Pattern</h3>
+                <div style="font-family: monospace; background: #f0fdf4; padding: 15px; border-radius: 8px;">
+                    <div style="text-align: center; line-height: 2.5;">
+                        <div>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yyd</span>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yye</span>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yys</span>
+                        </div>
+                        <div>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yy6</span>
+                            <span style="background: #10b981; color: white; padding: 5px 10px; margin: 2px; font-weight: bold;">9q8yy9</span>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yyw</span>
+                        </div>
+                        <div>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yy3</span>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yy8</span>
+                            <span style="background: #dbeafe; padding: 5px 10px; margin: 2px;">9q8yyq</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; color: #065f46; font-size: 0.9em;">
+                        ✓ Search 9 cells total (center + 8 neighbors)<br>
+                        ✓ Ensures no edge cases missed<br>
+                        ✓ Then filter by exact Haversine distance
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADDITIONAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #059669; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Location Privacy:</strong> Fuzzing user location (round to 100m grid)</li>
+                    <li><strong>Rate Limiting:</strong> Per IP, per user, per API key</li>
+                    <li><strong>DDoS Protection:</strong> CloudFlare, AWS Shield, WAF rules</li>
+                    <li><strong>Review Spam:</strong> ML model, duplicate detection, user reputation</li>
+                    <li><strong>HTTPS Only:</strong> TLS 1.3, HSTS, certificate pinning</li>
+                    <li><strong>Data Encryption:</strong> At-rest (S3, RDS), in-transit (TLS)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #059669; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services, auto-scaling</li>
+                    <li><strong>Database Sharding:</strong> By geohash prefix (regional)</li>
+                    <li><strong>Read Replicas:</strong> 3-5 replicas per region</li>
+                    <li><strong>Multi-Tier Caching:</strong> CDN, Redis, application</li>
+                    <li><strong>Async Processing:</strong> Kafka for reviews, photos, analytics</li>
+                    <li><strong>Geographic Distribution:</strong> Multi-region deployment</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #059669; margin-bottom: 10px;">Data Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Business Data:</strong> Strong consistency (PostgreSQL ACID)</li>
+                    <li><strong>Reviews:</strong> Eventual consistency (acceptable delay)</li>
+                    <li><strong>Cache:</strong> TTL-based + event invalidation</li>
+                    <li><strong>Search Index:</strong> Near real-time (Elasticsearch refresh 1s)</li>
+                    <li><strong>Analytics:</strong> Batch processing, daily aggregation</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #059669; margin-bottom: 10px;">Disaster Recovery</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Database Backup:</strong> Daily full + hourly incremental</li>
+                    <li><strong>Cross-Region Replication:</strong> Active-active for reads</li>
+                    <li><strong>Failover:</strong> Automatic DNS switch <5 min</li>
+                    <li><strong>RTO:</strong> 5 minutes (Recovery Time Objective)</li>
+                    <li><strong>RPO:</strong> 1 hour (Recovery Point Objective)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">🌍 <strong>Geospatial Intelligence at Scale:</strong> Serving millions of location queries with sub-200ms latency worldwide</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Java/Spring Boot • Python/FastAPI • PostgreSQL+PostGIS • Elasticsearch • Redis • MongoDB • Kafka • S3</p>
+    </div>
+</div>
+</body>
+</html>
