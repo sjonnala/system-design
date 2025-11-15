@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce & Marketplace System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.microservices { background: #dbeafe; color: #1e40af; }
+        .tag.distributed { background: #fef3c7; color: #92400e; }
+        .tag.scale { background: #d1fae5; color: #065f46; }
+        .tag.secure { background: #fee2e2; color: #991b1b; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 12;
+        }
+
+        .cdn-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 12;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .microservices-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 12;
+        }
+
+        .product-service {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .search-service {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 3;
+        }
+
+        .cart-service {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 3;
+        }
+
+        .inventory-service {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 3;
+        }
+
+        .order-service {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 3;
+        }
+
+        .payment-service {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 3;
+        }
+
+        .seller-service {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 3;
+        }
+
+        .recommendation-service {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .nosql-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 4;
+        }
+
+        .search-db-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .ml-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🛒 E-Commerce & Marketplace System Design</h1>
+        <div class="subtitle">Complete Amazon/Flipkart-scale Architecture</div>
+        <div class="tags">
+            <span class="tag microservices">Microservices</span>
+            <span class="tag distributed">Distributed Systems</span>
+            <span class="tag scale">Horizontally Scalable</span>
+            <span class="tag secure">PCI-DSS Compliant</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- CLIENT LAYER -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <div class="component">
+                    <div class="component-name">💻 Web Browser</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>React / Next.js</li>
+                            <li>Progressive Web App</li>
+                            <li>Service Workers</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">📱 Mobile App</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>React Native / Flutter</li>
+                            <li>iOS (Swift)</li>
+                            <li>Android (Kotlin)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">🏪 Seller Dashboard</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>Product Management</li>
+                            <li>Order Fulfillment</li>
+                            <li>Analytics</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">🔌 API Clients</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>Third-party Integrations</li>
+                            <li>Mobile SDKs</li>
+                            <li>Partner APIs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS Requests</div>
+        </div>
+
+        <!-- CDN LAYER -->
+        <div class="section cdn-section">
+            <div class="section-title">⚡ CDN / EDGE NETWORK</div>
+            <div class="component">
+                <div class="component-name">CloudFront / Akamai / Cloudflare</div>
+                <div class="component-details">
+                    <strong>Cached Content:</strong>
+                    <ul>
+                        <li><strong>Product Images:</strong> 200+ GB, Cache-Control: 1 year</li>
+                        <li><strong>Static Assets:</strong> CSS, JS, fonts</li>
+                        <li><strong>Category Pages:</strong> Cache-Control: 5 min (stale-while-revalidate)</li>
+                        <li><strong>Product Pages:</strong> Cache-Control: 1 min (for price updates)</li>
+                        <li><strong>API Responses:</strong> Selective caching with Vary headers</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>200+ Edge Locations globally</li>
+                        <li>DDoS Protection (AWS Shield Advanced / Cloudflare)</li>
+                        <li>SSL/TLS Termination</li>
+                        <li>HTTP/2 & HTTP/3 support</li>
+                        <li>Image Optimization (WebP, AVIF)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        Cache-Control: public, max-age=31536000, immutable
+                        X-Cache: Hit from cloudfront
+                        X-Cache-Hits: 1234567</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GATEWAY LAYER -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway / NGINX</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT validation, OAuth 2.0</li>
+                        <li><strong>Rate Limiting:</strong>
+                            <div class="code-snippet" style="font-size: 0.75em;">
+                                Anonymous: 100 req/min
+                                Authenticated: 1000 req/min
+                                Premium: 10000 req/min</div>
+                        </li>
+                        <li><strong>Request Routing:</strong> Path-based, header-based</li>
+                        <li><strong>Response Transformation</strong></li>
+                        <li><strong>API Versioning:</strong> /api/v1, /api/v2</li>
+                        <li><strong>Circuit Breaker:</strong> 50% error rate → open for 60s</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer (ALB)</div>
+                <div class="component-details">
+                    <strong>Algorithms:</strong>
+                    <ul>
+                        <li>Round Robin (default)</li>
+                        <li>Least Outstanding Requests</li>
+                        <li>Sticky Sessions (for cart)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Health Checks (HTTP /health every 30s)</li>
+                        <li>Auto-scaling Integration</li>
+                        <li>Cross-Zone Load Balancing</li>
+                        <li>Connection Draining (300s timeout)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MICROSERVICES LAYER -->
+        <div class="section microservices-section">
+            <div class="section-title">🔧 MICROSERVICES ARCHITECTURE</div>
+            <div class="component-details" style="margin-bottom: 20px;">
+                <strong>12 Core Services</strong> running on Kubernetes (EKS/GKE), each independently scalable and deployable
+            </div>
+        </div>
+
+        <!-- Product Catalog Service -->
+        <div class="section product-service">
+            <div class="section-title">📦 PRODUCT CATALOG</div>
+            <div class="component">
+                <div class="component-name">Product Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Java Spring Boot / Node.js</li>
+                        <li>MongoDB (flexible schema)</li>
+                        <li>Redis (product cache)</li>
+                    </ul>
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li>500M+ SKUs management</li>
+                        <li>Product variants (size, color)</li>
+                        <li>Pricing & discounts</li>
+                        <li>Category taxonomy</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        GET /api/v1/products/{id}
+                        POST /api/v1/products
+                        PUT /api/v1/products/{id}
+
+                        Scale: 10 pods, 1K QPS</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Service -->
+        <div class="section search-service">
+            <div class="section-title">🔍 SEARCH & DISCOVERY</div>
+            <div class="component">
+                <div class="component-name">Search Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Elasticsearch 8.x</li>
+                        <li>Python (FastAPI)</li>
+                        <li>Redis (autocomplete cache)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Full-text search</li>
+                        <li>Faceted filtering (brand, price, rating)</li>
+                        <li>Auto-suggestions</li>
+                        <li>Spell correction</li>
+                        <li>Ranking: Relevance + Rating + Sales</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        GET /api/v1/search?q=iphone
+                        &brand=apple&price=500-1000
+
+                        Latency: P95 < 200ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Service -->
+        <div class="section cart-service">
+            <div class="section-title">🛒 SHOPPING CART</div>
+            <div class="component">
+                <div class="component-name">Cart Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Node.js / Go</li>
+                        <li>Redis (primary storage)</li>
+                        <li>PostgreSQL (backup)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Add/Remove items</li>
+                        <li>Apply coupons</li>
+                        <li>Save for later</li>
+                        <li>Merge guest → user cart</li>
+                        <li>Real-time price updates</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        GET /api/v1/cart
+                        POST /api/v1/cart/items
+
+                        TTL: 7 days
+                        Latency: < 50ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Service -->
+        <div class="section inventory-service">
+            <div class="section-title">📊 INVENTORY</div>
+            <div class="component">
+                <div class="component-name">Inventory Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Java Spring Boot</li>
+                        <li>PostgreSQL (ACID)</li>
+                        <li>Redis (availability cache)</li>
+                    </ul>
+                    <strong>Critical Operations:</strong>
+                    <ul>
+                        <li><strong>Reserve:</strong> Atomic DB locks</li>
+                        <li><strong>Release:</strong> Cron job (1 min)</li>
+                        <li><strong>Deduct:</strong> On order confirmation</li>
+                        <li>Multi-warehouse support</li>
+                        <li>Low-stock alerts</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        POST /api/v1/inventory/reserve
+                        DELETE /api/v1/inventory/release
+
+                        Consistency: STRONG</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Service -->
+        <div class="section order-service">
+            <div class="section-title">📋 ORDER MANAGEMENT</div>
+            <div class="component">
+                <div class="component-name">Order Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Java Spring Boot</li>
+                        <li>PostgreSQL (partitioned by date)</li>
+                        <li>Kafka (order events)</li>
+                    </ul>
+                    <strong>Workflow (Saga Pattern):</strong>
+                    <ul>
+                        <li>1. Create order (pending)</li>
+                        <li>2. Reserve inventory</li>
+                        <li>3. Process payment</li>
+                        <li>4. Confirm order</li>
+                        <li>5. Deduct inventory</li>
+                        <li>6. Notify user</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        POST /api/v1/orders
+                        GET /api/v1/orders/{id}
+
+                        Throughput: 115 orders/sec
+                        Peak: 1000 orders/sec</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Service -->
+        <div class="section payment-service">
+            <div class="section-title">💳 PAYMENT</div>
+            <div class="component">
+                <div class="component-name">Payment Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Java (PCI-DSS compliant)</li>
+                        <li>PostgreSQL (encrypted)</li>
+                        <li>Stripe, PayPal, Razorpay</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Multiple payment methods</li>
+                        <li>Card tokenization</li>
+                        <li>3D Secure / CVV</li>
+                        <li>Idempotency (prevent duplicate charges)</li>
+                        <li>Refund processing</li>
+                        <li>Retry logic (exponential backoff)</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        POST /api/v1/payments/charge
+                        POST /api/v1/payments/refund
+
+                        Compliance: PCI-DSS Level 1</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seller Service -->
+        <div class="section seller-service">
+            <div class="section-title">🏪 SELLER MANAGEMENT</div>
+            <div class="component">
+                <div class="component-name">Seller Service</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Node.js / Python</li>
+                        <li>PostgreSQL</li>
+                        <li>S3 (documents)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Seller onboarding (KYC)</li>
+                        <li>Product listing approval</li>
+                        <li>Order fulfillment dashboard</li>
+                        <li>Payout management</li>
+                        <li>Seller analytics</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        POST /api/v1/sellers/register
+                        GET /api/v1/sellers/{id}/orders
+
+                        Sellers: 2M active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation Service -->
+        <div class="section recommendation-service">
+            <div class="section-title">🎯 RECOMMENDATIONS</div>
+            <div class="component">
+                <div class="component-name">Recommendation Engine</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong>
+                    <ul>
+                        <li>Python (TensorFlow, PyTorch)</li>
+                        <li>Apache Spark (batch ML)</li>
+                        <li>Redis (real-time recs)</li>
+                        <li>ClickHouse (analytics)</li>
+                    </ul>
+                    <strong>Algorithms:</strong>
+                    <ul>
+                        <li>Collaborative Filtering (40%)</li>
+                        <li>Content-Based (30%)</li>
+                        <li>Trending Products (20%)</li>
+                        <li>Contextual (10%)</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.7em;">
+                        GET /api/v1/recommendations
+                        /user/{userId}
+                        /similar/{productId}
+
+                        Model: Daily retrain</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATABASE LAYER -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ RELATIONAL DATABASES</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Users:</strong> User profiles, addresses</li>
+                        <li><strong>Orders:</strong> Order data (partitioned by date)</li>
+                        <li><strong>Payments:</strong> Payment transactions</li>
+                        <li><strong>Inventory:</strong> Stock levels (strong consistency)</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Primary (writes)</li>
+                        <li>3 Read Replicas (reads)</li>
+                        <li>Async replication (< 100ms lag)</li>
+                        <li>Connection pooling (PgBouncer)</li>
+                    </ul>
+                    <strong>Scaling:</strong>
+                    <ul>
+                        <li>Sharding by user_id hash (10 shards)</li>
+                        <li>Partitioning by date (monthly)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section nosql-section">
+            <div class="section-title">📄 NoSQL DATABASES</div>
+            <div class="component">
+                <div class="component-name">MongoDB Sharded Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Product Catalog:</strong> 500M+ SKUs</li>
+                        <li><strong>Reviews:</strong> User reviews & ratings</li>
+                        <li><strong>User Activity:</strong> Browsing history</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Sharded by product_id (hash-based)</li>
+                        <li>3 shards × 3 replicas = 9 nodes</li>
+                        <li>Config servers (metadata)</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Writes: 5K ops/sec</li>
+                        <li>Reads: 50K ops/sec (with replicas)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Session Store:</strong> User sessions (50M DAU)</li>
+                        <li><strong>Cart:</strong> Shopping cart data (TTL: 7 days)</li>
+                        <li><strong>Product Cache:</strong> Hot products (20% → 80% traffic)</li>
+                        <li><strong>Inventory Cache:</strong> Availability (TTL: 5 sec)</li>
+                        <li><strong>Rate Limiting:</strong> API quota tracking</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>6 masters, 6 replicas (12 nodes)</li>
+                        <li>Hash slot-based sharding (16384 slots)</li>
+                        <li>LRU eviction policy</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 200K ops/sec</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Hit Rate: 85%</li>
+                        <li>Total Size: 1TB</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Analytics -->
+        <div class="section search-db-section">
+            <div class="section-title">🔍 SEARCH ENGINE</div>
+            <div class="component">
+                <div class="component-name">Elasticsearch Cluster</div>
+                <div class="component-details">
+                    <strong>Indices:</strong>
+                    <ul>
+                        <li><strong>products:</strong> 500M documents, 1TB</li>
+                        <li><strong>sellers:</strong> 2M documents</li>
+                        <li><strong>reviews:</strong> 100M documents</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>6 data nodes (sharded)</li>
+                        <li>3 master nodes (cluster management)</li>
+                        <li>2 coordinating nodes (query routing)</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.75em;">
+                        {
+                          "query": {
+                            "bool": {
+                              "must": [...],
+                              "filter": [...]
+                            }
+                          },
+                          "aggs": {...}
+                        }
+
+                        Latency: P95 < 200ms</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS DATABASE</div>
+            <div class="component">
+                <div class="component-name">ClickHouse Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>Click events (1B+ events/day)</li>
+                        <li>Order analytics</li>
+                        <li>User behavior tracking</li>
+                        <li>Real-time dashboards</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Partitioned by date (daily partitions)</li>
+                        <li>Compressed (10:1 ratio)</li>
+                        <li>Materialized views for aggregations</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.75em;">
+                        SELECT
+                          toDate(timestamp) as date,
+                          count() as clicks,
+                          uniq(user_id) as users
+                        FROM click_events
+                        WHERE date >= today() - 7
+                        GROUP BY date</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE & EVENT STREAMING</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka Cluster</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>order.created:</strong> New order events</li>
+                        <li><strong>payment.completed:</strong> Payment success</li>
+                        <li><strong>inventory.updated:</strong> Stock changes</li>
+                        <li><strong>notification.email:</strong> Email queue</li>
+                        <li><strong>analytics.events:</strong> User interactions</li>
+                    </ul>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>3 brokers</li>
+                        <li>Replication factor: 3</li>
+                        <li>Retention: 7 days</li>
+                    </ul>
+                    <div class="code-snippet" style="font-size: 0.75em;">
+                        {
+                          "event": "order.created",
+                          "order_id": "ORD-12345",
+                          "user_id": 456,
+                          "total": 999.99,
+                          "timestamp": "2025-11-14T..."
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Object Storage -->
+        <div class="section storage-section">
+            <div class="section-title">☁️ OBJECT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3 / Cloud Storage</div>
+                <div class="component-details">
+                    <strong>Buckets:</strong>
+                    <ul>
+                        <li><strong>product-images:</strong> 500TB
+                            <ul style="margin-left: 15px;">
+                                <li>Multiple resolutions (thumbnail, medium, large)</li>
+                                <li>WebP & AVIF formats</li>
+                                <li>CDN integration</li>
+                            </ul>
+                        </li>
+                        <li><strong>user-uploads:</strong> 50TB (review images)</li>
+                        <li><strong>documents:</strong> 10TB (invoices, seller docs)</li>
+                        <li><strong>backups:</strong> 100TB (daily DB backups)</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Lifecycle policies (S3 → Glacier after 90 days)</li>
+                        <li>Cross-region replication</li>
+                        <li>Versioning enabled</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Metrics Collected:</strong>
+                    <ul>
+                        <li>Request rate (QPS per service)</li>
+                        <li>Latency percentiles (P50, P95, P99)</li>
+                        <li>Error rates (4xx, 5xx)</li>
+                        <li>Database query time</li>
+                        <li>Cache hit ratio</li>
+                        <li>Kafka lag (consumer groups)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ELK Stack (Logging)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Centralized log aggregation (1TB/day)</li>
+                        <li>Structured JSON logging</li>
+                        <li>7-day retention (hot), 30-day (warm)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Jaeger (Distributed Tracing)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>End-to-end request tracing</li>
+                        <li>Service dependency mapping</li>
+                        <li>Performance bottleneck identification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Infrastructure -->
+        <div class="section ml-section">
+            <div class="section-title">🤖 ML/AI INFRASTRUCTURE</div>
+            <div class="component">
+                <div class="component-name">Recommendation ML Pipeline</div>
+                <div class="component-details">
+                    <strong>Components:</strong>
+                    <ul>
+                        <li><strong>Data Collection:</strong> User interactions (Kafka)</li>
+                        <li><strong>Feature Engineering:</strong> Spark (daily batch jobs)</li>
+                        <li><strong>Model Training:</strong> TensorFlow on GPU cluster (weekly)</li>
+                        <li><strong>Model Serving:</strong> TensorFlow Serving / Seldon</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Fraud Detection</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Real-time scoring (< 100ms)</li>
+                        <li>Gradient Boosting (XGBoost)</li>
+                        <li>Features: 50+ signals</li>
+                        <li>Accuracy: 95%+</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">50M</div>
+                <div class="metric-label">Daily Active Users</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">500M</div>
+                <div class="metric-label">Product SKUs</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">50K</div>
+                <div class="metric-label">Peak QPS (reads)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1K</div>
+                <div class="metric-label">Peak Orders/sec</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;200ms</div>
+                <div class="metric-label">Search P95 Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">Cart P95 Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">600TB</div>
+                <div class="metric-label">Total Storage</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10M</div>
+                <div class="metric-label">Orders/day</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🏗️ ARCHITECTURE PATTERNS & BEST PRACTICES</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Microservices Design Patterns</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>API Gateway Pattern:</strong> Single entry point for all clients</li>
+                    <li><strong>Database per Service:</strong> Each service owns its data</li>
+                    <li><strong>Saga Pattern:</strong> Distributed transactions (order creation)</li>
+                    <li><strong>CQRS:</strong> Separate read/write models for orders</li>
+                    <li><strong>Event Sourcing:</strong> Audit trail for order state changes</li>
+                    <li><strong>Circuit Breaker:</strong> Fail fast on service failures</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Consistency Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Strong Consistency:</strong> Inventory (PostgreSQL with locks)</li>
+                    <li><strong>Strong Consistency:</strong> Payments (ACID transactions)</li>
+                    <li><strong>Eventual Consistency:</strong> Product catalog sync</li>
+                    <li><strong>Eventual Consistency:</strong> Reviews and ratings</li>
+                    <li><strong>Cache-Aside Pattern:</strong> Redis for hot products</li>
+                    <li><strong>Write-Through Cache:</strong> Cart operations</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services (auto-scaling)</li>
+                    <li><strong>Database Sharding:</strong> By user_id, product_id</li>
+                    <li><strong>Read Replicas:</strong> 3 replicas per primary DB</li>
+                    <li><strong>Caching:</strong> Multi-tier (CDN → Redis → DB)</li>
+                    <li><strong>Async Processing:</strong> Kafka for non-critical ops</li>
+                    <li><strong>CDN:</strong> 90% of static content served from edge</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Resilience & Fault Tolerance</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Multi-AZ Deployment:</strong> 3 availability zones</li>
+                    <li><strong>Database Backups:</strong> Daily automated backups</li>
+                    <li><strong>Disaster Recovery:</strong> RPO: 1 hour, RTO: 4 hours</li>
+                    <li><strong>Circuit Breakers:</strong> Prevent cascading failures</li>
+                    <li><strong>Retry Logic:</strong> Exponential backoff for transient errors</li>
+                    <li><strong>Health Checks:</strong> Service-level health monitoring</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack Summary -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">💻 TECHNOLOGY STACK (Industry Standard)</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Backend Services</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Languages:</strong> Java (Spring Boot), Node.js, Go, Python<br>
+                    <strong>API Gateway:</strong> Kong, AWS API Gateway, NGINX<br>
+                    <strong>Message Queue:</strong> Apache Kafka, RabbitMQ<br>
+                    <strong>Task Queue:</strong> Celery, Bull
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Databases & Storage</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>SQL:</strong> PostgreSQL, MySQL<br>
+                    <strong>NoSQL:</strong> MongoDB, Cassandra, DynamoDB<br>
+                    <strong>Cache:</strong> Redis Cluster, Memcached<br>
+                    <strong>Search:</strong> Elasticsearch, Solr<br>
+                    <strong>Analytics:</strong> ClickHouse, Apache Druid<br>
+                    <strong>Object Storage:</strong> Amazon S3, MinIO
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">DevOps & Infrastructure</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Containers:</strong> Docker, Kubernetes (EKS/GKE)<br>
+                    <strong>CI/CD:</strong> Jenkins, GitLab CI, GitHub Actions<br>
+                    <strong>IaC:</strong> Terraform, CloudFormation<br>
+                    <strong>Monitoring:</strong> Prometheus, Grafana, Datadog<br>
+                    <strong>Logging:</strong> ELK Stack, Splunk<br>
+                    <strong>Tracing:</strong> Jaeger, Zipkin
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Frontend & Mobile</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Web:</strong> React, Next.js, Vue.js<br>
+                    <strong>Mobile:</strong> React Native, Flutter<br>
+                    <strong>iOS:</strong> Swift, SwiftUI<br>
+                    <strong>Android:</strong> Kotlin, Jetpack Compose<br>
+                    <strong>CDN:</strong> CloudFront, Cloudflare, Akamai
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #8b5cf6;">
+                <h4 style="color: #8b5cf6; margin-bottom: 10px;">ML/AI Stack</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Frameworks:</strong> TensorFlow, PyTorch, Scikit-learn<br>
+                    <strong>MLOps:</strong> MLflow, Kubeflow, SageMaker<br>
+                    <strong>Data Processing:</strong> Apache Spark, Airflow<br>
+                    <strong>Feature Store:</strong> Feast, Tecton
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ef4444;">
+                <h4 style="color: #ef4444; margin-bottom: 10px;">Security & Compliance</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>WAF:</strong> AWS WAF, Cloudflare<br>
+                    <strong>DDoS:</strong> AWS Shield, Cloudflare<br>
+                    <strong>Secrets:</strong> HashiCorp Vault, AWS Secrets Manager<br>
+                    <strong>Compliance:</strong> PCI-DSS Level 1, GDPR<br>
+                    <strong>Auth:</strong> OAuth 2.0, JWT, Auth0
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Design Philosophy:</strong> Microservices for scalability, strong consistency for money, eventual consistency for everything else</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Java/Spring Boot • Node.js • Go • Python • PostgreSQL • MongoDB • Redis • Elasticsearch • Kafka • Kubernetes</p>
+        <p style="font-size: 0.8em; margin-top: 10px; color: #a0aec0;">Capacity: 50M DAU • 500M Products • 10M Orders/day • 50K QPS • 99.99% Uptime</p>
+    </div>
+</div>
+</body>
+</html>
