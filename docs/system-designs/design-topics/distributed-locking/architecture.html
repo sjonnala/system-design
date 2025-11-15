@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Locking System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.consensus { background: #fef3c7; color: #92400e; }
+        .tag.coordination { background: #fee2e2; color: #991b1b; }
+        .tag.availability { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 8;
+        }
+
+        .lockmanager-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .consensus-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .coordination-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .scheduler-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .failover-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔒 Distributed Locking System Design Blueprint</h1>
+        <div class="subtitle">Complete Consensus, Coordination & Scheduling Architecture</div>
+        <div class="tags">
+            <span class="tag consensus">Consensus Algorithms</span>
+            <span class="tag coordination">Distributed Coordination</span>
+            <span class="tag availability">High Availability</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT APPLICATIONS</div>
+            <div class="component">
+                <div class="component-name">Microservices / Workers</div>
+                <div class="component-details">
+                    <strong>Lock Operations:</strong>
+                    <ul>
+                        <li>ACQUIRE lock (exclusive)</li>
+                        <li>RELEASE lock</li>
+                        <li>RENEW lease (heartbeat)</li>
+                        <li>CHECK lock status</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Lock Requests</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY / LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">gRPC / HTTP Gateway</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Protocol:</strong> gRPC for low latency, HTTP/2 for compatibility</li>
+                        <li><strong>Load Balancing:</strong> Consistent hashing to lock managers</li>
+                        <li><strong>Authentication:</strong> mTLS, API keys, JWT tokens</li>
+                        <li><strong>Rate Limiting:</strong> Token bucket per client (1000 req/sec)</li>
+                        <li><strong>Circuit Breaker:</strong> Fail-fast on lock manager failures</li>
+                        <li><strong>Timeout Management:</strong> Configurable deadlines (default: 5s)</li>
+                    </ul>
+                    <div class="code-snippet">
+// Lock Request
+service LockService {
+  rpc AcquireLock(LockRequest) returns (LockResponse);
+  rpc ReleaseLock(UnlockRequest) returns (UnlockResponse);
+  rpc RenewLock(RenewRequest) returns (RenewResponse);
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lock Manager -->
+        <div class="section lockmanager-section">
+            <div class="section-title">🔐 LOCK MANAGER CLUSTER</div>
+            <div class="component">
+                <div class="component-name">Distributed Lock Service</div>
+                <div class="component-details">
+                    <strong>Core Responsibilities:</strong>
+                    <div class="code-snippet">
+public class DistributedLock {
+  String lockId;          // UUID
+  String resourceName;    // e.g., "payment:user:123"
+  String ownerId;         // Client identifier
+  long ttl;               // Time-to-live (30s default)
+  long acquiredAt;        // Timestamp
+  long expiresAt;         // acquiredAt + ttl
+  int renewalCount;       // Heartbeat counter
+  LockState state;        // ACQUIRED, EXPIRED, RELEASED
+}
+
+// Acquire Lock Algorithm
+public LockResponse acquireLock(String resource, String owner) {
+  // 1. Check if lock exists
+  Lock existingLock = getLock(resource);
+
+  if (existingLock != null) {
+    if (existingLock.isExpired()) {
+      // Expired lock - auto cleanup
+      releaseLock(resource);
+    } else if (existingLock.owner == owner) {
+      // Same owner - renew
+      return renewLock(resource, owner);
+    } else {
+      // Different owner - lock denied
+      return LockResponse.DENIED;
+    }
+  }
+
+  // 2. Acquire lock with fencing token
+  long fencingToken = incrementFencingToken(resource);
+  Lock newLock = new Lock(resource, owner, ttl, fencingToken);
+
+  // 3. Write to consensus layer (Raft/Paxos)
+  boolean success = consensusLayer.propose(newLock);
+
+  if (success) {
+    // 4. Cache locally for fast lookup
+    localCache.put(resource, newLock);
+
+    // 5. Start heartbeat monitor
+    heartbeatScheduler.schedule(resource, ttl / 2);
+
+    return LockResponse.SUCCESS(fencingToken);
+  }
+
+  return LockResponse.FAILED;
+}</div>
+                    <strong>Key Features:</strong>
+                    <ul>
+                        <li><strong>Fencing Tokens:</strong> Monotonically increasing counter to prevent stale operations</li>
+                        <li><strong>Lock Expiration:</strong> TTL-based auto-release (default 30s)</li>
+                        <li><strong>Heartbeat/Renewal:</strong> Clients renew every ttl/2 interval</li>
+                        <li><strong>Deadlock Detection:</strong> Wait-die / Wound-wait algorithms</li>
+                        <li><strong>Fair Queuing:</strong> FIFO queue for waiting clients</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Lock Expiry & Cleanup</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Background thread scans expired locks every 5s</li>
+                        <li>Lazy deletion on access (check expiry on get)</li>
+                        <li>Grace period: 2s before hard deletion</li>
+                        <li>Metrics: Track lock hold duration, renewal rate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consensus Layer -->
+        <div class="section consensus-section">
+            <div class="section-title">⚖️ CONSENSUS LAYER</div>
+            <div class="component">
+                <div class="component-name">Raft / Paxos Consensus</div>
+                <div class="component-details">
+                    <strong>Raft Algorithm (Recommended):</strong>
+                    <div class="code-snippet">
+// Raft Cluster: 5 nodes (tolerates 2 failures)
+Leader Election:
+- Term-based election (term++)
+- Majority vote required (3/5)
+- Randomized timeouts (150-300ms)
+
+Log Replication:
+- Leader receives lock request
+- Appends to local log
+- Replicates to followers (async)
+- Commits when majority ACK (3/5)
+- Applies to state machine
+
+Consistency Guarantee:
+- Strong consistency (linearizability)
+- Read from leader (latest state)
+- Write only through leader</div>
+                    <strong>Why Raft over Paxos?</strong>
+                    <ul>
+                        <li>Simpler to understand and implement</li>
+                        <li>Better leader stability (single leader at a time)</li>
+                        <li>More efficient log compaction (snapshots)</li>
+                        <li>Used by: etcd, Consul, CockroachDB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">State Machine</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Deterministic lock state transitions</li>
+                        <li>Log compaction via snapshots (every 10K ops)</li>
+                        <li>Fast recovery from snapshots + delta logs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coordination Services -->
+        <div class="section coordination-section">
+            <div class="section-title">🤝 COORDINATION LAYER</div>
+            <div class="component">
+                <div class="component-name">ZooKeeper / etcd / Consul</div>
+                <div class="component-details">
+                    <strong>Why Use Coordination Services?</strong>
+                    <ul>
+                        <li><strong>Battle-tested:</strong> Production-grade, proven at scale</li>
+                        <li><strong>Built-in consensus:</strong> No need to implement Raft/Paxos</li>
+                        <li><strong>Watch mechanism:</strong> Clients notified on lock state changes</li>
+                        <li><strong>Ephemeral nodes:</strong> Auto-cleanup on client disconnect</li>
+                    </ul>
+                    <strong>etcd Example:</strong>
+                    <div class="code-snippet">
+// Acquire lock with etcd
+client.txn()
+  .If(new Cmp(lockKey, Cmp.Op.EQUAL, CmpTarget.createRevision(0)))
+  .Then(Op.put(lockKey, clientId, leaseId))
+  .Else()
+  .commit();
+
+// Automatic cleanup on lease expiration
+Lease lease = client.getLeaseClient();
+lease.grant(30); // 30s TTL
+lease.keepAlive(leaseId); // Heartbeat</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Layer -->
+        <div class="section storage-section">
+            <div class="section-title">💾 PERSISTENT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Distributed Database</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+CREATE TABLE locks (
+  resource_name VARCHAR(255) PRIMARY KEY,
+  owner_id VARCHAR(64) NOT NULL,
+  fencing_token BIGINT NOT NULL,
+  acquired_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_expires_at (expires_at)
+);
+
+-- Lock History for auditing
+CREATE TABLE lock_history (
+  id BIGSERIAL PRIMARY KEY,
+  resource_name VARCHAR(255),
+  owner_id VARCHAR(64),
+  action VARCHAR(20), -- ACQUIRE, RELEASE, EXPIRE
+  fencing_token BIGINT,
+  timestamp BIGINT,
+  duration_ms INT
+);</div>
+                    <strong>Databases:</strong>
+                    <ul>
+                        <li><strong>PostgreSQL:</strong> Strong ACID, good for audit logs</li>
+                        <li><strong>CockroachDB:</strong> Distributed SQL, automatic sharding</li>
+                        <li><strong>DynamoDB:</strong> High throughput, conditional writes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">⚡ CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Redlock Algorithm:</strong>
+                    <div class="code-snippet">
+// Acquire lock from N Redis instances (N=5)
+public boolean acquireLock(String resource, int ttl) {
+  long startTime = System.currentTimeMillis();
+  int quorum = (N / 2) + 1; // 3/5
+  int successCount = 0;
+
+  // Try to acquire from all instances
+  for (RedisInstance redis : instances) {
+    if (redis.set(resource, clientId, "NX", "PX", ttl)) {
+      successCount++;
+    }
+  }
+
+  long elapsed = System.currentTimeMillis() - startTime;
+  long validityTime = ttl - elapsed - CLOCK_DRIFT_MS;
+
+  // Check quorum and time validity
+  if (successCount >= quorum && validityTime > 0) {
+    return true; // Lock acquired
+  } else {
+    // Release acquired locks
+    releaseAllInstances(resource);
+    return false;
+  }
+}</div>
+                    <strong>Redis as Lock Store:</strong>
+                    <ul>
+                        <li>SET with NX (only if not exists) and PX (TTL)</li>
+                        <li>Fast: sub-millisecond latency</li>
+                        <li>Caveat: Not strongly consistent (AP in CAP)</li>
+                        <li>Use case: Best-effort locks, non-critical sections</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduler -->
+        <div class="section scheduler-section">
+            <div class="section-title">⏰ DISTRIBUTED SCHEDULER</div>
+            <div class="component">
+                <div class="component-name">Task Scheduling with Locks</div>
+                <div class="component-details">
+                    <strong>Cron Job Coordination:</strong>
+                    <div class="code-snippet">
+// Ensure only one instance runs scheduled task
+@Scheduled(cron = "0 0 * * * *") // Every hour
+public void hourlyTask() {
+  String lockKey = "scheduler:hourly-task";
+  String ownerId = instanceId;
+
+  try {
+    // Try to acquire lock
+    if (lockManager.tryLock(lockKey, ownerId, 3600)) {
+      // Execute task
+      processHourlyData();
+
+      // Publish metrics
+      metrics.recordTaskExecution(lockKey, "SUCCESS");
+    } else {
+      // Another instance is running
+      log.info("Task already running on another instance");
+    }
+  } finally {
+    lockManager.unlock(lockKey, ownerId);
+  }
+}</div>
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Leader Election:</strong> Single active scheduler among replicas</li>
+                        <li><strong>Job Distribution:</strong> Prevent duplicate job execution</li>
+                        <li><strong>Resource Allocation:</strong> Assign work to workers exclusively</li>
+                        <li><strong>Database Migrations:</strong> Ensure single migrator runs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Work Queue Management</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Lock-based consumer coordination (Kafka consumer groups)</li>
+                        <li>Fair work distribution via FIFO lock queue</li>
+                        <li>Prevent thundering herd on lock release</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📊 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Metrics & Alerts</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li><strong>Lock Acquisition Rate:</strong> locks/sec (trend analysis)</li>
+                        <li><strong>Lock Hold Duration:</strong> P50, P95, P99 (detect long locks)</li>
+                        <li><strong>Lock Contention:</strong> Failed acquisitions / total attempts</li>
+                        <li><strong>Renewal Success Rate:</strong> % of successful heartbeats</li>
+                        <li><strong>Expiry Rate:</strong> Auto-expired locks / total (leaky clients?)</li>
+                        <li><strong>Consensus Latency:</strong> Raft commit time (P99 < 50ms)</li>
+                    </ul>
+                    <strong>Alerts:</strong>
+                    <div class="code-snippet">
+Alert Rules:
+- Lock contention > 20% for 5min → HIGH_CONTENTION
+- Consensus latency P99 > 100ms → SLOW_CONSENSUS
+- Expired locks > 10/min → LEAKY_CLIENTS
+- Leader elections > 2/hour → CLUSTER_INSTABILITY</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Trace lock flow: acquire → consensus → commit → cache</li>
+                        <li>Jaeger / Zipkin for request flow visualization</li>
+                        <li>Correlate lock events with application logs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 EVENT STREAMING</div>
+            <div class="component">
+                <div class="component-name">Kafka / NATS</div>
+                <div class="component-details">
+                    <strong>Lock Events:</strong>
+                    <ul>
+                        <li><strong>lock.acquired:</strong> {resource, owner, fencingToken, timestamp}</li>
+                        <li><strong>lock.released:</strong> {resource, owner, holdDuration}</li>
+                        <li><strong>lock.expired:</strong> {resource, lastOwner, reason}</li>
+                        <li><strong>lock.contention:</strong> {resource, waitingClients[]}</li>
+                    </ul>
+                    <strong>Consumers:</strong>
+                    <ul>
+                        <li>Analytics service (lock usage patterns)</li>
+                        <li>Audit logger (compliance, security)</li>
+                        <li>Notification service (SLA violations)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="section analytics-section">
+            <div class="section-title">📈 ANALYTICS</div>
+            <div class="component">
+                <div class="component-name">ClickHouse / TimescaleDB</div>
+                <div class="component-details">
+                    <strong>Time-Series Analysis:</strong>
+                    <ul>
+                        <li>Lock hold duration trends (detect bottlenecks)</li>
+                        <li>Top contentious resources (optimization targets)</li>
+                        <li>Client behavior analysis (identify bad actors)</li>
+                        <li>Capacity planning (predict scaling needs)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Failover & Recovery -->
+        <div class="section failover-section">
+            <div class="section-title">🔄 FAILOVER & RECOVERY</div>
+            <div class="component">
+                <div class="component-name">Disaster Recovery</div>
+                <div class="component-details">
+                    <strong>Failure Scenarios:</strong>
+                    <ul>
+                        <li><strong>Lock Manager Crash:</strong> Consensus layer elects new leader, in-flight locks preserved</li>
+                        <li><strong>Consensus Partition:</strong> Minority partition cannot acquire locks (safety preserved)</li>
+                        <li><strong>Client Crash:</strong> Locks auto-expire via TTL, no manual cleanup needed</li>
+                        <li><strong>Network Split:</strong> Fencing tokens prevent split-brain scenarios</li>
+                    </ul>
+                    <strong>Recovery Procedures:</strong>
+                    <div class="code-snippet">
+Recovery SOP:
+1. Leader failure → Raft election (< 1s)
+2. Node recovery → Snapshot + log replay
+3. Cluster expansion → Add node, sync state
+4. Rolling upgrades → One node at a time, verify health</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">10,000 QPS</div>
+                <div class="metric-label">Lock acquisition throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;10ms</div>
+                <div class="metric-label">P99 lock acquisition latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability (4 nines)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">30 seconds</div>
+                <div class="metric-label">Default lock TTL</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">5 nodes</div>
+                <div class="metric-label">Raft cluster size (tolerates 2 failures)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;1 second</div>
+                <div class="metric-label">Leader election time</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 DISTRIBUTED LOCKING PATTERNS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Pessimistic vs Optimistic Locking</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Pessimistic:</strong> Acquire lock before operation, block others (high contention)</li>
+                    <li><strong>Optimistic:</strong> Check version on commit, retry if conflict (low contention)</li>
+                    <li><strong>When to use:</strong> Pessimistic for critical resources, Optimistic for read-heavy</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Lock Granularity</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Coarse-grained:</strong> Lock entire table/resource (simple, high contention)</li>
+                    <li><strong>Fine-grained:</strong> Lock specific rows/items (complex, low contention)</li>
+                    <li><strong>Hierarchical:</strong> Intent locks + row locks (balance complexity/performance)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Deadlock Prevention</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Resource Ordering:</strong> Always acquire locks in same order</li>
+                    <li><strong>Timeout:</strong> Release locks after max wait time</li>
+                    <li><strong>Wait-Die:</strong> Older transactions wait, younger die</li>
+                    <li><strong>Wound-Wait:</strong> Older transactions preempt younger</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Fencing Tokens</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Problem:</strong> Client acquires lock, pauses, lock expires, another client acquires</li>
+                    <li><strong>Solution:</strong> Monotonic token, server rejects operations with stale tokens</li>
+                    <li><strong>Implementation:</strong> Increment counter on each lock acquisition</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAP Theorem Trade-offs -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">⚖️ CAP THEOREM TRADE-OFFS</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">CP System (Consistency + Partition Tolerance)</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Examples:</strong> ZooKeeper, etcd, Consul<br>
+                    <strong>Behavior:</strong> Unavailable during network partition<br>
+                    <strong>Guarantees:</strong> Strong consistency (linearizability)<br>
+                    <strong>Use When:</strong> Correctness > Availability (banking, inventory)
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">AP System (Availability + Partition Tolerance)</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Examples:</strong> Redis (single instance), Cassandra<br>
+                    <strong>Behavior:</strong> Always available, eventual consistency<br>
+                    <strong>Guarantees:</strong> Best-effort, may have conflicts<br>
+                    <strong>Use When:</strong> Availability > Correctness (caching, metrics)
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Hybrid Approach (Recommended)</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Strategy:</strong> CP for critical locks, AP for best-effort<br>
+                    <strong>Implementation:</strong> etcd for strong locks, Redis for fast locks<br>
+                    <strong>Benefit:</strong> Flexibility based on use case requirements<br>
+                    <strong>Example:</strong> Payment locks (CP), rate limiting (AP)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">🔒 <strong>Core Principle:</strong> Distributed locks enable coordination at scale while preserving safety and liveness properties</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Raft Consensus • etcd/ZooKeeper • Redis • gRPC • Kubernetes • Prometheus</p>
+    </div>
+</div>
+</body>
+</html>
