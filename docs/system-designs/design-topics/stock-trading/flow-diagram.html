@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Trading System Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e3c72;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(30, 60, 114, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #1e3c72;
+        }
+
+        .flow-description h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #1e3c72;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #1e3c72;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💹 Stock Trading System Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('order')">📝 Order Placement Flow</button>
+            <button class="tab" onclick="showDiagram('execution')">⚡ Order Execution Flow</button>
+            <button class="tab" onclick="showDiagram('market')">📊 Market Data Flow</button>
+            <button class="tab" onclick="showDiagram('settlement')">💰 Settlement Flow</button>
+        </div>
+    </div>
+
+    <!-- Order Placement Flow -->
+    <div id="order-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#1e3c72" />
+                </marker>
+                <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+                </marker>
+                <marker id="arrowhead-error" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
+                </marker>
+                <linearGradient id="grad-client" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-gateway" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-auth" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f87171;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-order" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-risk" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-matching" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Order Placement Flow: Buy 100 AAPL @ $150
+            </text>
+
+            <!-- Client -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 Trading Client</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">User places order</text>
+            </g>
+
+            <!-- Arrow 1 -->
+            <path d="M 700 140 L 700 180" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#1e3c72" font-weight="600">POST /api/orders</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="url(#grad-gateway)" stroke="#0891b2" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="white">Rate limiting + Validation</text>
+            </g>
+
+            <!-- Arrow 2 -->
+            <path d="M 700 260 L 700 300" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="285" font-size="11" fill="#1e3c72" font-weight="600">Validate JWT</text>
+
+            <!-- Authentication -->
+            <g class="component">
+                <rect x="600" y="300" width="200" height="80" rx="10" fill="url(#grad-auth)" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔐 Auth Service</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Verify user identity</text>
+            </g>
+
+            <!-- Arrow 3 -->
+            <path d="M 700 380 L 700 420" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="405" font-size="11" fill="#1e3c72" font-weight="600">Authenticated</text>
+
+            <!-- Order Service -->
+            <g class="component">
+                <rect x="550" y="420" width="300" height="100" rx="10" fill="url(#grad-order)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="455" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📋 Order Management Service</text>
+                <text x="700" y="475" font-size="12" text-anchor="middle" fill="white">Validate order parameters</text>
+                <text x="700" y="495" font-size="11" text-anchor="middle" fill="white">Symbol, Quantity, Price, Side</text>
+            </g>
+
+            <!-- Arrow to Risk Engine -->
+            <path d="M 850 470 L 1020 470" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="900" y="460" font-size="11" fill="#1e3c72" font-weight="600">Pre-trade check</text>
+
+            <!-- Risk Engine -->
+            <g class="component">
+                <rect x="1020" y="420" width="280" height="100" rx="10" fill="url(#grad-risk)" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1160" y="455" font-size="14" font-weight="bold" text-anchor="middle" fill="white">⚠️ Risk Management Engine</text>
+                <text x="1160" y="475" font-size="11" text-anchor="middle" fill="white">• Check buying power: $20,000 > $15,000 ✓</text>
+                <text x="1160" y="493" font-size="11" text-anchor="middle" fill="white">• Position limit: 100 < 1,000 shares ✓</text>
+            </g>
+
+            <!-- Decision Diamond -->
+            <g class="component">
+                <path d="M 700 560 L 800 620 L 700 680 L 600 620 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="615" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Risk</text>
+                <text x="700" y="633" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Approved?</text>
+            </g>
+
+            <!-- Risk Rejected Path -->
+            <path d="M 600 620 L 200 620" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="380" y="610" font-size="12" fill="#dc2626" font-weight="700">NO ✗ - Insufficient funds</text>
+
+            <g class="component">
+                <rect x="100" y="580" width="100" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+                <text x="150" y="615" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ REJECTED</text>
+                <text x="150" y="635" font-size="11" text-anchor="middle" fill="#991b1b">Return error</text>
+            </g>
+
+            <!-- Risk Approved Path -->
+            <path d="M 700 680 L 700 740" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="630" y="715" font-size="12" fill="#059669" font-weight="700">YES ✓ - Approved</text>
+
+            <!-- Database Write (ACID Transaction) -->
+            <g class="component">
+                <rect x="550" y="740" width="300" height="120" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="775" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🗄️ Database (ACID Transaction)</text>
+                <text x="700" y="795" font-size="11" text-anchor="middle" fill="white">BEGIN TRANSACTION;</text>
+                <text x="700" y="813" font-size="11" text-anchor="middle" fill="white">INSERT INTO orders (PENDING)</text>
+                <text x="700" y="831" font-size="11" text-anchor="middle" fill="white">UPDATE accounts SET balance -= $15,050</text>
+                <text x="700" y="849" font-size="11" text-anchor="middle" fill="white">COMMIT;</text>
+            </g>
+
+            <!-- Arrow to Matching Engine -->
+            <path d="M 700 860 L 700 920" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="895" font-size="11" fill="#1e3c72" font-weight="600">Route to Matching</text>
+
+            <!-- Matching Engine -->
+            <g class="component">
+                <rect x="550" y="920" width="300" height="100" rx="10" fill="url(#grad-matching)" stroke="#059669" stroke-width="2"/>
+                <text x="700" y="955" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⚡ Matching Engine</text>
+                <text x="700" y="975" font-size="12" text-anchor="middle" fill="white">Add to order book</text>
+                <text x="700" y="995" font-size="11" text-anchor="middle" fill="white">Status: ACCEPTED → Queue for matching</text>
+            </g>
+
+            <!-- WebSocket Notification -->
+            <path d="M 550 970 L 200 970" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="350" y="960" font-size="11" fill="#9333ea">WebSocket update</text>
+
+            <g class="component">
+                <rect x="100" y="930" width="100" height="80" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="150" y="965" font-size="14" font-weight="bold" text-anchor="middle" fill="#7c3aed">📱 Client</text>
+                <text x="150" y="985" font-size="11" text-anchor="middle" fill="#7c3aed">Order placed!</text>
+            </g>
+
+            <!-- Success Response -->
+            <path d="M 700 920 L 1100 920 L 1100 340 L 800 340" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)" stroke-dasharray="8,4"/>
+            <text x="1020" y="630" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="1020" y="650" font-size="11" fill="#059669">201 Created</text>
+            <text x="1020" y="665" font-size="11" fill="#059669">{orderId: "ORD-123"}</text>
+
+            <!-- Step Numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="220" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="227" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="340" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="347" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="700" cy="470" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="477" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="1160" cy="470" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1160" y="477" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="700" cy="800" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="807" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+
+            <circle cx="700" cy="970" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="977" font-size="14" font-weight="bold" text-anchor="middle" fill="white">7</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📝 Order Placement Flow Steps</h3>
+            <ol>
+                <li><strong>User Submits Order:</strong> Client sends <code>POST /api/orders</code> with order details: BUY 100 AAPL @ $150 LIMIT</li>
+                <li><strong>API Gateway:</strong> Validates request format, applies rate limiting (1000 orders/min for Pro tier), checks API quota</li>
+                <li><strong>Authentication:</strong> Verifies JWT token, checks user permissions, validates session (30-min timeout)</li>
+                <li><strong>Order Validation:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Validate symbol exists (AAPL is valid ticker)</li>
+                        <li>Check order parameters (quantity > 0, price > 0)</li>
+                        <li>Verify market hours (9:30 AM - 4:00 PM ET)</li>
+                        <li>Check order type constraints</li>
+                    </ul>
+                </li>
+                <li><strong>Pre-Trade Risk Checks:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Buying Power:</strong> $20,000 available > $15,050 required ✓</li>
+                        <li><strong>Position Limit:</strong> 100 shares < 1,000 max per symbol ✓</li>
+                        <li><strong>Concentration Limit:</strong> 15% < 25% max in single stock ✓</li>
+                        <li>If ANY check fails → REJECT order immediately</li>
+                    </ul>
+                </li>
+                <li><strong>ACID Transaction:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><code>BEGIN TRANSACTION;</code> (Atomicity starts)</li>
+                        <li><code>INSERT INTO orders</code> with status PENDING</li>
+                        <li><code>UPDATE accounts SET balance = balance - 15050</code> (reserve funds)</li>
+                        <li><code>INSERT INTO transactions</code> (audit trail)</li>
+                        <li><code>COMMIT;</code> (All or nothing - Atomicity + Durability)</li>
+                    </ul>
+                </li>
+                <li><strong>Route to Matching Engine:</strong> Order queued in matching engine's order book, status: ACCEPTED</li>
+                <li><strong>Client Notification:</strong> WebSocket push notification + HTTP 201 response with order ID</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dcfce7; border-left: 4px solid #22c55e; border-radius: 5px;">
+                <strong>🎯 Performance:</strong> Total latency from client to matching engine: ~10-50ms (P99)
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Execution Flow -->
+    <div id="execution-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Order Execution Flow: Matching & Settlement
+            </text>
+
+            <!-- Matching Engine -->
+            <g class="component">
+                <rect x="550" y="60" width="300" height="120" rx="10" fill="url(#grad-matching)" stroke="#059669" stroke-width="2"/>
+                <text x="700" y="100" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⚡ Matching Engine</text>
+                <text x="700" y="120" font-size="12" text-anchor="middle" fill="white">Order Book (C++ implementation)</text>
+                <text x="700" y="140" font-size="11" text-anchor="middle" fill="white">BID: $150.00 (500 shares) | ASK: $150.05 (300)</text>
+            </g>
+
+            <!-- New Order Arrives -->
+            <path d="M 400 120 L 550 120" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="420" y="110" font-size="11" fill="#1e3c72" font-weight="600">Incoming: SELL 100 @ $150.00</text>
+
+            <!-- Decision: Match Found? -->
+            <g class="component">
+                <path d="M 700 220 L 800 280 L 700 340 L 600 280 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="275" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Match</text>
+                <text x="700" y="293" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Found?</text>
+            </g>
+
+            <!-- No Match Path -->
+            <path d="M 600 280 L 200 280" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="380" y="270" font-size="12" fill="#dc2626" font-weight="700">NO - Add to book</text>
+
+            <g class="component">
+                <rect x="100" y="240" width="100" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="150" y="270" font-size="12" font-weight="bold" text-anchor="middle" fill="#991b1b">📋 Wait in</text>
+                <text x="150" y="290" font-size="12" font-weight="bold" text-anchor="middle" fill="#991b1b">Order Book</text>
+            </g>
+
+            <!-- Match Found Path -->
+            <path d="M 700 340 L 700 400" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="630" y="375" font-size="12" fill="#059669" font-weight="700">YES ✓ - Execute trade</text>
+
+            <!-- Trade Execution -->
+            <g class="component">
+                <rect x="550" y="400" width="300" height="100" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/>
+                <text x="700" y="435" font-size="16" font-weight="bold" text-anchor="middle" fill="#166534">💰 Trade Execution</text>
+                <text x="700" y="455" font-size="12" text-anchor="middle" fill="#166534">100 shares @ $150.00</text>
+                <text x="700" y="473" font-size="11" text-anchor="middle" fill="#166534">Buyer: User123 | Seller: User456</text>
+                <text x="700" y="491" font-size="11" text-anchor="middle" fill="#166534">Latency: &lt;100 microseconds</text>
+            </g>
+
+            <!-- Database Update (Dual-write ACID) -->
+            <path d="M 700 500 L 700 560" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="535" font-size="11" fill="#1e3c72" font-weight="600">Dual ACID transaction</text>
+
+            <!-- Split to two database updates -->
+            <path d="M 700 560 L 450 640" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 700 560 L 950 640" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Buyer's Account Update -->
+            <g class="component">
+                <rect x="250" y="640" width="280" height="140" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="390" y="675" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💵 Buyer (User123) Update</text>
+                <text x="390" y="695" font-size="11" text-anchor="middle" fill="white">BEGIN TRANSACTION;</text>
+                <text x="390" y="713" font-size="11" text-anchor="middle" fill="white">UPDATE orders SET status='FILLED'</text>
+                <text x="390" y="731" font-size="11" text-anchor="middle" fill="white">INSERT INTO positions (+100 AAPL)</text>
+                <text x="390" y="749" font-size="11" text-anchor="middle" fill="white">INSERT INTO transactions (ledger)</text>
+                <text x="390" y="767" font-size="11" text-anchor="middle" fill="white">COMMIT;</text>
+            </g>
+
+            <!-- Seller's Account Update -->
+            <g class="component">
+                <rect x="870" y="640" width="280" height="140" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="1010" y="675" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💵 Seller (User456) Update</text>
+                <text x="1010" y="695" font-size="11" text-anchor="middle" fill="white">BEGIN TRANSACTION;</text>
+                <text x="1010" y="713" font-size="11" text-anchor="middle" fill="white">UPDATE orders SET status='FILLED'</text>
+                <text x="1010" y="731" font-size="11" text-anchor="middle" fill="white">UPDATE positions (-100 AAPL)</text>
+                <text x="1010" y="749" font-size="11" text-anchor="middle" fill="white">UPDATE accounts (+$15,000)</text>
+                <text x="1010" y="767" font-size="11" text-anchor="middle" fill="white">COMMIT;</text>
+            </g>
+
+            <!-- Merge back -->
+            <path d="M 450 780 L 700 850" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 950 780 L 700 850" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Event Publishing -->
+            <g class="component">
+                <rect x="550" y="850" width="300" height="80" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="700" y="880" font-size="14" font-weight="bold" text-anchor="middle" fill="#7c3aed">📬 Kafka Event</text>
+                <text x="700" y="900" font-size="11" text-anchor="middle" fill="#7c3aed">Publish: order.filled event</text>
+            </g>
+
+            <!-- Notifications -->
+            <path d="M 550 890 L 200 890" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <path d="M 850 890 L 1200 890" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <g class="component">
+                <rect x="100" y="850" width="100" height="80" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="150" y="880" font-size="12" font-weight="bold" text-anchor="middle" fill="#1e40af">📱 Buyer</text>
+                <text x="150" y="900" font-size="11" text-anchor="middle" fill="#1e40af">Order filled!</text>
+            </g>
+
+            <g class="component">
+                <rect x="1200" y="850" width="100" height="80" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="1250" y="880" font-size="12" font-weight="bold" text-anchor="middle" fill="#1e40af">📱 Seller</text>
+                <text x="1250" y="900" font-size="11" text-anchor="middle" fill="#1e40af">Order filled!</text>
+            </g>
+
+            <!-- Settlement -->
+            <path d="M 700 930 L 700 990" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="965" font-size="11" fill="#1e3c72" font-weight="600">T+2 Settlement</text>
+
+            <g class="component">
+                <rect x="550" y="990" width="300" height="80" rx="10" fill="#fef3c7" stroke="#fbbf24" stroke-width="2"/>
+                <text x="700" y="1020" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">🏦 Clearinghouse</text>
+                <text x="700" y="1040" font-size="11" text-anchor="middle" fill="#92400e">DTCC settlement in 2 business days</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>⚡ Order Execution Flow Steps</h3>
+            <ol>
+                <li><strong>Matching Engine:</strong> Continuously scans order book for matching buy/sell orders
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Price-Time Priority: Best price first, then FIFO at same price</li>
+                        <li>Order book stored in memory (lock-free data structures)</li>
+                    </ul>
+                </li>
+                <li><strong>Match Detection:</strong> Incoming SELL 100 @ $150.00 matches existing BUY 100 @ $150.00
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Latency: &lt;100 microseconds from match detection to execution</li>
+                    </ul>
+                </li>
+                <li><strong>Trade Execution:</strong> Create trade record: 100 shares @ $150.00 between User123 (buyer) and User456 (seller)</li>
+                <li><strong>Dual ACID Transactions:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Buyer's Account:</strong> Debit cash, credit position (100 AAPL shares)</li>
+                        <li><strong>Seller's Account:</strong> Credit cash (+$15,000), debit position (-100 AAPL)</li>
+                        <li><strong>Both must succeed atomically</strong> - if one fails, both rollback (2-phase commit)</li>
+                    </ul>
+                </li>
+                <li><strong>Event Publishing:</strong> Publish <code>order.filled</code> event to Kafka for:
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Real-time notifications (WebSocket push)</li>
+                        <li>Analytics and reporting</li>
+                        <li>Compliance and audit trail</li>
+                    </ul>
+                </li>
+                <li><strong>Client Notifications:</strong> Both buyer and seller receive instant WebSocket push notification</li>
+                <li><strong>Settlement (T+2):</strong> Trade sent to DTCC clearinghouse for final settlement in 2 business days</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dcfce7; border-left: 4px solid #22c55e; border-radius: 5px;">
+                <strong>🎯 ACID Guarantee:</strong> Even if system crashes 1ms after trade, both accounts will be correctly updated on recovery (Write-Ahead Logging + Synchronous Replication)
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Data Flow -->
+    <div id="market-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Market Data Flow: Real-Time Price Updates
+            </text>
+
+            <!-- Exchange -->
+            <g class="component">
+                <rect x="200" y="60" width="200" height="100" rx="10" fill="#1e3c72" stroke="#1e40af" stroke-width="2"/>
+                <text x="300" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🏛️ Stock Exchange</text>
+                <text x="300" y="115" font-size="12" text-anchor="middle" fill="white">NYSE / NASDAQ</text>
+                <text x="300" y="135" font-size="11" text-anchor="middle" fill="white">Trade: AAPL $150.05</text>
+            </g>
+
+            <!-- FIX Protocol -->
+            <path d="M 400 110 L 550 110" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="430" y="100" font-size="11" fill="#1e3c72" font-weight="600">FIX Protocol</text>
+
+            <!-- Market Data Feed Handler -->
+            <g class="component">
+                <rect x="550" y="60" width="300" height="100" rx="10" fill="url(#grad-matching)" stroke="#059669" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📡 Feed Handler</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Parse & Normalize</text>
+                <text x="700" y="135" font-size="11" text-anchor="middle" fill="white">Process: 100K ticks/sec</text>
+            </g>
+
+            <!-- Fan-out to multiple consumers -->
+            <path d="M 700 160 L 400 250" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 700 160 L 700 250" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 700 160 L 1000 250" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Redis Cache -->
+            <g class="component">
+                <rect x="250" y="250" width="200" height="100" rx="10" fill="url(#grad-risk)" stroke="#f59e0b" stroke-width="2"/>
+                <text x="350" y="285" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💾 Redis Cache</text>
+                <text x="350" y="305" font-size="11" text-anchor="middle" fill="white">Latest quote:</text>
+                <text x="350" y="323" font-size="11" text-anchor="middle" fill="white">AAPL: $150.05</text>
+                <text x="350" y="341" font-size="11" text-anchor="middle" fill="white">TTL: Real-time (no expiry)</text>
+            </g>
+
+            <!-- Kafka Topic -->
+            <g class="component">
+                <rect x="550" y="250" width="300" height="100" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="700" y="285" font-size="14" font-weight="bold" text-anchor="middle" fill="#7c3aed">📬 Kafka Topic</text>
+                <text x="700" y="305" font-size="11" text-anchor="middle" fill="#7c3aed">market.data.aapl</text>
+                <text x="700" y="323" font-size="11" text-anchor="middle" fill="#7c3aed">Partition by symbol</text>
+                <text x="700" y="341" font-size="11" text-anchor="middle" fill="#7c3aed">Retention: 1 hour</text>
+            </g>
+
+            <!-- TimescaleDB -->
+            <g class="component">
+                <rect x="900" y="250" width="200" height="100" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="1000" y="285" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📊 TimescaleDB</text>
+                <text x="1000" y="305" font-size="11" text-anchor="middle" fill="white">Time-series storage</text>
+                <text x="1000" y="323" font-size="11" text-anchor="middle" fill="white">1-min OHLCV bars</text>
+                <text x="1000" y="341" font-size="11" text-anchor="middle" fill="white">Retention: 10 years</text>
+            </g>
+
+            <!-- WebSocket Server -->
+            <path d="M 700 350 L 700 450" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="405" font-size="11" fill="#1e3c72" font-weight="600">Consume from Kafka</text>
+
+            <g class="component">
+                <rect x="550" y="450" width="300" height="100" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="700" y="485" font-size="16" font-weight="bold" text-anchor="middle" fill="#1e40af">🔌 WebSocket Server</text>
+                <text x="700" y="505" font-size="12" text-anchor="middle" fill="#1e40af">100K concurrent connections</text>
+                <text x="700" y="525" font-size="11" text-anchor="middle" fill="#1e40af">Broadcast to subscribed clients</text>
+            </g>
+
+            <!-- Broadcast to clients -->
+            <path d="M 700 550 L 350 650" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <path d="M 700 550 L 700 650" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <path d="M 700 550 L 1050 650" stroke="#c084fc" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <!-- Web Client -->
+            <g class="component">
+                <rect x="200" y="650" width="150" height="100" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="275" y="685" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💻 Web Client</text>
+                <text x="275" y="705" font-size="11" text-anchor="middle" fill="white">React chart</text>
+                <text x="275" y="723" font-size="11" text-anchor="middle" fill="white">updates in</text>
+                <text x="275" y="741" font-size="11" text-anchor="middle" fill="white">real-time</text>
+            </g>
+
+            <!-- Mobile Client -->
+            <g class="component">
+                <rect x="575" y="650" width="150" height="100" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="650" y="685" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📱 Mobile App</text>
+                <text x="650" y="705" font-size="11" text-anchor="middle" fill="white">Native chart</text>
+                <text x="650" y="723" font-size="11" text-anchor="middle" fill="white">push</text>
+                <text x="650" y="741" font-size="11" text-anchor="middle" fill="white">notifications</text>
+            </g>
+
+            <!-- Algo Trading -->
+            <g class="component">
+                <rect x="950" y="650" width="150" height="100" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="1025" y="685" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🤖 Algo Bot</text>
+                <text x="1025" y="705" font-size="11" text-anchor="middle" fill="white">Automated</text>
+                <text x="1025" y="723" font-size="11" text-anchor="middle" fill="white">trading on</text>
+                <text x="1025" y="741" font-size="11" text-anchor="middle" fill="white">price triggers</text>
+            </g>
+
+            <!-- Latency annotation -->
+            <text x="1200" y="400" font-size="13" fill="#059669" font-weight="700">Latency Breakdown:</text>
+            <text x="1200" y="425" font-size="11" fill="#4a5568">Exchange → Feed: 5ms</text>
+            <text x="1200" y="445" font-size="11" fill="#4a5568">Processing: 2ms</text>
+            <text x="1200" y="465" font-size="11" fill="#4a5568">Kafka publish: 1ms</text>
+            <text x="1200" y="485" font-size="11" fill="#4a5568">WebSocket: 2ms</text>
+            <text x="1200" y="515" font-size="13" fill="#ef4444" font-weight="700">Total: ~10ms</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📊 Market Data Flow Steps</h3>
+            <ol>
+                <li><strong>Exchange Feed:</strong> NYSE/NASDAQ broadcasts real-time trade: AAPL traded at $150.05
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>FIX protocol or proprietary binary format</li>
+                        <li>Direct connection to exchange (colocation for low latency)</li>
+                    </ul>
+                </li>
+                <li><strong>Feed Handler:</strong> Parses and normalizes market data
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Handles 100K+ ticks per second</li>
+                        <li>Converts to internal format</li>
+                        <li>Performs basic validation</li>
+                    </ul>
+                </li>
+                <li><strong>Multi-path Distribution:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Redis Cache:</strong> Update latest quote (sub-ms lookup)</li>
+                        <li><strong>Kafka Topic:</strong> Publish to <code>market.data.aapl</code> topic</li>
+                        <li><strong>TimescaleDB:</strong> Store historical tick data (1-min bars)</li>
+                    </ul>
+                </li>
+                <li><strong>WebSocket Server:</strong> Consumes from Kafka, broadcasts to subscribed clients
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Supports 100K concurrent WebSocket connections</li>
+                        <li>Topic-based subscriptions (clients subscribe to specific symbols)</li>
+                    </ul>
+                </li>
+                <li><strong>Client Updates:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Web:</strong> React chart updates in real-time</li>
+                        <li><strong>Mobile:</strong> Native chart with haptic feedback</li>
+                        <li><strong>Algo Bots:</strong> Trigger automated trades on price thresholds</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #fbbf24; border-radius: 5px;">
+                <strong>⚡ Performance:</strong> End-to-end latency from exchange to client: ~10ms (P50), ~20ms (P99)
+            </div>
+        </div>
+    </div>
+
+    <!-- Settlement Flow -->
+    <div id="settlement-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Settlement Flow: T+2 Clearing & Settlement
+            </text>
+
+            <!-- T+0: Trade Day -->
+            <g class="component">
+                <rect x="100" y="80" width="200" height="120" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                <text x="200" y="115" font-size="16" font-weight="bold" text-anchor="middle" fill="#166534">📅 T+0 (Trade Day)</text>
+                <text x="200" y="135" font-size="12" text-anchor="middle" fill="#166534">Trade executed</text>
+                <text x="200" y="153" font-size="11" text-anchor="middle" fill="#166534">100 AAPL @ $150</text>
+                <text x="200" y="171" font-size="11" text-anchor="middle" fill="#166534">Trade confirmed</text>
+            </g>
+
+            <path d="M 300 140 L 400 140" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Clearinghouse -->
+            <g class="component">
+                <rect x="400" y="80" width="250" height="120" rx="10" fill="url(#grad-risk)" stroke="#f59e0b" stroke-width="2"/>
+                <text x="525" y="115" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🏦 DTCC / NSCC</text>
+                <text x="525" y="135" font-size="12" text-anchor="middle" fill="white">Clearinghouse</text>
+                <text x="525" y="153" font-size="11" text-anchor="middle" fill="white">• Validate trade</text>
+                <text x="525" y="171" font-size="11" text-anchor="middle" fill="white">• Novation (becomes counterparty)</text>
+            </g>
+
+            <!-- T+1: Day 1 -->
+            <path d="M 525 200 L 525 280" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="545" y="245" font-size="11" fill="#1e3c72" font-weight="600">Next business day</text>
+
+            <g class="component">
+                <rect x="400" y="280" width="250" height="120" rx="10" fill="#fef3c7" stroke="#fbbf24" stroke-width="2"/>
+                <text x="525" y="315" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400e">📅 T+1</text>
+                <text x="525" y="335" font-size="12" text-anchor="middle" fill="#92400e">Comparison & Netting</text>
+                <text x="525" y="353" font-size="11" text-anchor="middle" fill="#92400e">• Match buyer/seller details</text>
+                <text x="525" y="371" font-size="11" text-anchor="middle" fill="#92400e">• Calculate net obligations</text>
+            </g>
+
+            <!-- T+2: Settlement Day -->
+            <path d="M 525 400 L 525 480" stroke="#1e3c72" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="545" y="445" font-size="11" fill="#1e3c72" font-weight="600">Settlement day</text>
+
+            <g class="component">
+                <rect x="400" y="480" width="250" height="140" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/>
+                <text x="525" y="515" font-size="16" font-weight="bold" text-anchor="middle" fill="#166534">📅 T+2 (Settlement)</text>
+                <text x="525" y="535" font-size="12" text-anchor="middle" fill="#166534">Final Settlement</text>
+                <text x="525" y="553" font-size="11" text-anchor="middle" fill="#166534">• DTC transfers shares</text>
+                <text x="525" y="571" font-size="11" text-anchor="middle" fill="#166534">• Federal Reserve transfers cash</text>
+                <text x="525" y="589" font-size="11" text-anchor="middle" fill="#166534">• Settlement complete ✓</text>
+            </g>
+
+            <!-- Buyer's Broker -->
+            <path d="M 650 550 L 850 550" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="720" y="540" font-size="11" fill="#059669" font-weight="600">Shares delivered</text>
+
+            <g class="component">
+                <rect x="850" y="480" width="200" height="140" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="950" y="515" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 Buyer (User123)</text>
+                <text x="950" y="535" font-size="11" text-anchor="middle" fill="white">Receives:</text>
+                <text x="950" y="553" font-size="11" text-anchor="middle" fill="white">✓ 100 AAPL shares</text>
+                <text x="950" y="571" font-size="11" text-anchor="middle" fill="white">Position now settled</text>
+                <text x="950" y="589" font-size="11" text-anchor="middle" fill="white">Can sell or transfer</text>
+            </g>
+
+            <!-- Seller's Broker -->
+            <path d="M 400 550 L 200 550" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="250" y="540" font-size="11" fill="#059669" font-weight="600">Cash delivered</text>
+
+            <g class="component">
+                <rect x="100" y="480" width="200" height="140" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="200" y="515" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 Seller (User456)</text>
+                <text x="200" y="535" font-size="11" text-anchor="middle" fill="white">Receives:</text>
+                <text x="200" y="553" font-size="11" text-anchor="middle" fill="white">✓ $15,000 cash</text>
+                <text x="200" y="571" font-size="11" text-anchor="middle" fill="white">Funds now available</text>
+                <text x="200" y="589" font-size="11" text-anchor="middle" fill="white">Can withdraw</text>
+            </g>
+
+            <!-- Timeline -->
+            <line x1="100" y1="700" x2="1050" y2="700" stroke="#cbd5e0" stroke-width="3"/>
+            <circle cx="200" cy="700" r="10" fill="#22c55e"/>
+            <circle cx="525" cy="700" r="10" fill="#fbbf24"/>
+            <circle cx="850" cy="700" r="10" fill="#10b981"/>
+
+            <text x="200" y="730" font-size="12" text-anchor="middle" fill="#166534" font-weight="600">T+0</text>
+            <text x="525" y="730" font-size="12" text-anchor="middle" fill="#92400e" font-weight="600">T+1</text>
+            <text x="850" y="730" font-size="12" text-anchor="middle" fill="#059669" font-weight="600">T+2</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>💰 Settlement Flow Steps (T+2 Cycle)</h3>
+            <ol>
+                <li><strong>T+0 (Trade Day):</strong> Trade executed and confirmed
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Trade details sent to clearinghouse (DTCC/NSCC)</li>
+                        <li>Both parties' accounts show pending positions</li>
+                        <li>Clearinghouse performs <strong>novation</strong> (becomes counterparty to both sides)</li>
+                    </ul>
+                </li>
+                <li><strong>T+1 (Next Business Day):</strong> Comparison and netting
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Comparison:</strong> Match buyer and seller trade details</li>
+                        <li><strong>Netting:</strong> Calculate net obligations across all trades</li>
+                        <li>Example: If buyer has 5 trades, net position calculated</li>
+                        <li>Reduces settlement volume by ~98% (CNS - Continuous Net Settlement)</li>
+                    </ul>
+                </li>
+                <li><strong>T+2 (Settlement Day):</strong> Final settlement
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>DTC (Depository Trust Company):</strong> Transfers shares electronically</li>
+                        <li><strong>Federal Reserve:</strong> Transfers cash via Fedwire</li>
+                        <li>Settlement occurs at end of day (typically 4:00 PM ET)</li>
+                        <li>Buyer's position no longer pending - fully settled</li>
+                        <li>Seller's cash fully available for withdrawal</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #fbbf24; border-radius: 5px;">
+                <strong>📌 Note:</strong> SEC moved from T+3 to T+2 in 2017. Industry is considering T+1 or T+0 (instant settlement) using blockchain technology.
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>⚠️ Risk:</strong> If buyer fails to deliver cash or seller fails to deliver shares → <strong>Fail to Deliver (FTD)</strong> → Clearinghouse covers and charges fees
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">&lt;10ms</div>
+                <div class="metric-label">Order Placement (P99)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;100μs</div>
+                <div class="metric-label">Matching Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;10ms</div>
+                <div class="metric-label">Market Data Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">1M</div>
+                <div class="metric-label">Orders/sec Capacity</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100K</div>
+                <div class="metric-label">WebSocket Connections</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);"></div>
+            <span>Client Layer</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #f87171, #ef4444);"></div>
+            <span>Authentication</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #84cc16, #65a30d);"></div>
+            <span>Order Service</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"></div>
+            <span>Risk Engine</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #34d399, #10b981);"></div>
+            <span>Matching Engine</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fb923c, #f97316);"></div>
+            <span>Database</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(30, 60, 114, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
