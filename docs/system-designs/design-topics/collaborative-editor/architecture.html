@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Real-time Editor System Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.realtime { background: #fef3c7; color: #92400e; }
+        .tag.collaborative { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .websocket-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 8;
+        }
+
+        .collab-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .document-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .ot-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .crdt-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .version-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .presence-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .notification-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 4;
+        }
+
+        .auth-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📝 Collaborative Real-time Editor System Design</h1>
+        <div class="subtitle">Google Docs / Notion Style Architecture</div>
+        <div class="tags">
+            <span class="tag realtime">Real-time Sync</span>
+            <span class="tag collaborative">Multi-user Collaboration</span>
+            <span class="tag scale">Conflict Resolution</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Rich Text Editor</div>
+                <div class="component-details">
+                    <strong>Technologies:</strong>
+                    <ul>
+                        <li>Quill.js / ProseMirror / Slate.js</li>
+                        <li>React / Vue for UI</li>
+                        <li>Y.js for CRDT</li>
+                        <li>WebSocket client</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Rich formatting (bold, italic, lists)</li>
+                        <li>Real-time cursor tracking</li>
+                        <li>Offline editing support</li>
+                        <li>Undo/Redo stack</li>
+                        <li>Comments & suggestions</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="component">
+                <div class="component-name">Local State Management</div>
+                <div class="component-details">
+                    <ul>
+                        <li>IndexedDB for offline storage</li>
+                        <li>Operational buffer queue</li>
+                        <li>Pending operations tracking</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ WebSocket Connection</div>
+        </div>
+
+        <!-- WebSocket Gateway -->
+        <div class="section websocket-section">
+            <div class="section-title">🔌 WEBSOCKET GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Real-time Communication Server</div>
+                <div class="component-details">
+                    <strong>Node.js / Go WebSocket Server</strong>
+                    <div class="code-snippet">
+// WebSocket Message Types
+{
+  "type": "operation",
+  "docId": "doc-12345",
+  "userId": "user-789",
+  "operation": {
+    "type": "insert",
+    "position": 42,
+    "text": "Hello",
+    "version": 156
+  }
+}
+
+{
+  "type": "cursor",
+  "docId": "doc-12345",
+  "userId": "user-789",
+  "position": 42,
+  "selection": { "start": 42, "end": 47 }
+}</div>
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Connection management:</strong> 1M+ concurrent connections</li>
+                        <li><strong>Room-based routing:</strong> Broadcast to document participants</li>
+                        <li><strong>Heartbeat/ping:</strong> Keep-alive every 30s</li>
+                        <li><strong>Reconnection handling:</strong> Resume from last operation</li>
+                        <li><strong>Load balancing:</strong> Consistent hashing by document ID</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Message Queue Integration</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Publish operations to Kafka/Redis Streams</li>
+                        <li>Durable operation log</li>
+                        <li>Replay capability for sync</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Horizontal Scaling</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Stateless WebSocket servers (50-100 instances)</li>
+                        <li>Redis Pub/Sub for cross-server broadcast</li>
+                        <li>Sticky sessions via document ID</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Service (OT) -->
+        <div class="section collab-section">
+            <div class="section-title">🤝 COLLABORATION SERVICE</div>
+            <div class="component">
+                <div class="component-name">Operational Transform Engine</div>
+                <div class="component-details">
+                    <strong>Core Responsibilities:</strong>
+                    <ul>
+                        <li>Transform concurrent operations</li>
+                        <li>Maintain causality and convergence</li>
+                        <li>Resolve conflicts automatically</li>
+                        <li>Broadcast transformed ops to clients</li>
+                    </ul>
+                    <div class="code-snippet">
+// OT Transformation Example
+function transform(op1, op2) {
+  // User A inserts "X" at position 5
+  // User B inserts "Y" at position 7
+  // Result: Both operations succeed,
+  // positions adjusted for causality
+
+  if (op1.position < op2.position) {
+    op2.position += op1.text.length;
+  }
+  return [op1, op2];
+}</div>
+                    <strong>Algorithms:</strong>
+                    <ul>
+                        <li><strong>OT (Operational Transformation):</strong> Google Docs approach</li>
+                        <li><strong>Transform operations:</strong> insert, delete, retain</li>
+                        <li><strong>Vector clocks:</strong> Track operation ordering</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Operation Sequencer</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Assign global sequence numbers</li>
+                        <li>Ensure total ordering of operations</li>
+                        <li>Handle out-of-order delivery</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Service -->
+        <div class="section document-section">
+            <div class="section-title">📄 DOCUMENT SERVICE</div>
+            <div class="component">
+                <div class="component-name">Document Management</div>
+                <div class="component-details">
+                    <strong>REST API:</strong>
+                    <div class="code-snippet">
+POST   /api/v1/documents
+GET    /api/v1/documents/:id
+PATCH  /api/v1/documents/:id
+DELETE /api/v1/documents/:id
+GET    /api/v1/documents/:id/collaborators
+POST   /api/v1/documents/:id/share</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Document CRUD operations</li>
+                        <li>Permissions management (owner, editor, viewer)</li>
+                        <li>Folder hierarchy</li>
+                        <li>Document metadata (title, created_at, updated_at)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Access Control</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Role-based permissions (RBAC)</li>
+                        <li>Share links with expiration</li>
+                        <li>Organization-level policies</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Export Service</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Export to PDF, DOCX, Markdown</li>
+                        <li>Background job processing</li>
+                        <li>Template support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operational Transform (OT) -->
+        <div class="section ot-section">
+            <div class="section-title">🔄 OT ALGORITHM</div>
+            <div class="component">
+                <div class="component-name">Operational Transformation</div>
+                <div class="component-details">
+                    <strong>Used by: Google Docs</strong>
+                    <div class="code-snippet">
+// Operation types
+Insert(pos, text)
+Delete(pos, length)
+Retain(length)
+
+// Transform function
+transform(op1, op2) {
+  // Ensure convergence:
+  // op1 ∘ transform(op2, op1)
+  // = op2 ∘ transform(op1, op2)
+}</div>
+                    <strong>Advantages:</strong>
+                    <ul>
+                        <li>Deterministic conflict resolution</li>
+                        <li>Low bandwidth (send operations, not full doc)</li>
+                        <li>Proven at scale (Google Docs)</li>
+                    </ul>
+                    <strong>Challenges:</strong>
+                    <ul>
+                        <li>Complex to implement correctly</li>
+                        <li>Requires central server for ordering</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRDT -->
+        <div class="section crdt-section">
+            <div class="section-title">📊 CRDT ALGORITHM</div>
+            <div class="component">
+                <div class="component-name">Conflict-free Replicated Data Type</div>
+                <div class="component-details">
+                    <strong>Used by: Figma, Notion</strong>
+                    <div class="code-snippet">
+// Y.js CRDT example
+import * as Y from 'yjs'
+
+const ydoc = new Y.Doc()
+const ytext = ydoc.getText('content')
+
+// Insert text
+ytext.insert(0, 'Hello')
+
+// Sync updates
+const update = Y.encodeStateAsUpdate(ydoc)
+// Send update to other clients</div>
+                    <strong>Advantages:</strong>
+                    <ul>
+                        <li>Strong eventual consistency</li>
+                        <li>Peer-to-peer friendly (no central server needed)</li>
+                        <li>Offline-first support</li>
+                        <li>Automatic conflict resolution</li>
+                    </ul>
+                    <strong>Types:</strong>
+                    <ul>
+                        <li><strong>YATA:</strong> Y.js text CRDT</li>
+                        <li><strong>RGA:</strong> Replicated Growable Array</li>
+                        <li><strong>LWW:</strong> Last-Write-Wins</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version Control -->
+        <div class="section version-section">
+            <div class="section-title">🕰️ VERSION CONTROL</div>
+            <div class="component">
+                <div class="component-name">Document History Service</div>
+                <div class="component-details">
+                    <strong>Snapshot Strategy:</strong>
+                    <ul>
+                        <li><strong>Full snapshot:</strong> Every 100 operations</li>
+                        <li><strong>Delta snapshots:</strong> Store operation diffs</li>
+                        <li><strong>Retention:</strong> 30-day history (configurable)</li>
+                    </ul>
+                    <div class="code-snippet">
+// Version metadata
+{
+  "versionId": "v-1234",
+  "docId": "doc-12345",
+  "timestamp": "2025-11-14T10:00:00Z",
+  "operations": [...],  // Delta from previous
+  "author": "user-789",
+  "snapshotUrl": "s3://snapshots/v-1234.json"
+}</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Time-travel to any version</li>
+                        <li>Compare versions (diff view)</li>
+                        <li>Restore previous versions</li>
+                        <li>Named versions (tags)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Branching & Merging</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Create document branches</li>
+                        <li>Merge changes with conflict resolution</li>
+                        <li>Review suggestions before merge</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Presence Service -->
+        <div class="section presence-section">
+            <div class="section-title">👁️ PRESENCE SERVICE</div>
+            <div class="component">
+                <div class="component-name">Real-time Presence Tracking</div>
+                <div class="component-details">
+                    <strong>Track:</strong>
+                    <ul>
+                        <li><strong>Active users:</strong> Who's viewing/editing</li>
+                        <li><strong>Cursor positions:</strong> Real-time cursor locations</li>
+                        <li><strong>Selections:</strong> Highlighted text ranges</li>
+                        <li><strong>User colors:</strong> Assign unique colors to users</li>
+                    </ul>
+                    <div class="code-snippet">
+// Presence data structure
+{
+  "docId": "doc-12345",
+  "users": {
+    "user-789": {
+      "name": "Alice",
+      "color": "#FF6B6B",
+      "cursor": 42,
+      "selection": { "start": 42, "end": 47 },
+      "lastSeen": "2025-11-14T10:30:15Z"
+    },
+    "user-456": {
+      "name": "Bob",
+      "color": "#4ECDC4",
+      "cursor": 100,
+      "selection": null,
+      "lastSeen": "2025-11-14T10:30:20Z"
+    }
+  }
+}</div>
+                    <strong>Implementation:</strong>
+                    <ul>
+                        <li>Redis Pub/Sub for real-time updates</li>
+                        <li>TTL-based cleanup (remove after 30s inactivity)</li>
+                        <li>Throttle cursor updates (max 10/sec)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Awareness Protocol</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Broadcast user join/leave events</li>
+                        <li>Idle detection (5 min timeout)</li>
+                        <li>View-only vs. editing mode</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <ul>
+                        <li><strong>Document snapshots:</strong> Latest document state (TTL: 1 hour)</li>
+                        <li><strong>Presence data:</strong> Active users, cursors (TTL: 30s)</li>
+                        <li><strong>Operation buffer:</strong> Recent 1000 operations per document</li>
+                        <li><strong>Permissions:</strong> User access rights (TTL: 5 min)</li>
+                        <li><strong>Session data:</strong> WebSocket connection mappings</li>
+                    </ul>
+                    <div class="code-snippet">
+# Document cache
+SET doc:12345:snapshot "{...}" EX 3600
+
+# Operation log (List)
+LPUSH doc:12345:ops "{op1}" "{op2}" "{op3}"
+LTRIM doc:12345:ops 0 999
+
+# Presence (Hash)
+HSET doc:12345:presence user-789 "{cursor:42,...}" EX 30
+
+# Pub/Sub for broadcasts
+PUBLISH doc:12345:channel "{type:'operation',...}"</div>
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>6-node cluster (3 masters, 3 replicas)</li>
+                        <li>LRU eviction policy</li>
+                        <li>100GB memory per node</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL (Primary)</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+CREATE TABLE documents (
+  id UUID PRIMARY KEY,
+  title VARCHAR(500),
+  owner_id UUID REFERENCES users(id),
+  folder_id UUID,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  is_deleted BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE document_collaborators (
+  doc_id UUID REFERENCES documents(id),
+  user_id UUID REFERENCES users(id),
+  role VARCHAR(20), -- owner, editor, viewer
+  PRIMARY KEY (doc_id, user_id)
+);
+
+CREATE TABLE operations_log (
+  id BIGSERIAL PRIMARY KEY,
+  doc_id UUID,
+  user_id UUID,
+  operation JSONB,
+  version BIGINT,
+  timestamp TIMESTAMP,
+  INDEX idx_doc_version (doc_id, version)
+);
+
+CREATE TABLE document_snapshots (
+  id BIGSERIAL PRIMARY KEY,
+  doc_id UUID,
+  version BIGINT,
+  content TEXT,
+  snapshot_url VARCHAR(1000),
+  created_at TIMESTAMP
+);</div>
+                    <strong>Optimizations:</strong>
+                    <ul>
+                        <li>Partition operations_log by month</li>
+                        <li>B-tree index on (doc_id, version)</li>
+                        <li>JSONB for flexible operation schema</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Read Replicas</div>
+                <div class="component-details">
+                    <ul>
+                        <li>3 read replicas for analytics queries</li>
+                        <li>Asynchronous replication (lag <50ms)</li>
+                        <li>Read-write splitting via connection pool</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Object Storage -->
+        <div class="section storage-section">
+            <div class="section-title">☁️ OBJECT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3 / GCS</div>
+                <div class="component-details">
+                    <strong>Storage Types:</strong>
+                    <ul>
+                        <li><strong>Full snapshots:</strong> Every 100 operations (compressed)</li>
+                        <li><strong>Media assets:</strong> Images, videos embedded in docs</li>
+                        <li><strong>Export files:</strong> Generated PDFs, DOCX files</li>
+                        <li><strong>Backups:</strong> Daily full document backups</li>
+                    </ul>
+                    <div class="code-snippet">
+// S3 structure
+s3://docs-bucket/
+  ├── snapshots/
+  │   ├── doc-12345/
+  │   │   ├── v1.json.gz
+  │   │   ├── v100.json.gz
+  │   │   └── v200.json.gz
+  ├── media/
+  │   ├── images/
+  │   └── videos/
+  └── exports/
+      └── doc-12345-export-20251114.pdf</div>
+                    <strong>Lifecycle:</strong>
+                    <ul>
+                        <li>Standard → Infrequent Access (30 days)</li>
+                        <li>Infrequent → Glacier (90 days)</li>
+                        <li>Delete after 1 year (compliance)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Service -->
+        <div class="section search-section">
+            <div class="section-title">🔍 SEARCH SERVICE</div>
+            <div class="component">
+                <div class="component-name">Elasticsearch</div>
+                <div class="component-details">
+                    <strong>Indexed Data:</strong>
+                    <ul>
+                        <li>Document titles and content</li>
+                        <li>Full-text search with typo tolerance</li>
+                        <li>Faceted search (by owner, date, folder)</li>
+                    </ul>
+                    <div class="code-snippet">
+// Elasticsearch index
+PUT /documents/_doc/12345
+{
+  "title": "Project Proposal",
+  "content": "Full document text...",
+  "owner": "user-789",
+  "created_at": "2025-11-14T10:00:00Z",
+  "tags": ["proposal", "project"]
+}
+
+// Search query
+GET /documents/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "machine learning",
+      "fields": ["title^2", "content"]
+    }
+  }
+}</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Auto-complete suggestions</li>
+                        <li>Highlighting of search terms</li>
+                        <li>Real-time indexing (debounced)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Service -->
+        <div class="section notification-section">
+            <div class="section-title">🔔 NOTIFICATION SERVICE</div>
+            <div class="component">
+                <div class="component-name">Real-time Notifications</div>
+                <div class="component-details">
+                    <strong>Notification Types:</strong>
+                    <ul>
+                        <li>Document shared with you</li>
+                        <li>Comment/mention in document</li>
+                        <li>Document access granted/revoked</li>
+                        <li>Suggestion accepted/rejected</li>
+                    </ul>
+                    <div class="code-snippet">
+// Notification event
+{
+  "type": "comment_mention",
+  "docId": "doc-12345",
+  "fromUser": "user-789",
+  "toUser": "user-456",
+  "message": "@Bob check this out",
+  "timestamp": "2025-11-14T10:30:00Z"
+}</div>
+                    <strong>Channels:</strong>
+                    <ul>
+                        <li>In-app notifications (WebSocket)</li>
+                        <li>Email notifications (batched)</li>
+                        <li>Push notifications (mobile)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Service -->
+        <div class="section auth-section">
+            <div class="section-title">🔐 AUTHENTICATION</div>
+            <div class="component">
+                <div class="component-name">Identity Service</div>
+                <div class="component-details">
+                    <strong>Auth Methods:</strong>
+                    <ul>
+                        <li>Email/Password (bcrypt)</li>
+                        <li>OAuth2 (Google, Microsoft)</li>
+                        <li>SAML SSO (enterprise)</li>
+                        <li>JWT tokens (15-min expiry)</li>
+                    </ul>
+                    <div class="code-snippet">
+// JWT payload
+{
+  "userId": "user-789",
+  "email": "alice@example.com",
+  "orgId": "org-123",
+  "roles": ["editor"],
+  "iat": 1700000000,
+  "exp": 1700000900
+}</div>
+                    <strong>Session Management:</strong>
+                    <ul>
+                        <li>Refresh tokens (30-day expiry)</li>
+                        <li>Device tracking</li>
+                        <li>Revocation support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & PERFORMANCE</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">1M+</div>
+                <div class="metric-label">Concurrent collaborators (Google Docs scale)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">Operation latency (P95)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10K ops/sec</div>
+                <div class="metric-label">Per-document operation throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100</div>
+                <div class="metric-label">Max simultaneous editors per document</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">30 days</div>
+                <div class="metric-label">Version history retention</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OT vs CRDT Comparison -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">⚖️ OT vs CRDT COMPARISON</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px;">
+            <div style="background: white; padding: 25px; border-radius: 12px; border-left: 5px solid #f87171;">
+                <h3 style="color: #f87171; margin-bottom: 15px;">🔄 Operational Transformation (OT)</h3>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 15px;">
+                    <strong>Used by:</strong> Google Docs, Etherpad, Firepad
+                </p>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 10px;"><strong>Pros:</strong></p>
+                <ul style="color: #4a5568; line-height: 2; margin-left: 20px;">
+                    <li>Lower memory overhead</li>
+                    <li>Simpler data structures</li>
+                    <li>Proven at massive scale (Google Docs)</li>
+                    <li>Deterministic conflict resolution</li>
+                </ul>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 10px; margin-top: 15px;"><strong>Cons:</strong></p>
+                <ul style="color: #4a5568; line-height: 2; margin-left: 20px;">
+                    <li>Requires central server for ordering</li>
+                    <li>Complex to implement correctly</li>
+                    <li>Difficult to handle offline edits</li>
+                    <li>Transform functions must be carefully designed</li>
+                </ul>
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 12px; border-left: 5px solid #fb923c;">
+                <h3 style="color: #fb923c; margin-bottom: 15px;">📊 CRDT (Conflict-free Replicated Data Types)</h3>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 15px;">
+                    <strong>Used by:</strong> Figma, Notion, Linear, Atom Teletype
+                </p>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 10px;"><strong>Pros:</strong></p>
+                <ul style="color: #4a5568; line-height: 2; margin-left: 20px;">
+                    <li>Strong eventual consistency guarantees</li>
+                    <li>Peer-to-peer friendly (no central server needed)</li>
+                    <li>Excellent offline support</li>
+                    <li>Automatic conflict resolution (commutative)</li>
+                    <li>Mathematically proven correctness</li>
+                </ul>
+                <p style="color: #4a5568; line-height: 1.8; margin-bottom: 10px; margin-top: 15px;"><strong>Cons:</strong></p>
+                <ul style="color: #4a5568; line-height: 2; margin-left: 20px;">
+                    <li>Higher memory overhead (metadata for each character)</li>
+                    <li>Garbage collection complexity</li>
+                    <li>Larger payload sizes for sync</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Considerations -->
+    <div style="margin-top: 30px; padding: 30px; background: #fef3c7; border-radius: 15px; border: 2px solid #fbbf24;">
+        <h2 style="color: #92400e; margin-bottom: 20px;">🔧 SYSTEM DESIGN CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Conflict Resolution</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Intention preservation:</strong> Maintain user's original intent</li>
+                    <li><strong>Convergence:</strong> All clients eventually reach same state</li>
+                    <li><strong>Causality:</strong> Respect happens-before relationships</li>
+                    <li><strong>Last-Write-Wins:</strong> Tie-breaker using timestamps</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Offline Support</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Local buffer:</strong> Queue operations in IndexedDB</li>
+                    <li><strong>Sync on reconnect:</strong> Replay buffered operations</li>
+                    <li><strong>Conflict detection:</strong> Compare vector clocks</li>
+                    <li><strong>UI indicators:</strong> Show "syncing" status</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Performance Optimizations</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Operation batching:</strong> Bundle 10-20 ops together</li>
+                    <li><strong>Debouncing:</strong> Throttle cursor updates (100ms)</li>
+                    <li><strong>Lazy loading:</strong> Load document in chunks</li>
+                    <li><strong>Delta compression:</strong> Send only diffs, not full doc</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Operation signing:</strong> Verify operation authenticity</li>
+                    <li><strong>Rate limiting:</strong> 1000 ops/min per user</li>
+                    <li><strong>Permission checks:</strong> Validate on every operation</li>
+                    <li><strong>Audit logs:</strong> Track all document changes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Key Insight:</strong> Choose OT for centralized systems (Google Docs), CRDT for distributed/offline-first apps (Figma)</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Node.js/Go • WebSockets • PostgreSQL • Redis • Elasticsearch • Y.js/ShareDB</p>
+    </div>
+</div>
+</body>
+</html>
