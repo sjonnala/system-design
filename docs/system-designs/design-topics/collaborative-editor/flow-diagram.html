@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Editor Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: #f7fafc;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #edf2f7;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .diagram-container {
+            display: none;
+            min-height: 600px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .node {
+            transition: all 0.3s ease;
+        }
+
+        .node:hover {
+            filter: brightness(1.1);
+            cursor: pointer;
+        }
+
+        .arrow {
+            stroke: #4a5568;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .arrow-label {
+            font-size: 14px;
+            fill: #2d3748;
+            font-weight: 600;
+        }
+
+        .step-explanation {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-explanation h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .step-explanation ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #4a5568;
+        }
+
+        .step-explanation li {
+            margin: 10px 0;
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📝 Collaborative Editor Flow Diagrams</h1>
+        <div class="subtitle">Interactive Visualizations of Real-time Collaboration</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showDiagram('collab-flow')">Real-time Collaboration</button>
+        <button class="tab" onclick="showDiagram('ot-algorithm')">Operational Transformation</button>
+        <button class="tab" onclick="showDiagram('crdt-sync')">CRDT Synchronization</button>
+        <button class="tab" onclick="showDiagram('full-system')">Full System Flow</button>
+    </div>
+
+    <!-- Real-time Collaboration Flow -->
+    <div id="collab-flow" class="diagram-container active">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#4a5568" />
+                </marker>
+                <linearGradient id="clientGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="wsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="serverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#facc15;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#eab308;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="dbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Client A -->
+            <g class="node">
+                <rect x="50" y="50" width="250" height="120" rx="10" fill="url(#clientGrad)" />
+                <text x="175" y="90" text-anchor="middle" fill="white" font-size="20" font-weight="bold">Client A (Alice)</text>
+                <text x="175" y="120" text-anchor="middle" fill="white" font-size="14">Types: "Hello"</text>
+                <text x="175" y="145" text-anchor="middle" fill="white" font-size="12">Position: 0</text>
+            </g>
+
+            <!-- Client B -->
+            <g class="node">
+                <rect x="1100" y="50" width="250" height="120" rx="10" fill="url(#clientGrad)" />
+                <text x="1225" y="90" text-anchor="middle" fill="white" font-size="20" font-weight="bold">Client B (Bob)</text>
+                <text x="1225" y="120" text-anchor="middle" fill="white" font-size="14">Types: "World"</text>
+                <text x="1225" y="145" text-anchor="middle" fill="white" font-size="12">Position: 5</text>
+            </g>
+
+            <!-- WebSocket Gateway -->
+            <g class="node">
+                <rect x="450" y="250" width="500" height="100" rx="10" fill="url(#wsGrad)" />
+                <text x="700" y="290" text-anchor="middle" fill="white" font-size="20" font-weight="bold">WebSocket Gateway</text>
+                <text x="700" y="320" text-anchor="middle" fill="white" font-size="14">Node.js / Socket.io</text>
+            </g>
+
+            <!-- Collaboration Service -->
+            <g class="node">
+                <rect x="450" y="450" width="500" height="120" rx="10" fill="url(#serverGrad)" />
+                <text x="700" y="490" text-anchor="middle" fill="white" font-size="20" font-weight="bold">Collaboration Service</text>
+                <text x="700" y="520" text-anchor="middle" fill="white" font-size="14">OT Engine / CRDT</text>
+                <text x="700" y="545" text-anchor="middle" fill="white" font-size="12">Transform & Sequence Operations</text>
+            </g>
+
+            <!-- Database -->
+            <g class="node">
+                <rect x="450" y="680" width="240" height="100" rx="10" fill="url(#dbGrad)" />
+                <text x="570" y="720" text-anchor="middle" fill="white" font-size="18" font-weight="bold">PostgreSQL</text>
+                <text x="570" y="750" text-anchor="middle" fill="white" font-size="12">Operations Log</text>
+            </g>
+
+            <!-- Redis Cache -->
+            <g class="node">
+                <rect x="710" y="680" width="240" height="100" rx="10" fill="#f472b6" />
+                <text x="830" y="720" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Redis</text>
+                <text x="830" y="750" text-anchor="middle" fill="white" font-size="12">Document State</text>
+            </g>
+
+            <!-- Arrows and Flow -->
+            <!-- Client A to WebSocket -->
+            <path class="arrow" d="M 175 170 L 600 250" />
+            <text x="350" y="200" class="arrow-label">① insert("Hello", 0)</text>
+
+            <!-- Client B to WebSocket -->
+            <path class="arrow" d="M 1225 170 L 800 250" />
+            <text x="1000" y="200" class="arrow-label">② insert("World", 5)</text>
+
+            <!-- WebSocket to Collaboration Service -->
+            <path class="arrow" d="M 700 350 L 700 450" />
+            <text x="720" y="400" class="arrow-label">③ Forward operations</text>
+
+            <!-- Collaboration Service to Database -->
+            <path class="arrow" d="M 600 570 L 590 680" />
+            <text x="480" y="620" class="arrow-label">④ Persist</text>
+
+            <!-- Collaboration Service to Redis -->
+            <path class="arrow" d="M 800 570 L 810 680" />
+            <text x="820" y="620" class="arrow-label">⑤ Cache update</text>
+
+            <!-- Collaboration Service back to WebSocket -->
+            <path class="arrow" d="M 500 450 L 500 350" />
+            <text x="380" y="400" class="arrow-label">⑥ Broadcast transformed ops</text>
+
+            <!-- WebSocket to Client A -->
+            <path class="arrow" d="M 500 250 L 250 170" />
+            <text x="300" y="220" class="arrow-label">⑦ Op from Bob</text>
+
+            <!-- WebSocket to Client B -->
+            <path class="arrow" d="M 900 250 L 1150 170" />
+            <text x="950" y="220" class="arrow-label">⑦ Op from Alice</text>
+
+            <!-- Timeline -->
+            <line x1="50" y1="850" x2="1350" y2="850" stroke="#cbd5e0" stroke-width="3" />
+            <text x="700" y="880" text-anchor="middle" fill="#4a5568" font-size="14" font-weight="bold">
+                Total Latency: ~50-100ms (P95)
+            </text>
+        </svg>
+
+        <div class="step-explanation">
+            <h3>🔄 Real-time Collaboration Flow</h3>
+            <ol>
+                <li><strong>Client A (Alice)</strong> types "Hello" at position 0 → Creates insert operation</li>
+                <li><strong>Client B (Bob)</strong> simultaneously types "World" at position 5 → Creates insert operation</li>
+                <li>Both operations sent to <strong>WebSocket Gateway</strong> via persistent connection</li>
+                <li><strong>Collaboration Service</strong> receives operations and determines ordering (vector clock/timestamp)</li>
+                <li>Operations are <strong>transformed</strong> if concurrent (OT algorithm adjusts positions)</li>
+                <li><strong>Persisted to PostgreSQL</strong> operations log for durability</li>
+                <li><strong>Redis cache updated</strong> with latest document state for fast reads</li>
+                <li><strong>Transformed operations broadcast</strong> to all connected clients in the document</li>
+                <li>Clients apply operations and <strong>converge to same state</strong>: "HelloWorld"</li>
+            </ol>
+
+            <div class="code-example">
+// Client-side operation creation
+const operation = {
+  type: 'insert',
+  position: cursor.position,
+  text: 'Hello',
+  userId: currentUser.id,
+  docId: 'doc-123',
+  clientVersion: localVersion,
+  timestamp: Date.now()
+};
+
+// Send via WebSocket
+ws.send(JSON.stringify(operation));
+
+// Receive transformed operation
+ws.on('message', (data) => {
+  const transformedOp = JSON.parse(data);
+  applyOperation(transformedOp);
+  localVersion++;
+});
+            </div>
+        </div>
+    </div>
+
+    <!-- Operational Transformation Algorithm -->
+    <div id="ot-algorithm" class="diagram-container">
+        <svg viewBox="0 0 1400 1000" xmlns="http://www.w3.org/2000/svg">
+            <!-- Operation 1 -->
+            <g class="node">
+                <rect x="100" y="50" width="300" height="80" rx="10" fill="#f87171" />
+                <text x="250" y="95" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Operation 1 (Alice)
+                </text>
+                <text x="250" y="118" text-anchor="middle" fill="white" font-size="14">
+                    insert("X", position=5)
+                </text>
+            </g>
+
+            <!-- Operation 2 -->
+            <g class="node">
+                <rect x="1000" y="50" width="300" height="80" rx="10" fill="#fb923c" />
+                <text x="1150" y="95" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Operation 2 (Bob)
+                </text>
+                <text x="1150" y="118" text-anchor="middle" fill="white" font-size="14">
+                    insert("Y", position=7)
+                </text>
+            </g>
+
+            <!-- Initial Document State -->
+            <g class="node">
+                <rect x="550" y="200" width="300" height="60" rx="10" fill="#cbd5e0" />
+                <text x="700" y="238" text-anchor="middle" fill="#1a202c" font-size="16" font-weight="bold">
+                    Initial: "Hello_World"
+                </text>
+            </g>
+
+            <!-- Transform Function -->
+            <g class="node">
+                <rect x="500" y="350" width="400" height="120" rx="10" fill="#facc15" />
+                <text x="700" y="390" text-anchor="middle" fill="white" font-size="18" font-weight="bold">
+                    Transform Function
+                </text>
+                <text x="700" y="420" text-anchor="middle" fill="white" font-size="14">
+                    transform(op1, op2)
+                </text>
+                <text x="700" y="445" text-anchor="middle" fill="white" font-size="12">
+                    Adjust positions based on precedence
+                </text>
+            </g>
+
+            <!-- Transformed Operation 1 -->
+            <g class="node">
+                <rect x="100" y="550" width="300" height="80" rx="10" fill="#10b981" />
+                <text x="250" y="585" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Transformed Op1'
+                </text>
+                <text x="250" y="610" text-anchor="middle" fill="white" font-size="14">
+                    insert("X", position=5)
+                </text>
+                <text x="250" y="625" text-anchor="middle" fill="white" font-size="11">
+                    (no change)
+                </text>
+            </g>
+
+            <!-- Transformed Operation 2 -->
+            <g class="node">
+                <rect x="1000" y="550" width="300" height="80" rx="10" fill="#14b8a6" />
+                <text x="1150" y="585" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Transformed Op2'
+                </text>
+                <text x="1150" y="610" text-anchor="middle" fill="white" font-size="14">
+                    insert("Y", position=8)
+                </text>
+                <text x="1150" y="625" text-anchor="middle" fill="white" font-size="11">
+                    (position adjusted +1)
+                </text>
+            </g>
+
+            <!-- Final State -->
+            <g class="node">
+                <rect x="550" y="750" width="300" height="80" rx="10" fill="#6366f1" />
+                <text x="700" y="780" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Converged State
+                </text>
+                <text x="700" y="808" text-anchor="middle" fill="white" font-size="14">
+                    "HelloX_YWorld"
+                </text>
+            </g>
+
+            <!-- Arrows -->
+            <path class="arrow" d="M 250 130 L 650 200" />
+            <path class="arrow" d="M 1150 130 L 750 200" />
+            <path class="arrow" d="M 700 260 L 700 350" />
+            <path class="arrow" d="M 600 470 L 300 550" />
+            <path class="arrow" d="M 800 470 L 1100 550" />
+            <path class="arrow" d="M 250 630 L 650 750" />
+            <path class="arrow" d="M 1150 630 L 750 750" />
+
+            <!-- Labels -->
+            <text x="700" y="320" text-anchor="middle" fill="#4a5568" font-size="13">
+                Both operations on same base version
+            </text>
+            <text x="420" y="510" text-anchor="middle" fill="#4a5568" font-size="13">
+                Op1 has priority (earlier timestamp)
+            </text>
+            <text x="980" y="510" text-anchor="middle" fill="#4a5568" font-size="13">
+                Op2 position shifted right
+            </text>
+        </svg>
+
+        <div class="step-explanation">
+            <h3>🔄 Operational Transformation Algorithm</h3>
+            <ol>
+                <li><strong>Concurrent Operations:</strong> Alice inserts "X" at position 5, Bob inserts "Y" at position 7 (both on same base document)</li>
+                <li><strong>Conflict Detection:</strong> Server detects operations on same document version</li>
+                <li><strong>Ordering:</strong> Establish order (e.g., Alice's operation processed first based on timestamp)</li>
+                <li><strong>Transform Op2:</strong> Since Op1 inserted 1 character before position 7, Op2's position shifts to 8</li>
+                <li><strong>Apply Transformed Operations:</strong> Apply Op1' and Op2' in order</li>
+                <li><strong>Convergence:</strong> All clients reach same final state "HelloX_YWorld"</li>
+            </ol>
+
+            <div class="code-example">
+// OT Transform Function (simplified)
+function transform(op1, op2) {
+  if (op1.type === 'insert' && op2.type === 'insert') {
+    // Both insert operations
+    if (op1.position < op2.position) {
+      // op1 comes first, shift op2's position
+      return [
+        op1, // unchanged
+        { ...op2, position: op2.position + op1.text.length }
+      ];
+    } else if (op1.position > op2.position) {
+      // op2 comes first, shift op1's position
+      return [
+        { ...op1, position: op1.position + op2.text.length },
+        op2 // unchanged
+      ];
+    } else {
+      // Same position, use tie-breaker (e.g., user ID)
+      return op1.userId < op2.userId 
+        ? [op1, { ...op2, position: op2.position + op1.text.length }]
+        : [{ ...op1, position: op1.position + op2.text.length }, op2];
+    }
+  }
+  
+  if (op1.type === 'delete' && op2.type === 'insert') {
+    // Delete before insert position: shift insert left
+    if (op1.position < op2.position) {
+      return [
+        op1,
+        { ...op2, position: Math.max(op1.position, op2.position - op1.length) }
+      ];
+    }
+  }
+  
+  // ... handle other operation type combinations
+  
+  return [op1, op2];
+}
+
+// Convergence guarantee:
+// op1 ∘ transform(op2, op1) = op2 ∘ transform(op1, op2)
+            </div>
+        </div>
+    </div>
+
+    <!-- CRDT Synchronization -->
+    <div id="crdt-sync" class="diagram-container">
+        <svg viewBox="0 0 1400 950" xmlns="http://www.w3.org/2000/svg">
+            <!-- Replica A -->
+            <g class="node">
+                <rect x="100" y="50" width="300" height="150" rx="10" fill="#60a5fa" />
+                <text x="250" y="90" text-anchor="middle" fill="white" font-size="18" font-weight="bold">
+                    Replica A (Alice)
+                </text>
+                <text x="250" y="120" text-anchor="middle" fill="white" font-size="14">
+                    State: "Hello"
+                </text>
+                <text x="250" y="145" text-anchor="middle" fill="white" font-size="12">
+                    CRDT: Y.Text
+                </text>
+                <text x="250" y="170" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:5, B:0}
+                </text>
+            </g>
+
+            <!-- Replica B -->
+            <g class="node">
+                <rect x="1000" y="50" width="300" height="150" rx="10" fill="#fb923c" />
+                <text x="1150" y="90" text-anchor="middle" fill="white" font-size="18" font-weight="bold">
+                    Replica B (Bob)
+                </text>
+                <text x="1150" y="120" text-anchor="middle" fill="white" font-size="14">
+                    State: "Hello"
+                </text>
+                <text x="1150" y="145" text-anchor="middle" fill="white" font-size="12">
+                    CRDT: Y.Text
+                </text>
+                <text x="1150" y="170" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:5, B:0}
+                </text>
+            </g>
+
+            <!-- Alice's Change -->
+            <g class="node">
+                <rect x="100" y="280" width="300" height="100" rx="10" fill="#10b981" />
+                <text x="250" y="315" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Alice inserts " World"
+                </text>
+                <text x="250" y="340" text-anchor="middle" fill="white" font-size="13">
+                    State: "Hello World"
+                </text>
+                <text x="250" y="365" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:11, B:0}
+                </text>
+            </g>
+
+            <!-- Bob's Change -->
+            <g class="node">
+                <rect x="1000" y="280" width="300" height="100" rx="10" fill="#14b8a6" />
+                <text x="1150" y="315" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Bob inserts "!"
+                </text>
+                <text x="1150" y="340" text-anchor="middle" fill="white" font-size="13">
+                    State: "Hello!"
+                </text>
+                <text x="1150" y="365" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:5, B:1}
+                </text>
+            </g>
+
+            <!-- Sync Update A→B -->
+            <g class="node">
+                <rect x="550" y="480" width="300" height="80" rx="10" fill="#facc15" />
+                <text x="700" y="510" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Sync: A → B
+                </text>
+                <text x="700" y="535" text-anchor="middle" fill="white" font-size="13">
+                    Delta: {chars: " World", VC: {A:11}}
+                </text>
+            </g>
+
+            <!-- Sync Update B→A -->
+            <g class="node">
+                <rect x="550" y="600" width="300" height="80" rx="10" fill="#c084fc" />
+                <text x="700" y="630" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Sync: B → A
+                </text>
+                <text x="700" y="655" text-anchor="middle" fill="white" font-size="13">
+                    Delta: {char: "!", VC: {B:1}}
+                </text>
+            </g>
+
+            <!-- Merged State A -->
+            <g class="node">
+                <rect x="100" y="780" width="300" height="100" rx="10" fill="#6366f1" />
+                <text x="250" y="815" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Merged State (Alice)
+                </text>
+                <text x="250" y="840" text-anchor="middle" fill="white" font-size="14">
+                    "Hello World!"
+                </text>
+                <text x="250" y="865" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:11, B:1}
+                </text>
+            </g>
+
+            <!-- Merged State B -->
+            <g class="node">
+                <rect x="1000" y="780" width="300" height="100" rx="10" fill="#6366f1" />
+                <text x="1150" y="815" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+                    Merged State (Bob)
+                </text>
+                <text x="1150" y="840" text-anchor="middle" fill="white" font-size="14">
+                    "Hello World!"
+                </text>
+                <text x="1150" y="865" text-anchor="middle" fill="white" font-size="11">
+                    Vector Clock: {A:11, B:1}
+                </text>
+            </g>
+
+            <!-- Arrows -->
+            <path class="arrow" d="M 250 200 L 250 280" />
+            <path class="arrow" d="M 1150 200 L 1150 280" />
+            <path class="arrow" d="M 350 330 L 600 480" />
+            <path class="arrow" d="M 1050 330 L 800 480" />
+            <path class="arrow" d="M 700 560 L 1100 780" stroke="#facc15" stroke-width="3" />
+            <path class="arrow" d="M 700 680 L 300 780" stroke="#c084fc" stroke-width="3" />
+
+            <!-- Labels -->
+            <text x="250" y="250" text-anchor="middle" fill="#4a5568" font-size="12">Offline edit</text>
+            <text x="1150" y="250" text-anchor="middle" fill="#4a5568" font-size="12">Offline edit</text>
+            <text x="900" y="550" text-anchor="middle" fill="#4a5568" font-size="12">Apply delta</text>
+            <text x="500" y="720" text-anchor="middle" fill="#4a5568" font-size="12">Apply delta</text>
+        </svg>
+
+        <div class="step-explanation">
+            <h3>📊 CRDT (Conflict-free Replicated Data Type) Synchronization</h3>
+            <ol>
+                <li><strong>Initial State:</strong> Both replicas have "Hello" with vector clock {A:5, B:0}</li>
+                <li><strong>Concurrent Edits (Offline):</strong>
+                    <ul>
+                        <li>Alice inserts " World" → State: "Hello World", VC: {A:11, B:0}</li>
+                        <li>Bob inserts "!" → State: "Hello!", VC: {A:5, B:1}</li>
+                    </ul>
+                </li>
+                <li><strong>Synchronization:</strong> When replicas reconnect, they exchange deltas (only changes)</li>
+                <li><strong>Automatic Merge:</strong> CRDT algorithm automatically resolves conflicts:
+                    <ul>
+                        <li>Each character has unique ID (replica_id + counter)</li>
+                        <li>Characters sorted by their IDs</li>
+                        <li>Result: "Hello World!" (deterministic ordering)</li>
+                    </ul>
+                </li>
+                <li><strong>Strong Eventual Consistency:</strong> All replicas converge to same state without coordination</li>
+            </ol>
+
+            <div class="code-example">
+// Y.js CRDT Example
+import * as Y from 'yjs'
+
+// Create CRDT document
+const ydoc = new Y.Doc()
+const ytext = ydoc.getText('content')
+
+// Insert text
+ytext.insert(0, 'Hello')
+
+// Generate update (delta)
+const update = Y.encodeStateAsUpdate(ydoc)
+
+// Send update to other clients
+ws.send(update)
+
+// Receive and apply update from another client
+Y.applyUpdate(ydoc, receivedUpdate)
+
+// CRDT guarantees convergence:
+// - Commutative: op1 ∘ op2 = op2 ∘ op1
+// - Idempotent: applying same update multiple times = applying once
+// - Associative: (op1 ∘ op2) ∘ op3 = op1 ∘ (op2 ∘ op3)
+
+// Each character has unique identifier
+// Example: 'H' = {id: 'A:0', char: 'H'}
+//          'e' = {id: 'A:1', char: 'e'}
+//          '!' = {id: 'B:0', char: '!'}
+
+// Conflicts resolved by sorting character IDs
+            </div>
+        </div>
+    </div>
+
+    <!-- Full System Flow -->
+    <div id="full-system" class="diagram-container">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Clients -->
+            <rect x="50" y="50" width="180" height="80" rx="8" fill="#60a5fa" />
+            <text x="140" y="95" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Web Client</text>
+
+            <rect x="270" y="50" width="180" height="80" rx="8" fill="#60a5fa" />
+            <text x="360" y="95" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Mobile Client</text>
+
+            <!-- Load Balancer -->
+            <rect x="160" y="220" width="200" height="70" rx="8" fill="#22d3ee" />
+            <text x="260" y="260" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Load Balancer</text>
+
+            <!-- WebSocket Servers -->
+            <rect x="50" y="380" width="150" height="70" rx="8" fill="#facc15" />
+            <text x="125" y="420" text-anchor="middle" fill="white" font-size="13" font-weight="bold">WS Server 1</text>
+
+            <rect x="220" y="380" width="150" height="70" rx="8" fill="#facc15" />
+            <text x="295" y="420" text-anchor="middle" fill="white" font-size="13" font-weight="bold">WS Server 2</text>
+
+            <!-- Redis Pub/Sub -->
+            <rect x="450" y="380" width="180" height="70" rx="8" fill="#f472b6" />
+            <text x="540" y="415" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Redis Pub/Sub</text>
+            <text x="540" y="435" text-anchor="middle" fill="white" font-size="11">Cross-server broadcast</text>
+
+            <!-- Collaboration Service -->
+            <rect x="420" y="550" width="240" height="80" rx="8" fill="#84cc16" />
+            <text x="540" y="580" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Collaboration Service</text>
+            <text x="540" y="605" text-anchor="middle" fill="white" font-size="12">OT/CRDT Engine</text>
+
+            <!-- Document Service -->
+            <rect x="720" y="550" width="200" height="80" rx="8" fill="#fb923c" />
+            <text x="820" y="580" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Document Service</text>
+            <text x="820" y="605" text-anchor="middle" fill="white" font-size="12">CRUD API</text>
+
+            <!-- Version Control -->
+            <rect x="980" y="550" width="200" height="80" rx="8" fill="#c084fc" />
+            <text x="1080" y="580" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Version Control</text>
+            <text x="1080" y="605" text-anchor="middle" fill="white" font-size="12">Snapshots</text>
+
+            <!-- Database Layer -->
+            <rect x="200" y="750" width="180" height="70" rx="8" fill="#818cf8" />
+            <text x="290" y="780" text-anchor="middle" fill="white" font-size="14" font-weight="bold">PostgreSQL</text>
+            <text x="290" y="800" text-anchor="middle" fill="white" font-size="11">Operations Log</text>
+
+            <rect x="420" y="750" width="160" height="70" rx="8" fill="#38bdf8" />
+            <text x="500" y="780" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Redis Cache</text>
+            <text x="500" y="800" text-anchor="middle" fill="white" font-size="11">Doc State</text>
+
+            <rect x="620" y="750" width="160" height="70" rx="8" fill="#2dd4bf" />
+            <text x="700" y="780" text-anchor="middle" fill="white" font-size="14" font-weight="bold">S3 Storage</text>
+            <text x="700" y="800" text-anchor="middle" fill="white" font-size="11">Snapshots</text>
+
+            <rect x="820" y="750" width="180" height="70" rx="8" fill="#ef4444" />
+            <text x="910" y="780" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Elasticsearch</text>
+            <text x="910" y="800" text-anchor="middle" fill="white" font-size="11">Full-text Search</text>
+
+            <!-- Presence Service -->
+            <rect x="1070" y="750" width="180" height="70" rx="8" fill="#a78bfa" />
+            <text x="1160" y="780" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Presence Service</text>
+            <text x="1160" y="800" text-anchor="middle" fill="white" font-size="11">Active Users</text>
+
+            <!-- Message Queue -->
+            <rect x="520" y="920" width="240" height="70" rx="8" fill="#fbbf24" />
+            <text x="640" y="950" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Kafka / Redis Streams</text>
+            <text x="640" y="970" text-anchor="middle" fill="white" font-size="11">Event Streaming</text>
+
+            <!-- Arrows with labels -->
+            <path class="arrow" d="M 140 130 L 230 220" />
+            <path class="arrow" d="M 360 130 L 290 220" />
+
+            <path class="arrow" d="M 220 290 L 125 380" />
+            <path class="arrow" d="M 300 290 L 295 380" />
+
+            <path class="arrow" d="M 200 415 L 450 415" />
+            <path class="arrow" d="M 370 415 L 450 415" />
+
+            <path class="arrow" d="M 540 450 L 540 550" />
+
+            <path class="arrow" d="M 540 630 L 290 750" />
+            <path class="arrow" d="M 540 630 L 500 750" />
+            <path class="arrow" d="M 540 630 L 640 920" />
+
+            <path class="arrow" d="M 660 590 L 720 590" />
+            <path class="arrow" d="M 820 630 L 910 750" />
+
+            <path class="arrow" d="M 920 590 L 980 590" />
+            <path class="arrow" d="M 1080 630 L 700 750" />
+
+            <path class="arrow" d="M 125 450 L 125 550" stroke="#f472b6" stroke-width="3" />
+            <text x="145" y="500" fill="#f472b6" font-size="12">Presence</text>
+            <path class="arrow" d="M 125 550 L 1070 750" stroke="#f472b6" stroke-width="2" stroke-dasharray="5,5" />
+
+            <!-- Flow Labels -->
+            <text x="140" y="180" text-anchor="middle" fill="#4a5568" font-size="11">① Edit request</text>
+            <text x="260" y="340" text-anchor="middle" fill="#4a5568" font-size="11">② Route to WS server</text>
+            <text x="540" y="510" text-anchor="middle" fill="#4a5568" font-size="11">③ Transform & sequence</text>
+            <text x="380" y="700" text-anchor="middle" fill="#4a5568" font-size="11">④ Persist</text>
+            <text x="680" y="870" text-anchor="middle" fill="#4a5568" font-size="11">⑤ Event streaming</text>
+
+            <!-- Timeline -->
+            <line x1="50" y1="1050" x2="1350" y2="1050" stroke="#cbd5e0" stroke-width="3" />
+            <circle cx="100" cy="1050" r="8" fill="#60a5fa" />
+            <text x="100" y="1080" text-anchor="middle" fill="#4a5568" font-size="11">User types (0ms)</text>
+
+            <circle cx="400" cy="1050" r="8" fill="#facc15" />
+            <text x="400" y="1080" text-anchor="middle" fill="#4a5568" font-size="11">WS recv (10ms)</text>
+
+            <circle cx="700" cy="1050" r="8" fill="#84cc16" />
+            <text x="700" y="1080" text-anchor="middle" fill="#4a5568" font-size="11">Transform (30ms)</text>
+
+            <circle cx="1000" cy="1050" r="8" fill="#818cf8" />
+            <text x="1000" y="1080" text-anchor="middle" fill="#4a5568" font-size="11">Persist (50ms)</text>
+
+            <circle cx="1300" cy="1050" r="8" fill="#60a5fa" />
+            <text x="1300" y="1080" text-anchor="middle" fill="#4a5568" font-size="11">Broadcast (80ms)</text>
+        </svg>
+
+        <div class="step-explanation">
+            <h3>🏗️ Full System Architecture Flow</h3>
+            <ol>
+                <li><strong>Client Layer:</strong> Web/mobile clients with rich text editors (Quill.js, ProseMirror)</li>
+                <li><strong>Load Balancer:</strong> Routes WebSocket connections to available WS servers (sticky sessions by document ID)</li>
+                <li><strong>WebSocket Servers:</strong> Maintain persistent connections, horizontally scalable (50-100 instances)</li>
+                <li><strong>Redis Pub/Sub:</strong> Enables cross-server communication for broadcasting operations</li>
+                <li><strong>Collaboration Service:</strong> Core OT/CRDT engine for transforming and sequencing operations</li>
+                <li><strong>Document Service:</strong> REST API for CRUD operations, permissions, sharing</li>
+                <li><strong>Version Control:</strong> Manages document history, snapshots, and rollback</li>
+                <li><strong>Data Layer:</strong>
+                    <ul>
+                        <li>PostgreSQL: Durable operations log and metadata</li>
+                        <li>Redis Cache: Fast document state retrieval</li>
+                        <li>S3: Full document snapshots and media</li>
+                        <li>Elasticsearch: Full-text search</li>
+                    </ul>
+                </li>
+                <li><strong>Presence Service:</strong> Tracks active users, cursors, selections</li>
+                <li><strong>Message Queue:</strong> Event streaming for analytics, notifications, webhooks</li>
+            </ol>
+
+            <p style="margin-top: 20px; color: #4a5568; line-height: 1.8;">
+                <strong>Performance:</strong> End-to-end latency from user keystroke to other users seeing the change: <strong>50-100ms (P95)</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function showDiagram(diagramId) {
+    // Hide all diagrams
+    document.querySelectorAll('.diagram-container').forEach(container => {
+        container.classList.remove('active');
+    });
+
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Show selected diagram
+    document.getElementById(diagramId).classList.add('active');
+
+    // Activate clicked tab
+    event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
