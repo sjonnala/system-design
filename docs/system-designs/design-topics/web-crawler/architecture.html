@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Crawler System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.metrics { background: #fef3c7; color: #92400e; }
+        .tag.security { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .seed-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 3;
+        }
+
+        .scheduler-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 3;
+        }
+
+        .fetcher-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .parser-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 4;
+        }
+
+        .dedup-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .frontier-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 4;
+        }
+
+        .index-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .dns-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 4;
+        }
+
+        .robotstxt-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🕷️ Web Crawler System Design Blueprint</h1>
+        <div class="subtitle">Complete End-to-End Distributed Crawler Architecture</div>
+        <div class="tags">
+            <span class="tag metrics">Billion-Scale Pages</span>
+            <span class="tag security">Politeness & Ethics</span>
+            <span class="tag scale">Massively Distributed</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Seed URLs -->
+        <div class="section seed-section">
+            <div class="section-title">🌱 SEED URLS</div>
+            <div class="component">
+                <div class="component-name">URL Seeds Repository</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Initial URL list (top sites)</li>
+                        <li>Sitemap.xml files</li>
+                        <li>RSS/Atom feeds</li>
+                        <li>User-submitted URLs</li>
+                        <li>Priority seeds (news, popular domains)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Bootstrap Crawl</div>
+        </div>
+
+        <!-- URL Scheduler -->
+        <div class="section scheduler-section">
+            <div class="section-title">⏰ URL SCHEDULER</div>
+            <div class="component">
+                <div class="component-name">Priority Scheduler</div>
+                <div class="component-details">
+                    <strong>Scheduling Strategies:</strong>
+                    <ul>
+                        <li><strong>BFS:</strong> Breadth-first crawling</li>
+                        <li><strong>Priority:</strong> PageRank-based</li>
+                        <li><strong>Freshness:</strong> Time-based re-crawl</li>
+                        <li><strong>Politeness:</strong> Rate limiting per domain</li>
+                    </ul>
+                    <div class="code-snippet">
+# Priority Queue per domain
+domain_queues = {
+  "example.com": PriorityQueue(),
+  "news.com": PriorityQueue()
+}
+
+# Politeness: 1 req/sec per domain
+rate_limiter.wait(domain)</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Schedule URLs</div>
+        </div>
+
+        <!-- URL Frontier -->
+        <div class="section frontier-section">
+            <div class="section-title">🚪 URL FRONTIER</div>
+            <div class="component">
+                <div class="component-name">Distributed Queue System</div>
+                <div class="component-details">
+                    <strong>Multi-Queue Architecture:</strong>
+                    <ul>
+                        <li><strong>Prioritizer:</strong> Assigns URLs to priority queues</li>
+                        <li><strong>Front Queues:</strong> Priority-based (F1-F5)</li>
+                        <li><strong>Back Queues:</strong> Domain-based (B1-Bn)</li>
+                        <li><strong>Selector:</strong> FIFO from back queues</li>
+                    </ul>
+                    <div class="code-snippet">
+Front Queues (Priority):
+F1: High priority (news, popular)
+F2: Medium priority
+F3: Low priority
+
+Back Queues (Politeness):
+B1: example.com (1 req/sec)
+B2: test.org (1 req/sec)
+...
+Bn: domain-n.com</div>
+                    <strong>Implementation:</strong> Redis + Kafka
+                </div>
+            </div>
+        </div>
+
+        <!-- Robots.txt Manager -->
+        <div class="section robotstxt-section">
+            <div class="section-title">🤖 ROBOTS.TXT</div>
+            <div class="component">
+                <div class="component-name">Robots Protocol Handler</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Fetch /robots.txt for each domain</li>
+                        <li>Cache rules (24hr TTL)</li>
+                        <li>Parse User-agent directives</li>
+                        <li>Check Disallow patterns</li>
+                        <li>Respect Crawl-delay</li>
+                    </ul>
+                    <div class="code-snippet">
+# Example robots.txt
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Crawl-delay: 1
+
+User-agent: Googlebot
+Allow: /</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DNS Resolver -->
+        <div class="section dns-section">
+            <div class="section-title">🌐 DNS RESOLVER</div>
+            <div class="component">
+                <div class="component-name">DNS Cache & Resolver</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Local DNS cache (reduce latency)</li>
+                        <li>TTL-based invalidation</li>
+                        <li>Batch DNS lookups</li>
+                        <li>Async resolution</li>
+                        <li>Fallback resolvers (8.8.8.8)</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Cache hit rate: 90%+</li>
+                        <li>DNS lookup: <10ms</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Fetcher -->
+        <div class="section fetcher-section">
+            <div class="section-title">📥 CONTENT FETCHER</div>
+
+            <div class="component">
+                <div class="component-name">HTTP Fetcher Pool</div>
+                <div class="component-details">
+                    <strong>Distributed Fetcher Fleet:</strong>
+                    <div class="code-snippet">
+// Multi-threaded fetcher
+class Fetcher:
+  def fetch(url):
+    # Check robots.txt
+    if not robots.is_allowed(url):
+      return None
+
+    # Set headers
+    headers = {
+      'User-Agent': 'MyBot/1.0',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Encoding': 'gzip, deflate'
+    }
+
+    # Fetch with timeout
+    response = http.get(url,
+      headers=headers,
+      timeout=10,
+      follow_redirects=True,
+      max_redirects=5
+    )
+
+    return response</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li><strong>Connection pooling:</strong> 100 connections per worker</li>
+                        <li><strong>HTTP/2 & HTTP/3:</strong> Multiplexing</li>
+                        <li><strong>Compression:</strong> gzip, brotli</li>
+                        <li><strong>Retry logic:</strong> Exponential backoff (3 retries)</li>
+                        <li><strong>Timeout:</strong> 10s connection, 30s read</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Politeness Manager</div>
+                <div class="component-details">
+                    <strong>Crawl Etiquette:</strong>
+                    <ul>
+                        <li>Rate limiting: 1-5 req/sec per domain</li>
+                        <li>Respect Crawl-delay directive</li>
+                        <li>Adaptive throttling (HTTP 429 responses)</li>
+                        <li>Time-of-day awareness (avoid peak hours)</li>
+                    </ul>
+                    <div class="code-snippet">
+# Token bucket algorithm
+class RateLimiter:
+  def acquire(domain):
+    bucket = buckets[domain]
+    if bucket.tokens > 0:
+      bucket.tokens -= 1
+      return True
+    return False
+
+  # Refill 1 token/sec
+  def refill():
+    for bucket in buckets:
+      bucket.tokens = min(
+        bucket.tokens + 1,
+        bucket.capacity
+      )</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- URL Deduplication -->
+        <div class="section dedup-section">
+            <div class="section-title">🔍 URL DEDUPLICATION</div>
+            <div class="component">
+                <div class="component-name">Bloom Filter + Hash Table</div>
+                <div class="component-details">
+                    <strong>Two-Tier Deduplication:</strong>
+                    <ul>
+                        <li><strong>Bloom Filter:</strong> Fast negative lookup (99.9% accuracy)</li>
+                        <li><strong>Hash Table:</strong> Exact match (MD5/SHA256 of URL)</li>
+                        <li><strong>Distributed:</strong> Sharded by URL hash</li>
+                    </ul>
+                    <div class="code-snippet">
+# URL normalization
+def normalize_url(url):
+  url = url.lower()
+  url = remove_fragment(url)  # #section
+  url = sort_query_params(url)
+  url = remove_default_port(url)
+  url = add_trailing_slash(url)
+  return url
+
+# Check if seen
+def is_seen(url):
+  url_hash = md5(normalize_url(url))
+
+  # Fast check
+  if not bloom_filter.contains(url_hash):
+    return False
+
+  # Exact check
+  return hash_table.exists(url_hash)</div>
+                    <strong>Scale:</strong> Handle 10B+ URLs
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Parser -->
+        <div class="section parser-section">
+            <div class="section-title">📄 CONTENT PARSER</div>
+            <div class="component">
+                <div class="component-name">HTML/XML Parser</div>
+                <div class="component-details">
+                    <strong>Parsing Pipeline:</strong>
+                    <ul>
+                        <li><strong>HTML Parser:</strong> BeautifulSoup, lxml</li>
+                        <li><strong>Link Extraction:</strong> &lt;a href&gt;, &lt;link&gt;, &lt;img src&gt;</li>
+                        <li><strong>Content Extraction:</strong> Text, metadata, structured data</li>
+                        <li><strong>Language Detection:</strong> Identify language</li>
+                    </ul>
+                    <div class="code-snippet">
+# Extract links
+def extract_links(html, base_url):
+  soup = BeautifulSoup(html, 'lxml')
+  links = []
+
+  for tag in soup.find_all(['a', 'link']):
+    href = tag.get('href')
+    if href:
+      # Resolve relative URLs
+      absolute_url = urljoin(base_url, href)
+      links.append(absolute_url)
+
+  return links
+
+# Extract content
+def extract_content(html):
+  soup = BeautifulSoup(html, 'lxml')
+
+  # Remove scripts, styles
+  for tag in soup(['script', 'style']):
+    tag.decompose()
+
+  # Extract text
+  text = soup.get_text(separator=' ')
+
+  # Extract metadata
+  title = soup.find('title').text
+  meta_desc = soup.find('meta', {'name': 'description'})
+
+  return {
+    'title': title,
+    'description': meta_desc.get('content') if meta_desc else '',
+    'text': text
+  }</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Storage -->
+        <div class="section storage-section">
+            <div class="section-title">💾 CONTENT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Document Store</div>
+                <div class="component-details">
+                    <strong>Tiered Storage:</strong>
+                    <ul>
+                        <li><strong>Hot Storage:</strong> Recent crawls (SSD) - 7 days</li>
+                        <li><strong>Warm Storage:</strong> Compressed (S3 Standard) - 6 months</li>
+                        <li><strong>Cold Storage:</strong> Archive (S3 Glacier) - 5 years</li>
+                    </ul>
+                    <div class="code-snippet">
+# Document structure
+{
+  "url": "https://example.com/page",
+  "url_hash": "a3b2c1d4e5f6...",
+  "html": "&lt;html&gt;...&lt;/html&gt;",
+  "text": "Extracted text content",
+  "title": "Page Title",
+  "metadata": {
+    "crawled_at": "2025-11-15T10:30:00Z",
+    "http_status": 200,
+    "content_type": "text/html",
+    "size_bytes": 45678,
+    "language": "en",
+    "encoding": "utf-8"
+  },
+  "links_out": ["url1", "url2", ...]
+}</div>
+                    <strong>Format:</strong> Compressed JSON (gzip)
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Index -->
+        <div class="section index-section">
+            <div class="section-title">🔎 SEARCH INDEX</div>
+            <div class="component">
+                <div class="component-name">Inverted Index</div>
+                <div class="component-details">
+                    <strong>Indexing Pipeline:</strong>
+                    <ul>
+                        <li><strong>Tokenization:</strong> Split text into terms</li>
+                        <li><strong>Normalization:</strong> Lowercase, stemming</li>
+                        <li><strong>Stop words:</strong> Remove common words (the, a, is)</li>
+                        <li><strong>Inverted index:</strong> term → [doc_ids]</li>
+                        <li><strong>Forward index:</strong> doc_id → [terms]</li>
+                    </ul>
+                    <div class="code-snippet">
+# Inverted Index (Elasticsearch)
+{
+  "web": [doc1, doc5, doc12, ...],
+  "crawler": [doc1, doc8, doc20, ...],
+  "system": [doc1, doc3, doc15, ...]
+}
+
+# Document ranking
+def rank_documents(query):
+  # TF-IDF scoring
+  # PageRank bonus
+  # Freshness bonus
+  return sorted_docs</div>
+                    <strong>Technology:</strong> Elasticsearch, Solr
+                </div>
+            </div>
+        </div>
+
+        <!-- URL Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ URL DATABASE</div>
+            <div class="component">
+                <div class="component-name">URL Metadata Store</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+-- PostgreSQL Schema
+CREATE TABLE crawled_urls (
+  id BIGSERIAL PRIMARY KEY,
+  url_hash VARCHAR(64) UNIQUE,
+  url TEXT NOT NULL,
+  domain VARCHAR(255),
+  first_seen TIMESTAMP,
+  last_crawled TIMESTAMP,
+  next_crawl TIMESTAMP,
+  crawl_frequency INTERVAL,
+  http_status INTEGER,
+  content_hash VARCHAR(64),
+  page_rank FLOAT,
+  crawl_priority INTEGER,
+  error_count INTEGER DEFAULT 0
+);
+
+CREATE INDEX idx_domain ON crawled_urls(domain);
+CREATE INDEX idx_next_crawl ON crawled_urls(next_crawl);
+CREATE INDEX idx_priority ON crawled_urls(crawl_priority);</div>
+                    <strong>Sharding:</strong> Hash(url) % num_shards
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka / RabbitMQ</div>
+                <div class="component-details">
+                    <strong>Topics/Queues:</strong>
+                    <ul>
+                        <li><strong>url.frontier:</strong> URLs ready to crawl</li>
+                        <li><strong>page.fetched:</strong> Fetched pages for processing</li>
+                        <li><strong>links.extracted:</strong> Discovered URLs</li>
+                        <li><strong>content.parsed:</strong> Parsed content for indexing</li>
+                        <li><strong>crawl.errors:</strong> Failed crawls for retry</li>
+                    </ul>
+                    <div class="code-snippet">
+// Kafka message
+{
+  "topic": "url.frontier",
+  "key": "example.com",
+  "value": {
+    "url": "https://example.com/page",
+    "priority": 5,
+    "depth": 2,
+    "parent_url": "https://example.com/",
+    "timestamp": "2025-11-15T10:30:00Z"
+  }
+}</div>
+                    <strong>Throughput:</strong> 100K+ messages/sec
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics & Metrics -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS</div>
+            <div class="component">
+                <div class="component-name">Crawl Metrics & Monitoring</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li>Pages crawled per second</li>
+                        <li>Crawl queue depth</li>
+                        <li>Average fetch latency</li>
+                        <li>Success/error rates</li>
+                        <li>Domain coverage</li>
+                        <li>Duplicate detection rate</li>
+                    </ul>
+                    <div class="code-snippet">
+# Real-time dashboard metrics
+{
+  "crawl_rate": "1500 pages/sec",
+  "queue_depth": "50M URLs",
+  "avg_latency": "350ms",
+  "success_rate": "94.2%",
+  "domains_crawled": "15M",
+  "total_pages": "10B+"
+}</div>
+                    <strong>Tools:</strong> Prometheus, Grafana, ELK Stack
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & HEALTH</div>
+            <div class="component">
+                <div class="component-name">System Health Checks</div>
+                <div class="component-details">
+                    <strong>Monitoring:</strong>
+                    <ul>
+                        <li>Fetcher health (CPU, memory, network)</li>
+                        <li>Queue lag and backlog</li>
+                        <li>DNS cache hit rate</li>
+                        <li>robots.txt cache status</li>
+                        <li>Storage capacity</li>
+                        <li>Dead letter queue monitoring</li>
+                    </ul>
+                    <strong>Alerts:</strong>
+                    <ul>
+                        <li>Crawl rate drop > 30%</li>
+                        <li>Error rate > 10%</li>
+                        <li>Queue depth > 100M</li>
+                        <li>Storage > 85% capacity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">10 Billion+</div>
+                <div class="metric-label">Total pages indexed</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1,500 Pages/sec</div>
+                <div class="metric-label">Crawl throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">50 Million</div>
+                <div class="metric-label">URL frontier size</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;500ms</div>
+                <div class="metric-label">Average fetch latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">500 TB</div>
+                <div class="metric-label">Content storage (compressed)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.5%</div>
+                <div class="metric-label">Deduplication accuracy</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADDITIONAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Politeness & Ethics</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Robots.txt Compliance:</strong> Respect all directives</li>
+                    <li><strong>Rate Limiting:</strong> 1-5 req/sec per domain</li>
+                    <li><strong>Crawl-delay:</strong> Honor specified delays</li>
+                    <li><strong>User-Agent:</strong> Identify bot clearly, provide contact info</li>
+                    <li><strong>Retry Strategy:</strong> Exponential backoff for errors</li>
+                    <li><strong>Time-aware:</strong> Avoid peak traffic hours</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> 100s-1000s of fetcher workers</li>
+                    <li><strong>Distributed Queues:</strong> Kafka partitioning by domain</li>
+                    <li><strong>Sharded Storage:</strong> Hash-based URL sharding</li>
+                    <li><strong>CDN Integration:</strong> Cache static resources</li>
+                    <li><strong>Geo-distributed:</strong> Crawlers in multiple regions</li>
+                    <li><strong>Auto-scaling:</strong> Based on queue depth</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Content Quality</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Duplicate Detection:</strong> Content hash (SimHash)</li>
+                    <li><strong>Spam Filtering:</strong> ML-based spam detection</li>
+                    <li><strong>Language Detection:</strong> Multi-language support</li>
+                    <li><strong>Content Freshness:</strong> Re-crawl scheduling</li>
+                    <li><strong>Quality Scoring:</strong> PageRank, domain authority</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Failure Handling</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Retry Logic:</strong> 3 retries with exponential backoff</li>
+                    <li><strong>Dead Letter Queue:</strong> Failed URLs for manual review</li>
+                    <li><strong>Circuit Breaker:</strong> Stop crawling problematic domains</li>
+                    <li><strong>Health Checks:</strong> Monitor fetcher workers</li>
+                    <li><strong>Graceful Degradation:</strong> Skip parsing if overloaded</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crawling Algorithms -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🎨 CRAWLING ALGORITHMS & STRATEGIES</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Breadth-First Crawling (BFS)</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Use Case:</strong> General web crawling<br>
+                    <strong>Algorithm:</strong> Queue-based, level-by-level<br>
+                    <strong>Pros:</strong> Discovers popular pages first, balanced coverage<br>
+                    <strong>Cons:</strong> May waste resources on low-quality pages<br>
+                    <strong>Example:</strong> Start from homepage, crawl all links on page, then crawl links from those pages
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Priority-Based Crawling</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Use Case:</strong> Important pages first (news, popular sites)<br>
+                    <strong>Algorithm:</strong> Priority queue based on PageRank, freshness<br>
+                    <strong>Pros:</strong> Efficient use of resources<br>
+                    <strong>Cons:</strong> May miss long-tail content<br>
+                    <strong>Scoring:</strong> priority = pagerank × freshness × domain_authority
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Focused Crawling</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Use Case:</strong> Topic-specific crawling (e.g., tech blogs)<br>
+                    <strong>Algorithm:</strong> Classify pages, prioritize relevant ones<br>
+                    <strong>Pros:</strong> Highly efficient for domain-specific needs<br>
+                    <strong>Cons:</strong> Requires trained classifiers<br>
+                    <strong>ML Model:</strong> Text classification to predict relevance
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Pareto Principle Applied:</strong> This design focuses on the 20% of patterns that solve 80% of web crawling challenges</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Python/Scrapy • Go/Colly • Java/Apache Nutch • Kafka • Elasticsearch • PostgreSQL • Redis</p>
+    </div>
+</div>
+</body>
+</html>
