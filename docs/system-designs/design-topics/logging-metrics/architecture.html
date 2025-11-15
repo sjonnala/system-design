@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging & Metrics System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.metrics { background: #fef3c7; color: #92400e; }
+        .tag.security { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .agents-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 4;
+        }
+
+        .collectors-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 4;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 6;
+        }
+
+        .processor-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .timeseries-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .alerting-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .retention-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Logging & Metrics System Design Blueprint</h1>
+        <div class="subtitle">Complete Observability Platform Architecture</div>
+        <div class="tags">
+            <span class="tag metrics">High Throughput</span>
+            <span class="tag security">Real-time Analytics</span>
+            <span class="tag scale">Petabyte Scale</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Data Sources / Agents -->
+        <div class="section agents-section">
+            <div class="section-title">🔌 DATA SOURCES & AGENTS</div>
+            <div class="component">
+                <div class="component-name">Application Agents</div>
+                <div class="component-details">
+                    <strong>Log Shippers:</strong>
+                    <ul>
+                        <li>Filebeat (lightweight log shipper)</li>
+                        <li>Fluentd / Fluent Bit</li>
+                        <li>Logstash agents</li>
+                        <li>Vector (Rust-based)</li>
+                    </ul>
+                    <div class="code-snippet">
+# Filebeat config
+filebeat.inputs:
+  - type: log
+    paths:
+      - /var/log/app/*.log
+    fields:
+      service: user-api
+      environment: production</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Metrics Agents</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Prometheus exporters:</strong> Node, JMX, Custom</li>
+                        <li><strong>StatsD / DogStatsD:</strong> Application metrics</li>
+                        <li><strong>OpenTelemetry collectors:</strong> Unified observability</li>
+                        <li><strong>Telegraf:</strong> InfluxDB agent</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Infrastructure Sources</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Kubernetes logs (kubectl logs)</li>
+                        <li>Docker container logs</li>
+                        <li>AWS CloudWatch Logs</li>
+                        <li>System logs (syslog, journald)</li>
+                        <li>Network device logs (SNMP)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Stream logs & metrics</div>
+        </div>
+
+        <!-- Collectors -->
+        <div class="section collectors-section">
+            <div class="section-title">📥 COLLECTION LAYER</div>
+            <div class="component">
+                <div class="component-name">Log Collectors</div>
+                <div class="component-details">
+                    <strong>Fluentd / Fluent Bit:</strong>
+                    <ul>
+                        <li>Unified logging layer</li>
+                        <li>Multi-format parsing (JSON, syslog, custom)</li>
+                        <li>Buffer management</li>
+                        <li>Output routing</li>
+                    </ul>
+                    <div class="code-snippet">
+# Fluentd pipeline
+&lt;source&gt;
+  @type forward
+  port 24224
+&lt;/source&gt;
+
+&lt;filter **&gt;
+  @type record_transformer
+  &lt;record&gt;
+    hostname ${hostname}
+    timestamp ${time}
+  &lt;/record&gt;
+&lt;/filter&gt;
+
+&lt;match **&gt;
+  @type kafka
+  brokers kafka:9092
+  topic_key topic
+&lt;/match&gt;</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Metrics Collectors</div>
+                <div class="component-details">
+                    <strong>Prometheus Server:</strong>
+                    <ul>
+                        <li>Pull-based metrics collection</li>
+                        <li>Service discovery (K8s, Consul)</li>
+                        <li>Scrape interval: 15-60s</li>
+                        <li>Local time-series storage</li>
+                    </ul>
+                    <strong>Alternative: Push Gateway</strong>
+                    <ul>
+                        <li>For short-lived jobs</li>
+                        <li>Batch processing metrics</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Parse & enrich</div>
+        </div>
+
+        <!-- Gateway / Load Balancer -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Ingestion Gateway</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Rate Limiting:</strong> 10K events/sec per client</li>
+                        <li><strong>Authentication:</strong> API keys, mTLS</li>
+                        <li><strong>Protocol Support:</strong> HTTP, gRPC, TCP</li>
+                        <li><strong>Compression:</strong> gzip, snappy</li>
+                        <li><strong>Buffering:</strong> Handle backpressure</li>
+                    </ul>
+                    <div class="code-snippet">
+POST /v1/logs HTTP/1.1
+Authorization: Bearer API_KEY
+Content-Type: application/json
+
+{
+  "timestamp": "2025-11-15T10:30:00Z",
+  "level": "ERROR",
+  "service": "payment-api",
+  "message": "Payment processing failed",
+  "context": {
+    "user_id": "user123",
+    "transaction_id": "txn456"
+  }
+}</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to queues</div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE STREAMING</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>logs.raw:</strong> Raw log ingestion (high volume)</li>
+                        <li><strong>logs.structured:</strong> Parsed & enriched logs</li>
+                        <li><strong>metrics.raw:</strong> Raw metric data</li>
+                        <li><strong>metrics.aggregated:</strong> Pre-aggregated metrics</li>
+                        <li><strong>alerts:</strong> Alert events</li>
+                    </ul>
+                    <div class="code-snippet">
+# Kafka configuration
+Topics: 10 (partitioned by service)
+Partitions: 30 per topic
+Replication: 3x
+Retention: 7 days (hot data)
+Throughput: 1M events/sec</div>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>Decouples ingestion from processing</li>
+                        <li>Replay capability for reprocessing</li>
+                        <li>Horizontal scaling</li>
+                        <li>Durability guarantees</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Alternative: AWS Kinesis</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Managed streaming service</li>
+                        <li>Auto-scaling shards</li>
+                        <li>24-hour default retention</li>
+                        <li>Easy AWS integration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stream Processors -->
+        <div class="section processor-section">
+            <div class="section-title">⚙️ STREAM PROCESSING</div>
+            <div class="component">
+                <div class="component-name">Apache Flink / Spark Streaming</div>
+                <div class="component-details">
+                    <strong>Processing Pipeline:</strong>
+                    <ul>
+                        <li><strong>Parsing:</strong> Extract structured fields from raw logs</li>
+                        <li><strong>Enrichment:</strong> Add metadata (geo, user info)</li>
+                        <li><strong>Filtering:</strong> Remove noise, debug logs</li>
+                        <li><strong>Aggregation:</strong> Real-time metrics (1-min windows)</li>
+                        <li><strong>Anomaly Detection:</strong> Statistical models</li>
+                    </ul>
+                    <div class="code-snippet">
+// Flink stream processing
+DataStream&lt;LogEvent&gt; logs = env
+  .addSource(new FlinkKafkaConsumer&lt;&gt;(...))
+  .map(new LogParser())
+  .filter(event -&gt; event.level != DEBUG)
+  .keyBy(event -&gt; event.service)
+  .window(TumblingEventTimeWindows.of(Time.minutes(1)))
+  .aggregate(new ErrorRateAggregator())
+  .addSink(new TimeSeriesDBSink());</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Logstash (Alternative)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Simpler for ETL pipelines</li>
+                        <li>Rich plugin ecosystem</li>
+                        <li>Grok pattern parsing</li>
+                        <li>Good for moderate scale</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Storage -->
+        <div class="section storage-section">
+            <div class="section-title">🗄️ LOG STORAGE</div>
+            <div class="component">
+                <div class="component-name">Elasticsearch</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li><strong>Indices:</strong> Time-based (logs-2025.11.15)</li>
+                        <li><strong>Shards:</strong> 30 primary + 30 replica</li>
+                        <li><strong>Index Lifecycle:</strong> Hot → Warm → Cold → Delete</li>
+                        <li><strong>Retention:</strong> 90 days searchable</li>
+                    </ul>
+                    <div class="code-snippet">
+# Index template
+{
+  "index_patterns": ["logs-*"],
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "refresh_interval": "5s"
+  },
+  "mappings": {
+    "properties": {
+      "timestamp": {"type": "date"},
+      "level": {"type": "keyword"},
+      "service": {"type": "keyword"},
+      "message": {"type": "text"},
+      "trace_id": {"type": "keyword"}
+    }
+  }
+}</div>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Hot nodes: SSD storage (last 7 days)</li>
+                        <li>Warm nodes: HDD storage (8-30 days)</li>
+                        <li>Cold nodes: Archive (31-90 days)</li>
+                        <li>Snapshot to S3: Long-term retention</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Alternative: Loki (Grafana)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Cost-effective (indexes metadata only)</li>
+                        <li>Stores logs in object storage</li>
+                        <li>LogQL query language</li>
+                        <li>Lower resource usage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time-Series Database -->
+        <div class="section timeseries-section">
+            <div class="section-title">📈 METRICS STORAGE</div>
+            <div class="component">
+                <div class="component-name">Prometheus TSDB</div>
+                <div class="component-details">
+                    <strong>Storage Model:</strong>
+                    <ul>
+                        <li><strong>Metric format:</strong> metric_name{label1="val1"}</li>
+                        <li><strong>Retention:</strong> 15 days local storage</li>
+                        <li><strong>Compression:</strong> ~1.3 bytes/sample</li>
+                        <li><strong>Cardinality:</strong> Millions of time series</li>
+                    </ul>
+                    <div class="code-snippet">
+# Prometheus metric example
+http_requests_total{
+  method="GET",
+  endpoint="/api/users",
+  status="200",
+  service="user-api"
+} 15247 @1700000000
+
+# Query example (PromQL)
+rate(http_requests_total[5m])
+sum by (service) (
+  rate(http_errors_total[5m])
+)</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Long-term Storage: Thanos / Cortex</div>
+                <div class="component-details">
+                    <strong>Thanos Architecture:</strong>
+                    <ul>
+                        <li><strong>Sidecar:</strong> Uploads blocks to S3</li>
+                        <li><strong>Store Gateway:</strong> Queries historical data</li>
+                        <li><strong>Compactor:</strong> Downsampling & retention</li>
+                        <li><strong>Query:</strong> Unified query across sources</li>
+                    </ul>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>Unlimited retention (object storage)</li>
+                        <li>Global query view</li>
+                        <li>High availability</li>
+                        <li>Cost-effective storage</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Alternatives</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>InfluxDB:</strong> High write throughput</li>
+                        <li><strong>TimescaleDB:</strong> PostgreSQL extension</li>
+                        <li><strong>VictoriaMetrics:</strong> High performance, low cost</li>
+                        <li><strong>M3DB:</strong> Uber's distributed TSDB</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Query results caching:</strong> Dashboard data</li>
+                        <li><strong>Hot metrics:</strong> Last 5-min aggregates</li>
+                        <li><strong>Rate limiting:</strong> API throttling</li>
+                        <li><strong>Session data:</strong> User preferences</li>
+                    </ul>
+                    <div class="code-snippet">
+# Cache structure
+SET metrics:cpu:host123 "45.2" EX 300
+ZADD hot_services 1500 "payment-api"
+SETEX query:dashboard1 3600 "{...}"</div>
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>Memory: 50GB cluster</li>
+                        <li>Eviction: LRU</li>
+                        <li>Persistence: RDB snapshots</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Analysis -->
+        <div class="section search-section">
+            <div class="section-title">🔍 SEARCH & ANALYSIS</div>
+            <div class="component">
+                <div class="component-name">Kibana</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Log search:</strong> Full-text, filters</li>
+                        <li><strong>Visualizations:</strong> Charts, graphs, maps</li>
+                        <li><strong>Dashboards:</strong> Real-time monitoring</li>
+                        <li><strong>Dev Tools:</strong> Query console</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Analytics Engine</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Apache Spark:</strong> Batch analytics</li>
+                        <li><strong>Presto/Trino:</strong> SQL queries on logs</li>
+                        <li><strong>ClickHouse:</strong> OLAP analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization -->
+        <div class="section visualization-section">
+            <div class="section-title">📊 VISUALIZATION</div>
+            <div class="component">
+                <div class="component-name">Grafana</div>
+                <div class="component-details">
+                    <strong>Dashboard Types:</strong>
+                    <ul>
+                        <li><strong>Infrastructure:</strong> CPU, Memory, Disk</li>
+                        <li><strong>Application:</strong> Request rate, latency, errors</li>
+                        <li><strong>Business:</strong> Transactions, revenue</li>
+                        <li><strong>Alerts:</strong> Real-time incident tracking</li>
+                    </ul>
+                    <div class="code-snippet">
+# PromQL query in Grafana
+rate(
+  http_requests_total[5m]
+)
+
+# Alert rule
+avg_over_time(
+  cpu_usage[5m]
+) > 80</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Multi-source data (Prometheus, ES, InfluxDB)</li>
+                        <li>Templating & variables</li>
+                        <li>Annotations & events</li>
+                        <li>Alerting integration</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Custom Dashboards</div>
+                <div class="component-details">
+                    <ul>
+                        <li>React / Vue.js web apps</li>
+                        <li>Real-time WebSocket updates</li>
+                        <li>Business-specific views</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerting -->
+        <div class="section alerting-section">
+            <div class="section-title">🚨 ALERTING & NOTIFICATION</div>
+            <div class="component">
+                <div class="component-name">Prometheus Alertmanager</div>
+                <div class="component-details">
+                    <strong>Alert Rules:</strong>
+                    <div class="code-snippet">
+groups:
+  - name: API Alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value }}"</div>
+                    <strong>Notification Channels:</strong>
+                    <ul>
+                        <li><strong>PagerDuty:</strong> On-call rotation</li>
+                        <li><strong>Slack:</strong> Team notifications</li>
+                        <li><strong>Email:</strong> Incident reports</li>
+                        <li><strong>Webhooks:</strong> Custom integrations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ElastAlert (for logs)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Query-based alerts on ES</li>
+                        <li>Frequency, spike, flatline rules</li>
+                        <li>Aggregation alerts</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Incident Management</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>PagerDuty:</strong> Alert routing, escalation</li>
+                        <li><strong>Opsgenie:</strong> On-call management</li>
+                        <li><strong>VictorOps:</strong> Incident timeline</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Retention -->
+        <div class="section retention-section">
+            <div class="section-title">🗂️ DATA LIFECYCLE & RETENTION</div>
+            <div class="component">
+                <div class="component-name">Tiered Storage Strategy</div>
+                <div class="component-details">
+                    <strong>Logs:</strong>
+                    <ul>
+                        <li><strong>Hot (0-7 days):</strong> ES on SSD, full search</li>
+                        <li><strong>Warm (8-30 days):</strong> ES on HDD, reduced replicas</li>
+                        <li><strong>Cold (31-90 days):</strong> ES frozen, S3 snapshot</li>
+                        <li><strong>Archive (90+ days):</strong> S3 Glacier, compliance</li>
+                    </ul>
+                    <strong>Metrics:</strong>
+                    <ul>
+                        <li><strong>Raw (15 days):</strong> Prometheus local</li>
+                        <li><strong>5min avg (90 days):</strong> Thanos/S3</li>
+                        <li><strong>1hr avg (1 year):</strong> Downsampled</li>
+                        <li><strong>1day avg (5 years):</strong> Long-term trends</li>
+                    </ul>
+                    <div class="code-snippet">
+# Retention policy
+Logs total storage: 50TB
+├─ Hot: 5TB (Elasticsearch SSD)
+├─ Warm: 15TB (Elasticsearch HDD)
+├─ Cold: 30TB (S3 Standard)
+└─ Archive: 500TB+ (S3 Glacier)
+
+Metrics storage: 10TB
+├─ Raw: 2TB (Prometheus)
+└─ Long-term: 8TB (Thanos/S3)</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Compliance & Auditing</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Immutability:</strong> WORM storage for audit logs</li>
+                        <li><strong>Encryption:</strong> At rest (AES-256), in transit (TLS)</li>
+                        <li><strong>Access logs:</strong> Who queried what, when</li>
+                        <li><strong>Retention policies:</strong> GDPR, SOX, HIPAA compliance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">1M events/sec</div>
+                <div class="metric-label">Peak ingestion rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100TB/day</div>
+                <div class="metric-label">Log data volume</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10M time series</div>
+                <div class="metric-label">Active metric cardinality</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;500ms</div>
+                <div class="metric-label">P95 query latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.9%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">90 days</div>
+                <div class="metric-label">Hot data retention</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 SYSTEM DESIGN CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Kafka partitions, ES shards</li>
+                    <li><strong>Data Partitioning:</strong> Time-based, service-based</li>
+                    <li><strong>Read Replicas:</strong> Scale query performance</li>
+                    <li><strong>Caching:</strong> Redis for hot data</li>
+                    <li><strong>Async Processing:</strong> Decouple ingestion from storage</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Quality & Reliability</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Schema Validation:</strong> Enforce log structure</li>
+                    <li><strong>Data Deduplication:</strong> Handle duplicate events</li>
+                    <li><strong>Backpressure Handling:</strong> Queue buffering</li>
+                    <li><strong>Dead Letter Queue:</strong> Handle failures</li>
+                    <li><strong>Monitoring:</strong> Data pipeline health</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Authentication:</strong> API keys, mTLS, OAuth</li>
+                    <li><strong>Authorization:</strong> RBAC for queries</li>
+                    <li><strong>Encryption:</strong> TLS, at-rest encryption</li>
+                    <li><strong>Data Masking:</strong> PII redaction</li>
+                    <li><strong>Audit Trails:</strong> Access logging</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Cost Optimization</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Sampling:</strong> 10% sample for debug logs</li>
+                    <li><strong>Compression:</strong> gzip, snappy (5-10x reduction)</li>
+                    <li><strong>Tiered Storage:</strong> Hot/warm/cold/archive</li>
+                    <li><strong>Retention Policies:</strong> Auto-delete old data</li>
+                    <li><strong>Query Optimization:</strong> Limit time ranges</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;"><strong>Observability Maturity Model:</strong> This design represents Level 4 - Full Observability with predictive analytics and AIOps capabilities</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Kafka • Elasticsearch • Prometheus • Grafana • Fluentd • Flink • Thanos • S3</p>
+    </div>
+</div>
+</body>
+</html>
