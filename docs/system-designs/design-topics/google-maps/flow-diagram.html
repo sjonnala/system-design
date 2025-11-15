@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps - Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #2c3e50;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .flow-content {
+            display: none;
+        }
+
+        .flow-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 25px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .flow-step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .flow-step.client { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .flow-step.cdn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .flow-step.gateway { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .flow-step.service { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        .flow-step.cache { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; }
+        .flow-step.database { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333; }
+        .flow-step.processing { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333; }
+
+        .step-number {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.1em;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-desc {
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .step-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #95a5a6;
+            margin: 5px 0;
+        }
+
+        .metrics-box {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .tab {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Google Maps Flow Diagrams</h1>
+        <p class="subtitle">End-to-end request flows for map services</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showFlow('tile-rendering')">Map Tile Rendering</button>
+            <button class="tab" onclick="showFlow('directions')">Directions Request</button>
+            <button class="tab" onclick="showFlow('geocoding')">Geocoding</button>
+            <button class="tab" onclick="showFlow('traffic')">Real-Time Traffic</button>
+            <button class="tab" onclick="showFlow('place-search')">Place Search</button>
+        </div>
+
+        <!-- Map Tile Rendering Flow -->
+        <div id="tile-rendering" class="flow-content active">
+            <div class="flow-diagram">
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        User Views Map
+                    </div>
+                    <div class="step-desc">
+                        User opens maps.google.com or mobile app and pans/zooms to a location
+                        <div class="step-details">
+                            <strong>Trigger:</strong> Map viewport change (pan, zoom, or initial load)
+                            <br><strong>Client Action:</strong> Calculate required tiles for viewport
+                            <br><strong>Tiles Needed:</strong> 8-20 tiles depending on screen size
+                        </div>
+                        <div class="code-block">// Calculate tiles for viewport
+function getTilesForViewport(lat, lon, zoom, width, height) {
+  const tileSize = 256;
+  const numTiles = Math.pow(2, zoom);
+
+  // Convert center to tile coordinates
+  const centerTileX = Math.floor((lon + 180) / 360 * numTiles);
+  const centerTileY = Math.floor((1 - Math.log(Math.tan(lat * Math.PI/180) +
+    1/Math.cos(lat * Math.PI/180)) / Math.PI) / 2 * numTiles);
+
+  // Calculate tiles needed for viewport
+  const tilesX = Math.ceil(width / tileSize) + 1;
+  const tilesY = Math.ceil(height / tileSize) + 1;
+
+  return { centerTileX, centerTileY, tilesX, tilesY };
+}</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Request Tiles from CDN
+                    </div>
+                    <div class="step-desc">
+                        Client makes HTTP requests for each required tile
+                        <div class="step-details">
+                            <strong>Request Format:</strong> https://mt{0-3}.google.com/vt?x={x}&y={y}&z={z}
+                            <br><strong>Load Balancing:</strong> Rotate through mt0, mt1, mt2, mt3 subdomains
+                            <br><strong>Headers:</strong> Accept-Encoding: gzip, If-None-Match (ETag caching)
+                        </div>
+                        <div class="code-block">// Browser tile request
+tiles.forEach((tile, index) => {
+  const subdomain = index % 4; // Round-robin across mt0-mt3
+  const url = `https://mt${subdomain}.google.com/vt?x=${tile.x}&y=${tile.y}&z=${tile.z}`;
+
+  fetch(url, {
+    headers: {
+      'Accept-Encoding': 'gzip, deflate, br',
+      'If-None-Match': cachedETag[tile.key]
+    }
+  }).then(response => {
+    if (response.status === 304) {
+      // Use cached tile
+      renderTile(cachedTile[tile.key]);
+    } else {
+      // New tile
+      renderTile(response.blob());
+    }
+  });
+});</div>
+                        <div class="metrics-box">
+                            <strong>Metrics:</strong>
+                            <br>• Parallel requests: 8-20 tiles
+                            <br>• Request size: 15-50 KB per tile (compressed)
+                            <br>• Expected latency: <100ms (CDN hit)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step cdn">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        CDN Edge Location Lookup
+                    </div>
+                    <div class="step-desc">
+                        Request hits nearest edge location (one of 200+ globally)
+                        <div class="step-details">
+                            <strong>Cache Lookup:</strong> Check if tile exists in edge cache
+                            <br><strong>Cache Key:</strong> tile:{z}:{x}:{y}:{style}:{language}
+                            <br><strong>Hit Rate:</strong> <span class="highlight">95% for popular tiles</span>
+                        </div>
+                        <div class="code-block">// CDN cache logic (Varnish VCL)
+sub vcl_recv {
+  # Generate cache key
+  set req.http.X-Cache-Key = "tile:" + req.url.z + ":" + req.url.x + ":" + req.url.y;
+
+  # Check cache
+  if (obj.hits > 0) {
+    # Cache hit - serve immediately
+    set req.http.X-Cache-Status = "HIT";
+    return (deliver);
+  } else {
+    # Cache miss - fetch from origin
+    set req.http.X-Cache-Status = "MISS";
+    return (pass);
+  }
+}</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong>
+                            <br>• Cache hit: <50ms
+                            <br>• Cache miss: forward to origin (+150ms)
+                            <br>• Bandwidth saved: 95% (CDN serves most requests)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step service">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Tile Service (Cache Miss)
+                    </div>
+                    <div class="step-desc">
+                        For cache misses, tile service generates or fetches tile
+                        <div class="step-details">
+                            <strong>Check Storage:</strong> Look for pre-rendered tile in object storage (S3/GCS)
+                            <br><strong>Pre-rendered:</strong> Zoom 0-15 globally, 16-22 for major cities
+                            <br><strong>On-demand:</strong> Generate tile if not pre-rendered
+                        </div>
+                        <div class="code-block">// Tile service logic (Go)
+func HandleTileRequest(z, x, y int, style string) ([]byte, error) {
+    // Check object storage first
+    tilePath := fmt.Sprintf("tiles/%s/%d/%d/%d.png", style, z, x, y)
+
+    if tileData, err := s3.GetObject(tilePath); err == nil {
+        return tileData, nil // Pre-rendered tile found
+    }
+
+    // Not pre-rendered - generate on-demand
+    if z > 15 {
+        // High zoom levels - generate using Mapnik
+        return renderTile(z, x, y, style)
+    }
+
+    return nil, errors.New("tile not found")
+}</div>
+                        <div class="metrics-box">
+                            <strong>Response Times:</strong>
+                            <br>• Pre-rendered (storage hit): 50-100ms
+                            <br>• On-demand rendering: 200-500ms
+                            <br>• Raster tile size: 15 KB (PNG, compressed)
+                            <br>• Vector tile size: 50 KB (MVT, gzipped)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        Render Tiles on Map
+                    </div>
+                    <div class="step-desc">
+                        Client receives tiles and renders them on the map canvas
+                        <div class="step-details">
+                            <strong>Rendering:</strong> Composite tiles into map canvas using WebGL
+                            <br><strong>Layering:</strong> Base tiles → roads → labels → traffic → user markers
+                            <br><strong>Caching:</strong> Store tiles in browser cache for 1-24 hours
+                        </div>
+                        <div class="code-block">// Client-side rendering (WebGL)
+function renderTiles(tiles, mapCanvas) {
+  const gl = mapCanvas.getContext('webgl');
+
+  tiles.forEach(tile => {
+    // Create texture from tile image
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tile.image);
+
+    // Position tile in map viewport
+    const position = calculateTilePosition(tile.x, tile.y, tile.z, mapViewport);
+
+    // Draw tile
+    drawTexturedQuad(gl, texture, position);
+  });
+
+  // Cache tiles in browser
+  tiles.forEach(tile => {
+    caches.open('map-tiles').then(cache => {
+      cache.put(tile.url, new Response(tile.data, {
+        headers: { 'Cache-Control': 'max-age=3600' }
+      }));
+    });
+  });
+}</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong>
+                            <br>• Total time (cache hit): <200ms
+                            <br>• Total time (cache miss): <500ms
+                            <br>• Frame rate: 60 FPS during pan/zoom
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directions Request Flow -->
+        <div id="directions" class="flow-content">
+            <div class="flow-diagram">
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        User Requests Directions
+                    </div>
+                    <div class="step-desc">
+                        User enters origin and destination, selects travel mode
+                        <div class="step-details">
+                            <strong>Input:</strong> Origin address/coords, destination address/coords
+                            <br><strong>Options:</strong> Travel mode (driving/walking/bicycling/transit), departure time
+                            <br><strong>Client Action:</strong> Send API request to Google Maps Directions API
+                        </div>
+                        <div class="code-block">// Client request
+const directionsRequest = {
+  origin: "1600 Amphitheatre Parkway, Mountain View, CA",
+  destination: "1 Apple Park Way, Cupertino, CA",
+  travelMode: "DRIVING",
+  drivingOptions: {
+    departureTime: new Date(),
+    trafficModel: "bestguess"
+  }
+};
+
+directionsService.route(directionsRequest, (result, status) => {
+  if (status === 'OK') {
+    displayRoute(result.routes[0]);
+  }
+});</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step gateway">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        API Gateway Processing
+                    </div>
+                    <div class="step-desc">
+                        Request authenticated, validated, and rate-limited
+                        <div class="step-details">
+                            <strong>Authentication:</strong> Validate API key, check quota
+                            <br><strong>Rate Limiting:</strong> Max 50 QPS per API key
+                            <br><strong>Routing:</strong> Forward to nearest Directions Service datacenter
+                        </div>
+                        <div class="metrics-box">
+                            <strong>Latency:</strong> 10-20ms
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step service">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Geocode Addresses to Coordinates
+                    </div>
+                    <div class="step-desc">
+                        Convert text addresses to lat/lon coordinates
+                        <div class="step-details">
+                            <strong>Geocoding Service:</strong> Elasticsearch fuzzy match on addresses
+                            <br><strong>Cache Lookup:</strong> Check Redis for previously geocoded addresses
+                            <br><strong>Result:</strong> (lat, lon) coordinates for origin and destination
+                        </div>
+                        <div class="code-block">// Geocoding
+origin_coords = geocode("1600 Amphitheatre Parkway, Mountain View, CA")
+# Returns: (37.4224764, -122.0842499)
+
+destination_coords = geocode("1 Apple Park Way, Cupertino, CA")
+# Returns: (37.3348, -122.0090)</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong>
+                            <br>• Cache hit: 5ms
+                            <br>• Cache miss: 50-100ms
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step cache">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Check Route Cache
+                    </div>
+                    <div class="step-desc">
+                        Look for cached route for this origin-destination pair
+                        <div class="step-details">
+                            <strong>Cache Key:</strong> hash(origin, destination, mode, current_time_bucket)
+                            <br><strong>TTL:</strong> 5 minutes (traffic changes frequently)
+                            <br><strong>Hit Rate:</strong> ~70% for popular routes
+                        </div>
+                        <div class="code-block">// Route cache check (Redis)
+cacheKey = f"route:{hash(origin)}:{hash(destination)}:driving:{time_bucket}"
+
+if route = redis.get(cacheKey):
+    # Cache hit - return immediately
+    return json.loads(route)
+else:
+    # Cache miss - compute route
+    route = computeRoute(origin, destination, mode)</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step service">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        Routing Engine - Contraction Hierarchies
+                    </div>
+                    <div class="step-desc">
+                        Compute shortest path using advanced graph algorithms
+                        <div class="step-details">
+                            <strong>Algorithm:</strong> Bidirectional A* on Contraction Hierarchies
+                            <br><strong>Edge Weights:</strong> Distance + live traffic + road type
+                            <br><strong>Optimizations:</strong> Pre-computed shortcuts, hierarchical graph
+                        </div>
+                        <div class="code-block">// Simplified routing algorithm
+function computeRoute(startNode, goalNode, trafficData) {
+  // Bidirectional search on contracted graph
+  const forwardSearch = dijkstra(startNode, "upward", trafficData);
+  const backwardSearch = dijkstra(goalNode, "upward", trafficData);
+
+  // Find meeting point
+  let minDist = Infinity;
+  let meetingNode = null;
+
+  for (node in forwardSearch.distances) {
+    if (node in backwardSearch.distances) {
+      const totalDist = forwardSearch.distances[node] +
+                        backwardSearch.distances[node];
+      if (totalDist < minDist) {
+        minDist = totalDist;
+        meetingNode = node;
+      }
+    }
+  }
+
+  // Reconstruct path
+  return reconstructPath(startNode, meetingNode, goalNode,
+                         forwardSearch.parents, backwardSearch.parents);
+}</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong>
+                            <br>• Query time: 50-200ms (cache miss)
+                            <br>• Graph size: 100M nodes, 200M edges
+                            <br>• Speedup: 1000× faster than naive Dijkstra
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step processing">
+                    <div class="step-title">
+                        <span class="step-number">6</span>
+                        Apply Real-Time Traffic
+                    </div>
+                    <div class="step-desc">
+                        Adjust route and ETA based on current traffic conditions
+                        <div class="step-details">
+                            <strong>Traffic Data:</strong> Fetch current speeds for route edges
+                            <br><strong>ETA Calculation:</strong> Σ(edge_distance / current_speed)
+                            <br><strong>Rerouting:</strong> Find alternative if severe congestion detected
+                        </div>
+                        <div class="code-block">// Apply traffic to route
+function applyTraffic(route, trafficData) {
+  let totalTime = 0;
+  let congestedEdges = [];
+
+  route.edges.forEach(edge => {
+    const currentSpeed = trafficData[edge.id] || edge.speedLimit;
+    const travelTime = (edge.distance / currentSpeed) * 3600; // seconds
+
+    totalTime += travelTime;
+
+    if (currentSpeed < edge.speedLimit * 0.5) {
+      congestedEdges.push(edge);
+    }
+  });
+
+  // Check if rerouting needed
+  if (congestedEdges.length > route.edges.length * 0.3) {
+    // >30% of route congested - find alternative
+    return computeAlternativeRoute(route.start, route.end,
+                                     excludeEdges=congestedEdges);
+  }
+
+  route.eta = totalTime;
+  return route;
+}</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">7</span>
+                        Display Route on Map
+                    </div>
+                    <div class="step-desc">
+                        Render route polyline, turn-by-turn directions, and ETA
+                        <div class="step-details">
+                            <strong>Polyline:</strong> Decode encoded polyline string
+                            <br><strong>Directions:</strong> Turn-by-turn text instructions
+                            <br><strong>ETA:</strong> Duration with traffic, distance
+                        </div>
+                        <div class="code-block">// Display route
+directionsRenderer.setDirections(result);
+
+// Show route details
+console.log(`Distance: ${route.legs[0].distance.text}`);
+console.log(`Duration: ${route.legs[0].duration.text}`);
+console.log(`Duration in traffic: ${route.legs[0].duration_in_traffic.text}`);
+
+// Turn-by-turn instructions
+route.legs[0].steps.forEach((step, index) => {
+  console.log(`${index + 1}. ${step.instructions}`);
+  console.log(`   Distance: ${step.distance.text}, Duration: ${step.duration.text}`);
+});</div>
+                        <div class="metrics-box">
+                            <strong>Total Latency:</strong>
+                            <br>• Cache hit: <100ms
+                            <br>• Cache miss: 200-500ms
+                            <br>• With traffic: +50-100ms
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geocoding Flow -->
+        <div id="geocoding" class="flow-content">
+            <div class="flow-diagram">
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        User Enters Address
+                    </div>
+                    <div class="step-desc">
+                        User types address in search box or autocomplete field
+                        <div class="code-block">// Geocoding API request
+GET /maps/api/geocode/json?
+  address=1600+Amphitheatre+Parkway,+Mountain+View,+CA
+  &key=YOUR_API_KEY</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step service">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Parse and Normalize Address
+                    </div>
+                    <div class="step-desc">
+                        Extract components and standardize format
+                        <div class="code-block">// Address parsing
+parsed = {
+  "street_number": "1600",
+  "street_name": "Amphitheatre Parkway",
+  "city": "Mountain View",
+  "state": "CA",
+  "country": "US",
+  "postal_code": null
+}</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step cache">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Check Geocode Cache
+                    </div>
+                    <div class="step-desc">
+                        Look for previously geocoded address
+                        <div class="step-details">
+                            <strong>Hit Rate:</strong> 80% for common addresses
+                            <br><strong>TTL:</strong> 24 hours
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step database">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Elasticsearch Fuzzy Search
+                    </div>
+                    <div class="step-desc">
+                        Query address database with fuzzy matching
+                        <div class="code-block">// Elasticsearch query
+{
+  "query": {
+    "bool": {
+      "should": [
+        {"match": {"full_address": {"query": "1600 Amphitheatre Parkway", "fuzziness": "AUTO"}}},
+        {"match": {"street_number": "1600"}},
+        {"match": {"street_name": "Amphitheatre Parkway"}}
+      ],
+      "filter": [
+        {"term": {"city": "Mountain View"}},
+        {"term": {"state": "CA"}}
+      ]
+    }
+  }
+}</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong> 20-50ms
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        Return Coordinates
+                    </div>
+                    <div class="step-desc">
+                        Send lat/lon and formatted address to client
+                        <div class="code-block">// Response
+{
+  "results": [{
+    "formatted_address": "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA",
+    "geometry": {
+      "location": {
+        "lat": 37.4224764,
+        "lng": -122.0842499
+      }
+    }
+  }]
+}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-Time Traffic Flow -->
+        <div id="traffic" class="flow-content">
+            <div class="flow-diagram">
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Mobile Devices Send GPS Updates
+                    </div>
+                    <div class="step-desc">
+                        Android devices send anonymized location updates
+                        <div class="step-details">
+                            <strong>Frequency:</strong> Every 30-60 seconds while moving
+                            <br><strong>Volume:</strong> <span class="highlight">1M updates/sec</span> globally
+                            <br><strong>Data:</strong> Lat, lon, speed, heading, accuracy
+                        </div>
+                        <div class="code-block">// GPS probe data
+{
+  "device_id": "hashed_anonymous_id",
+  "timestamp": 1700000000,
+  "location": {
+    "lat": 37.4224,
+    "lon": -122.0842
+  },
+  "speed": 15.6,  // m/s
+  "heading": 90,  // degrees
+  "accuracy": 10  // meters
+}</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step processing">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Kafka Ingestion
+                    </div>
+                    <div class="step-desc">
+                        GPS updates published to Kafka topic
+                        <div class="step-details">
+                            <strong>Topic:</strong> gps_probes (48 partitions)
+                            <br><strong>Throughput:</strong> 1M messages/sec
+                            <br><strong>Retention:</strong> 1 hour (streaming only)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step processing">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Map Matching (Apache Flink)
+                    </div>
+                    <div class="step-desc">
+                        Match GPS points to road network
+                        <div class="step-details">
+                            <strong>Algorithm:</strong> Hidden Markov Model (HMM) map matching
+                            <br><strong>Accuracy:</strong> 90% correctly matched
+                            <br><strong>Processing:</strong> Flink streaming job
+                        </div>
+                        <div class="code-block">// Map matching logic
+def mapMatch(gpsPoint):
+  # Find candidate road segments within 50m
+  candidates = findNearbyRoads(gpsPoint.lat, gpsPoint.lon, radius=50)
+
+  # Filter by heading similarity
+  candidates = filterByHeading(candidates, gpsPoint.heading, tolerance=45)
+
+  # Return closest match
+  return closestRoad(candidates, gpsPoint)</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step processing">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Aggregate Speeds by Road Segment
+                    </div>
+                    <div class="step-desc">
+                        Group by road segment, calculate average speed
+                        <div class="step-details">
+                            <strong>Window:</strong> 30-second tumbling windows
+                            <br><strong>Aggregation:</strong> Median speed per edge
+                            <br><strong>Min Samples:</strong> 5 GPS probes required
+                        </div>
+                        <div class="code-block">// Flink aggregation
+dataStream
+  .keyBy(probe => probe.edge_id)
+  .window(TumblingProcessingTimeWindows.of(Time.seconds(30)))
+  .aggregate(new MedianSpeedAggregator())
+  .filter(result => result.sample_count >= 5)
+  .addSink(new KafkaSink("traffic_updates"))</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step database">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        Store in TimescaleDB
+                    </div>
+                    <div class="step-desc">
+                        Write traffic speeds to time-series database
+                        <div class="code-block">INSERT INTO traffic_speeds (time, edge_id, average_speed, congestion_level)
+VALUES (NOW(), 12345, 25.5, 2);</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step cache">
+                    <div class="step-title">
+                        <span class="step-number">6</span>
+                        Update Redis Cache
+                    </div>
+                    <div class="step-desc">
+                        Publish to Redis Pub/Sub for real-time updates
+                        <div class="code-block">// Redis publish
+redis.publish("traffic_updates", JSON.stringify({
+  edge_id: 12345,
+  speed: 25.5,
+  congestion: 2,
+  timestamp: Date.now()
+}));</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">7</span>
+                        Push to Connected Clients
+                    </div>
+                    <div class="step-desc">
+                        WebSocket update to users viewing that area
+                        <div class="metrics-box">
+                            <strong>End-to-End Latency:</strong> GPS probe → client update = 30-60 seconds
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Place Search Flow -->
+        <div id="place-search" class="flow-content">
+            <div class="flow-diagram">
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        User Searches for Place
+                    </div>
+                    <div class="step-desc">
+                        User types query: "coffee shops near me"
+                        <div class="code-block">GET /maps/api/place/nearbysearch/json?
+  location=37.4224,-122.0842
+  &radius=1000
+  &type=cafe
+  &keyword=coffee
+  &key=YOUR_API_KEY</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step database">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Elasticsearch Geo + Text Search
+                    </div>
+                    <div class="step-desc">
+                        Combined geospatial and full-text search
+                        <div class="code-block">{
+  "query": {
+    "bool": {
+      "must": {
+        "multi_match": {
+          "query": "coffee",
+          "fields": ["name^3", "category", "tags"]
+        }
+      },
+      "filter": [
+        {
+          "geo_distance": {
+            "distance": "1km",
+            "location": {"lat": 37.4224, "lon": -122.0842}
+          }
+        },
+        {"term": {"type": "cafe"}},
+        {"range": {"rating": {"gte": 3.0}}}
+      ]
+    }
+  },
+  "sort": [
+    {"_geo_distance": {"location": {"lat": 37.4224, "lon": -122.0842}}}
+  ]
+}</div>
+                        <div class="metrics-box">
+                            <strong>Performance:</strong> 30-100ms
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step service">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Rank and Filter Results
+                    </div>
+                    <div class="step-desc">
+                        Apply business logic to ranking
+                        <div class="code-block">// Ranking formula
+score =
+  distance_score * 0.3 +
+  rating_score * 0.4 +
+  popularity_score * 0.2 +
+  relevance_score * 0.1</div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="flow-step client">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Return Top 20 Results
+                    </div>
+                    <div class="step-desc">
+                        Send place details to client
+                        <div class="code-block">{
+  "results": [
+    {
+      "name": "Blue Bottle Coffee",
+      "location": {"lat": 37.4220, "lon": -122.0830},
+      "rating": 4.5,
+      "price_level": 2,
+      "open_now": true
+    }
+  ]
+}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showFlow(flowId) {
+            // Hide all flows
+            document.querySelectorAll('.flow-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected flow
+            document.getElementById(flowId).classList.add('active');
+
+            // Activate clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
