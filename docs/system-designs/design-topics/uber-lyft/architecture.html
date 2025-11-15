@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uber/Lyft System Architecture Blueprint</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0ea5e9;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        .tag.realtime { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+        .tag.geo { background: #dcfce7; color: #166534; }
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 180px;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+        /* Section colors */
+        .mobile-section { background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%); grid-column: span 6; }
+        .gateway-section { background: linear-gradient(135deg, #fecaca 0%, #f87171 100%); grid-column: span 6; }
+        .location-section { background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%); grid-column: span 4; }
+        .matching-section { background: linear-gradient(135deg, #fde047 0%, #facc15 100%); grid-column: span 4; }
+        .trip-section { background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%); grid-column: span 4; }
+        .payment-section { background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%); grid-column: span 6; }
+        .notification-section { background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%); grid-column: span 6; }
+        .redis-section { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); grid-column: span 4; }
+        .postgres-section { background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%); grid-column: span 4; }
+        .kafka-section { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%); grid-column: span 4; }
+        .monitoring-section { background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%); grid-column: span 12; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🚗 Uber/Lyft System Architecture</h1>
+        <div class="subtitle">Ride-Sharing Platform Blueprint</div>
+        <div class="tags">
+            <span class="tag realtime">Real-Time Tracking</span>
+            <span class="tag scale">Millions of Rides/Day</span>
+            <span class="tag geo">Geospatial Matching</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Mobile Apps -->
+        <div class="section mobile-section">
+            <div class="section-title">📱 MOBILE APPLICATIONS</div>
+            <div class="component">
+                <div class="component-name">Rider App (iOS/Android)</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Request ride with pickup/dropoff</li>
+                        <li>View nearby drivers (real-time map)</li>
+                        <li>Track driver location during pickup</li>
+                        <li>In-trip navigation</li>
+                        <li>Payment & tipping</li>
+                        <li>Trip history & receipts</li>
+                    </ul>
+                    <strong>Tech Stack:</strong>
+                    <div class="code-snippet">
+                        React Native / Swift / Kotlin
+                        Mapbox GL for maps
+                        WebSocket for real-time updates
+                        Redux for state management
+                    </div>
+                </div>
+            </div>
+            <div class="component">
+                <div class="component-name">Driver App (iOS/Android)</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Go online/offline</li>
+                        <li>Receive ride requests</li>
+                        <li>Accept/reject rides</li>
+                        <li>Navigation to pickup & destination</li>
+                        <li>Start/end trip</li>
+                        <li>Earnings dashboard</li>
+                    </ul>
+                    <strong>Background Location:</strong>
+                    <div class="code-snippet">
+                        // Update location every 5 seconds
+                        setInterval(() => {
+                          navigator.geolocation.getCurrentPosition(
+                            pos => sendLocationUpdate(pos),
+                            { enableHighAccuracy: true }
+                          )
+                        }, 5000)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY & LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li><strong>Authentication:</strong> JWT token validation</li>
+                        <li><strong>Rate Limiting:</strong> 1000 req/min per user</li>
+                        <li><strong>Geo-Routing:</strong> Route to nearest data center</li>
+                        <li><strong>Circuit Breaker:</strong> Fail fast on service downtime</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # Rate limit configuration
+                        rider: 100 rides/day
+                        driver: unlimited ride accepts
+                        location_update: 1 req/5sec
+                    </div>
+                </div>
+            </div>
+            <div class="component">
+                <div class="component-name">Regional Load Balancing</div>
+                <div class="component-details">
+                    <strong>Multi-Region Setup:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>US-West: SF, LA, Seattle (40%)</li>
+                        <li>US-East: NYC, Boston, DC (30%)</li>
+                        <li>EU: London, Paris, Berlin (20%)</li>
+                        <li>APAC: Tokyo, Singapore, Sydney (10%)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Service -->
+        <div class="section location-section">
+            <div class="section-title">📍 LOCATION SERVICE</div>
+            <div class="component">
+                <div class="component-name">Real-Time Location Tracking</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Receive 400K location updates/sec</li>
+                        <li>Store in Redis Geospatial index</li>
+                        <li>Query nearby drivers (<10ms)</li>
+                        <li>Broadcast via WebSocket</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # Redis Geo commands
+                        GEOADD drivers:online -122.4194 37.7749 driver_123
+                        GEORADIUS drivers:online -122.4194 37.7749 5 km
+                    </div>
+                    <strong>Scaling:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Shard by city (SF, NYC, etc.)</li>
+                        <li>Each shard: Redis Cluster (6 nodes)</li>
+                        <li>Total: 50 shards × 6 = 300 Redis nodes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Service -->
+        <div class="section matching-section">
+            <div class="section-title">🎯 MATCHING SERVICE</div>
+            <div class="component">
+                <div class="component-name">Driver-Rider Matching Algorithm</div>
+                <div class="component-details">
+                    <strong>Matching Factors:</strong>
+                    <div class="code-snippet">
+                        score = 
+                          100/(1+distance) +        // 40%
+                          50/(1+eta) +              // 25%
+                          rating*10 +               // 25%
+                          acceptance_rate*10        // 10%
+                    </div>
+                    <strong>Process:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>1. Get nearby drivers (5km radius)</li>
+                        <li>2. Filter: car_type, rating >4.5</li>
+                        <li>3. Calculate ETA for each</li>
+                        <li>4. Score & rank drivers</li>
+                        <li>5. Dispatch to top 3 (parallel)</li>
+                        <li>6. First to accept wins</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>P95 matching time: 4.2 seconds</li>
+                        <li>Success rate: 94%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trip Service -->
+        <div class="section trip-section">
+            <div class="section-title">🛣️ TRIP SERVICE</div>
+            <div class="component">
+                <div class="component-name">Trip State Machine</div>
+                <div class="component-details">
+                    <strong>States:</strong>
+                    <div class="code-snippet">
+                        REQUESTED → DRIVER_ASSIGNED → 
+                        DRIVER_ARRIVED → TRIP_STARTED → 
+                        TRIP_COMPLETED → PAYMENT_PROCESSED → RATED
+                    </div>
+                    <strong>Features:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>ETA calculation & updates</li>
+                        <li>Route tracking (polyline)</li>
+                        <li>Fare meter (distance × time)</li>
+                        <li>Dynamic pricing (surge)</li>
+                    </ul>
+                    <strong>Storage:</strong>
+                    <div class="code-snippet">
+                        PostgreSQL: Historical trips (14TB)
+                        Redis: Active trips (hot state)
+                        TimescaleDB: Route history
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Service -->
+        <div class="section payment-section">
+            <div class="section-title">💳 PAYMENT SERVICE</div>
+            <div class="component">
+                <div class="component-name">Payment Processing</div>
+                <div class="component-details">
+                    <strong>Providers:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Stripe (credit/debit cards)</li>
+                        <li>Braintree (PayPal, Venmo)</li>
+                        <li>Apple Pay / Google Pay</li>
+                        <li>Wallet (pre-loaded balance)</li>
+                    </ul>
+                    <strong>Idempotency:</strong>
+                    <div class="code-snippet">
+                        # Ensure exactly-once payment
+                        idempotency_key = f"trip:{trip_id}"
+                        stripe.Charge.create(
+                          amount=fare * 100,
+                          currency="usd",
+                          customer=rider_id,
+                          idempotency_key=idempotency_key
+                        )
+                    </div>
+                    <strong>Features:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Auto-retry on failure (3 attempts)</li>
+                        <li>Split payment (UberPool)</li>
+                        <li>Tipping</li>
+                        <li>Refunds</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Service -->
+        <div class="section notification-section">
+            <div class="section-title">🔔 NOTIFICATION SERVICE</div>
+            <div class="component">
+                <div class="component-name">Push Notifications & SMS</div>
+                <div class="component-details">
+                    <strong>Channels:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li><strong>FCM/APNS:</strong> Push notifications</li>
+                        <li><strong>Twilio:</strong> SMS for critical updates</li>
+                        <li><strong>WebSocket:</strong> In-app real-time</li>
+                    </ul>
+                    <strong>Use Cases:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Driver assigned (push + SMS)</li>
+                        <li>Driver arriving (push)</li>
+                        <li>Trip started (push)</li>
+                        <li>Trip completed (push + receipt)</li>
+                        <li>Ride request (driver app)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # High priority notification
+                        FCM.send({
+                          to: driver_fcm_token,
+                          priority: "high",
+                          notification: {
+                            title: "New Ride Request",
+                            body: "3 min away • $12.50 fare"
+                          },
+                          data: { trip_id, pickup_lat, pickup_lon }
+                        })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis -->
+        <div class="section redis-section">
+            <div class="section-title">💾 REDIS (GEOSPATIAL)</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Data Structures:</strong>
+                    <div class="code-snippet">
+                        # Geospatial index
+                        GEOADD drivers:online lon lat driver_id
+                        
+                        # Driver metadata
+                        HMSET driver:123 {
+                          lat, lon, heading, speed, 
+                          car_type, rating, status
+                        }
+                        
+                        # Active trip state
+                        HSET trip:456 {
+                          rider_id, driver_id, state,
+                          pickup_lat, pickup_lon
+                        }
+                    </div>
+                    <strong>Performance:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Throughput: 500K ops/sec per cluster</li>
+                        <li>Latency: <5ms (P99)</li>
+                        <li>Data: 30GB active (driver locations)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PostgreSQL -->
+        <div class="section postgres-section">
+            <div class="section-title">🗄️ POSTGRESQL</div>
+            <div class="component">
+                <div class="component-name">Primary Database</div>
+                <div class="component-details">
+                    <strong>Tables:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li><strong>users:</strong> Riders & drivers (100M)</li>
+                        <li><strong>trips:</strong> Historical (7.3B, partitioned)</li>
+                        <li><strong>payments:</strong> Transactions (7.3B)</li>
+                        <li><strong>ratings:</strong> Reviews (14.6B)</li>
+                    </ul>
+                    <strong>Sharding:</strong>
+                    <div class="code-snippet">
+                        # Partition trips by month
+                        trips_2025_01, trips_2025_02, ...
+                        
+                        # Shard by city_id (consistent hashing)
+                        Shard 1: NYC, Boston, Philly
+                        Shard 2: SF, LA, Seattle
+                        ...
+                    </div>
+                    <strong>Replication:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>1 Primary + 3 Read Replicas per shard</li>
+                        <li>Cross-region async replication</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kafka -->
+        <div class="section kafka-section">
+            <div class="section-title">📬 KAFKA (EVENT STREAMING)</div>
+            <div class="component">
+                <div class="component-name">Event-Driven Architecture</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li><strong>location.driver.updated:</strong> 400K/sec</li>
+                        <li><strong>trip.created:</strong> 1.7K/sec</li>
+                        <li><strong>trip.completed:</strong> 1.7K/sec</li>
+                        <li><strong>payment.processed:</strong> 1.7K/sec</li>
+                    </ul>
+                    <strong>Consumers:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li>Analytics service (historical data)</li>
+                        <li>ML pipeline (demand prediction)</li>
+                        <li>Billing service</li>
+                        <li>Data warehouse (Snowflake)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # High throughput config
+                        partitions: 50 (location updates)
+                        replication_factor: 3
+                        retention: 7 days
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Metrics & Alerts</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                        <div style="background: #f0f9ff; padding: 10px; border-radius: 5px;">
+                            <div style="font-weight: bold; color: #0369a1;">Matching Latency</div>
+                            <div>P95: 4.2s</div>
+                        </div>
+                        <div style="background: #f0fdf4; padding: 10px; border-radius: 5px;">
+                            <div style="font-weight: bold; color: #15803d;">Active Rides</div>
+                            <div>2M concurrent</div>
+                        </div>
+                        <div style="background: #fef3c7; padding: 10px; border-radius: 5px;">
+                            <div style="font-weight: bold; color: #92400e;">Location Updates</div>
+                            <div>400K/sec</div>
+                        </div>
+                    </div>
+                    <strong style="display: block; margin-top: 15px;">Tools:</strong>
+                    <ul style="margin-left: 15px; margin-top: 5px;">
+                        <li><strong>Prometheus + Grafana:</strong> System metrics</li>
+                        <li><strong>ELK Stack:</strong> Log aggregation</li>
+                        <li><strong>Jaeger:</strong> Distributed tracing</li>
+                        <li><strong>PagerDuty:</strong> Incident management</li>
+                        <li><strong>Datadog:</strong> APM & infrastructure monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div style="background: #ecfdf5; padding: 20px; border-radius: 10px; margin-top: 30px; border: 2px solid #10b981;">
+        <h2 style="color: #065f46; margin-bottom: 15px;">🎯 KEY SYSTEM METRICS</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #0369a1;">2M</div>
+                <div style="color: #4a5568;">Concurrent Rides (Peak)</div>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #15803d;">400K/sec</div>
+                <div style="color: #4a5568;">Location Updates</div>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #92400e;">4.2s</div>
+                <div style="color: #4a5568;">P95 Matching Time</div>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #991b1b;">&lt;1s</div>
+                <div style="color: #4a5568;">Location Update Latency</div>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #6d28d9;">99.99%</div>
+                <div style="color: #4a5568;">Availability SLA</div>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ec4899;">
+                <div style="font-size: 1.5em; font-weight: bold; color: #be185d;">14 TB</div>
+                <div style="color: #4a5568;">Trip Data Storage</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
