@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scheduler Architecture Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #6366f1;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+        }
+
+        .component rect {
+            transition: all 0.3s;
+        }
+
+        .component:hover rect {
+            stroke-width: 3;
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #cbd5e0;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #6366f1;
+        }
+
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #6366f1;
+        }
+
+        @media (max-width: 768px) {
+            .tab {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⏰ Job Scheduler Architecture Flow Diagram</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('submission')">📝 Job Submission Flow</button>
+            <button class="tab" onclick="showDiagram('execution')">⚙️ Job Execution Flow</button>
+            <button class="tab" onclick="showDiagram('retry')">🔄 Retry & Failure Handling</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System Orchestration</button>
+        </div>
+    </div>
+
+    <!-- Job Submission Flow Diagram -->
+    <div id="submission-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#6366f1" />
+                </marker>
+                <linearGradient id="grad-client" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-gateway" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-scheduler" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-queue" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Job Submission Flow
+            </text>
+
+            <!-- Client -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 Client</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">CLI / SDK / Web UI</text>
+            </g>
+
+            <!-- Arrow 1 -->
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#4338ca" font-weight="600">POST /api/v1/jobs</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="550" y="180" width="300" height="100" rx="10" fill="url(#grad-gateway)" stroke="#0891b2" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="235" font-size="11" text-anchor="middle" fill="white">Auth • Rate Limit • Validation</text>
+                <text x="700" y="255" font-size="10" text-anchor="middle" fill="white">Check JWT, validate cron syntax</text>
+            </g>
+
+            <!-- Arrow 2 -->
+            <path d="M 700 280 L 700 320" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="305" font-size="11" fill="#4338ca" font-weight="600">Forward Request</text>
+
+            <!-- Scheduler Service -->
+            <g class="component">
+                <rect x="550" y="320" width="300" height="120" rx="10" fill="url(#grad-scheduler)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="700" y="360" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🧠 Scheduler Service</text>
+                <text x="700" y="380" font-size="11" text-anchor="middle" fill="white">Parse cron expression</text>
+                <text x="700" y="398" font-size="11" text-anchor="middle" fill="white">Calculate next_run_at</text>
+                <text x="700" y="416" font-size="11" text-anchor="middle" fill="white">Validate dependencies (DAG check)</text>
+            </g>
+
+            <!-- Arrow to Database -->
+            <path d="M 700 440 L 700 520" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="485" font-size="11" fill="#4338ca" font-weight="600">Persist Job</text>
+
+            <!-- Database -->
+            <g class="component">
+                <rect x="600" y="520" width="200" height="100" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="555" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="700" y="575" font-size="11" text-anchor="middle" fill="white">INSERT INTO jobs</text>
+                <text x="700" y="595" font-size="10" text-anchor="middle" fill="white">job_id, cron, priority, script</text>
+            </g>
+
+            <!-- Decision Diamond (Immediate Execution?) -->
+            <g class="component">
+                <path d="M 700 660 L 800 720 L 700 780 L 600 720 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="715" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Immediate</text>
+                <text x="700" y="733" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Execution?</text>
+            </g>
+
+            <!-- YES Path (Immediate) -->
+            <path d="M 800 720 L 950 720" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="850" y="710" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <g class="component">
+                <rect x="950" y="670" width="200" height="100" rx="10" fill="url(#grad-queue)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="1050" y="705" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka Queue</text>
+                <text x="1050" y="725" font-size="11" text-anchor="middle" fill="white">Publish to queue</text>
+                <text x="1050" y="745" font-size="10" text-anchor="middle" fill="white">partition=priority</text>
+            </g>
+
+            <!-- NO Path (Scheduled) -->
+            <path d="M 700 780 L 700 840" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="815" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="550" y="840" width="300" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="700" y="870" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">⏱️ Time Wheel</text>
+                <text x="700" y="890" font-size="11" text-anchor="middle" fill="#065f46">Add to delayed queue</text>
+                <text x="700" y="908" font-size="10" text-anchor="middle" fill="#065f46">Will trigger at next_run_at</text>
+            </g>
+
+            <!-- Response Arrow -->
+            <path d="M 600 570 L 400 570 L 400 230 L 550 230" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="320" y="400" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="320" y="420" font-size="11" fill="#059669">201 Created</text>
+            <text x="320" y="435" font-size="10" fill="#059669">{job_id, next_run_at}</text>
+
+            <!-- Step numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="230" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="237" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="380" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="387" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="700" cy="570" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="577" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📝 Job Submission Flow Steps</h3>
+            <ol>
+                <li><strong>Client Submits Job:</strong> User sends POST request with job definition (cron, script, priority, dependencies)</li>
+                <li><strong>API Gateway Validation:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Authenticates user via JWT token</li>
+                        <li>Checks rate limits (e.g., 100 jobs/day for free tier)</li>
+                        <li>Validates cron syntax and job parameters</li>
+                        <li>Rejects invalid requests with 400 Bad Request</li>
+                    </ul>
+                </li>
+                <li><strong>Scheduler Service Processing:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Parses cron expression (e.g., "0 2 * * *" → daily at 2 AM)</li>
+                        <li>Calculates next_run_at timestamp</li>
+                        <li>Validates DAG dependencies (detect cycles)</li>
+                        <li>Assigns unique job_id (UUID)</li>
+                    </ul>
+                </li>
+                <li><strong>Database Persistence:</strong> Inserts job metadata into PostgreSQL jobs table</li>
+                <li><strong>Execution Path Decision:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Immediate Execution:</strong> If next_run_at ≤ now(), publish to Kafka queue → Workers pick up immediately</li>
+                        <li><strong>Scheduled Execution:</strong> Add to Time Wheel (efficient delay queue) → Will trigger at scheduled time</li>
+                    </ul>
+                </li>
+                <li><strong>Response:</strong> Returns HTTP 201 Created with job metadata (job_id, next_run_at, status)</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Key Design Decision:</strong> Separating immediate vs. scheduled execution paths optimizes resource usage. Time Wheel provides O(1) insertion/deletion for millions of delayed jobs!
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Execution Flow Diagram -->
+    <div id="execution-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1300" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Job Execution Flow
+            </text>
+
+            <!-- Scheduler (Trigger) -->
+            <g class="component">
+                <rect x="550" y="60" width="300" height="80" rx="10" fill="url(#grad-scheduler)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🧠 Scheduler</text>
+                <text x="700" y="115" font-size="11" text-anchor="middle" fill="white">Trigger job (cron tick or manual)</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#4338ca" font-weight="600">Publish Event</text>
+
+            <!-- Kafka Queue -->
+            <g class="component">
+                <rect x="550" y="180" width="300" height="100" rx="10" fill="url(#grad-queue)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka Queue</text>
+                <text x="700" y="235" font-size="11" text-anchor="middle" fill="white">Job message published</text>
+                <text x="700" y="255" font-size="10" text-anchor="middle" fill="white">Topic: scheduled_jobs, Partition: by priority</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 280 L 700 320" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="305" font-size="11" fill="#4338ca" font-weight="600">Consumer Poll</text>
+
+            <!-- Worker Pool -->
+            <g class="component">
+                <rect x="550" y="320" width="300" height="100" rx="10" fill="#d9f99d" stroke="#65a30d" stroke-width="2"/>
+                <text x="700" y="355" font-size="16" font-weight="bold" text-anchor="middle" fill="#3f6212">⚙️ Worker Node</text>
+                <text x="700" y="375" font-size="11" text-anchor="middle" fill="#3f6212">Kubernetes Pod (auto-scaled)</text>
+                <text x="700" y="395" font-size="10" text-anchor="middle" fill="#3f6212">Consume message from queue</text>
+            </g>
+
+            <!-- Arrow to Lock Check -->
+            <path d="M 700 420 L 700 480" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="455" font-size="11" fill="#4338ca" font-weight="600">Attempt Lock</text>
+
+            <!-- Distributed Lock (Redis) -->
+            <g class="component">
+                <rect x="550" y="480" width="300" height="100" rx="10" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/>
+                <text x="700" y="515" font-size="16" font-weight="bold" text-anchor="middle" fill="#831843">🔒 Distributed Lock</text>
+                <text x="700" y="535" font-size="11" text-anchor="middle" fill="#831843">Redis: SET NX job_lock:{job_id}</text>
+                <text x="700" y="555" font-size="10" text-anchor="middle" fill="#831843">Prevent duplicate execution</text>
+            </g>
+
+            <!-- Decision Diamond (Lock Acquired?) -->
+            <g class="component">
+                <path d="M 700 620 L 800 680 L 700 740 L 600 680 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="675" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Lock</text>
+                <text x="700" y="693" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Acquired?</text>
+            </g>
+
+            <!-- NO Path (Another worker has lock) -->
+            <path d="M 600 680 L 200 680" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="350" y="670" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="50" y="630" width="150" height="100" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="125" y="665" font-size="12" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Skip</text>
+                <text x="125" y="685" font-size="10" text-anchor="middle" fill="#991b1b">Already running</text>
+                <text x="125" y="705" font-size="10" text-anchor="middle" fill="#991b1b">Log & exit</text>
+            </g>
+
+            <!-- YES Path (Lock acquired, proceed) -->
+            <path d="M 700 740 L 700 800" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="775" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- Execute Job -->
+            <g class="component">
+                <rect x="550" y="800" width="300" height="120" rx="10" fill="#d9f99d" stroke="#65a30d" stroke-width="2"/>
+                <text x="700" y="840" font-size="16" font-weight="bold" text-anchor="middle" fill="#3f6212">🔧 Execute Job</text>
+                <text x="700" y="860" font-size="11" text-anchor="middle" fill="#3f6212">Run script/container/webhook</text>
+                <text x="700" y="878" font-size="10" text-anchor="middle" fill="#3f6212">Stream logs to ClickHouse</text>
+                <text x="700" y="896" font-size="10" text-anchor="middle" fill="#3f6212">Monitor resource usage</text>
+            </g>
+
+            <!-- Arrow to Database Update -->
+            <path d="M 700 920 L 700 980" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="955" font-size="11" fill="#4338ca" font-weight="600">Update Status</text>
+
+            <!-- Database Update -->
+            <g class="component">
+                <rect x="550" y="980" width="300" height="100" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="1015" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="700" y="1035" font-size="11" text-anchor="middle" fill="white">UPDATE job_executions</text>
+                <text x="700" y="1055" font-size="10" text-anchor="middle" fill="white">status='completed', exit_code=0</text>
+            </g>
+
+            <!-- Arrow to Release Lock -->
+            <path d="M 700 1080 L 700 1140" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="1115" font-size="11" fill="#4338ca" font-weight="600">Release Lock</text>
+
+            <!-- Release Lock -->
+            <g class="component">
+                <rect x="550" y="1140" width="300" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="700" y="1170" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">🔓 Release Lock</text>
+                <text x="700" y="1190" font-size="11" text-anchor="middle" fill="#065f46">Redis: DEL job_lock:{job_id}</text>
+            </g>
+
+            <!-- Cron Reschedule (if recurring) -->
+            <path d="M 850 1040 L 1050 1040 L 1050 100 L 850 100" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="1070" y="570" font-size="11" fill="#9333ea" font-weight="600" transform="rotate(90 1070 570)">If cron job: reschedule next run</text>
+
+            <!-- Step numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="230" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="237" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="370" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="377" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="700" cy="530" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="537" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="700" cy="860" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="867" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="700" cy="1030" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="1037" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>⚙️ Job Execution Flow Steps</h3>
+            <ol>
+                <li><strong>Scheduler Triggers Job:</strong> Cron timer fires or manual trigger → job becomes ready for execution</li>
+                <li><strong>Publish to Kafka:</strong> Job details published to Kafka topic (partitioned by priority)</li>
+                <li><strong>Worker Consumes Message:</strong> Auto-scaled Kubernetes pods (workers) poll Kafka and consume job messages</li>
+                <li><strong>Acquire Distributed Lock:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Worker attempts to acquire lock in Redis: <code>SET job_lock:{job_id} {uuid} NX EX 300</code></li>
+                        <li><strong>Lock Acquired:</strong> Proceed to execute job ✓</li>
+                        <li><strong>Lock Failed:</strong> Another worker is already executing this job → Skip and log ✗</li>
+                    </ul>
+                </li>
+                <li><strong>Execute Job:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Run job payload (script, Docker container, HTTP webhook, Spark job)</li>
+                        <li>Stream logs to ClickHouse in real-time</li>
+                        <li>Monitor CPU/memory usage (enforce resource limits)</li>
+                        <li>Set timeout (e.g., max 24 hours)</li>
+                        <li>Capture exit code (0 = success, non-zero = failure)</li>
+                    </ul>
+                </li>
+                <li><strong>Update Database:</strong> Write execution result to PostgreSQL (status, duration, exit code, logs summary)</li>
+                <li><strong>Release Lock:</strong> Delete lock from Redis to allow future executions</li>
+                <li><strong>Reschedule (if cron job):</strong> Calculate next_run_at and add back to Time Wheel for future execution</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🔒 Exactly-Once Execution:</strong> Distributed locks in Redis ensure that even if multiple workers consume the same Kafka message (due to rebalancing), only ONE will execute the job. Lock TTL prevents deadlocks if worker crashes.
+            </div>
+        </div>
+    </div>
+
+    <!-- Retry & Failure Handling Flow -->
+    <div id="retry-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Retry & Failure Handling Flow
+            </text>
+
+            <!-- Job Execution Starts -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="#d9f99d" stroke="#65a30d" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="#3f6212">⚙️ Job Starts</text>
+                <text x="700" y="115" font-size="11" text-anchor="middle" fill="#3f6212">retry_count = 0</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 140 L 700 200" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Execute -->
+            <g class="component">
+                <rect x="600" y="200" width="200" height="80" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="235" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e40af">🔧 Execute Job</text>
+                <text x="700" y="255" font-size="11" text-anchor="middle" fill="#1e40af">Run & monitor</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 280 L 700 340" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Decision: Success or Failure? -->
+            <g class="component">
+                <path d="M 700 340 L 830 420 L 700 500 L 570 420 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="410" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Execution</text>
+                <text x="700" y="428" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Result?</text>
+            </g>
+
+            <!-- SUCCESS Path -->
+            <path d="M 830 420 L 1000 420" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="880" y="410" font-size="12" fill="#059669" font-weight="700">SUCCESS ✓</text>
+
+            <g class="component">
+                <rect x="1000" y="370" width="200" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="1100" y="405" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Mark Completed</text>
+                <text x="1100" y="425" font-size="11" text-anchor="middle" fill="#065f46">status='completed'</text>
+                <text x="1100" y="443" font-size="10" text-anchor="middle" fill="#065f46">exit_code=0</text>
+            </g>
+
+            <!-- FAILURE Path -->
+            <path d="M 700 500 L 700 580" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="545" font-size="12" fill="#dc2626" font-weight="700">FAILURE ✗</text>
+
+            <!-- Increment Retry Count -->
+            <g class="component">
+                <rect x="600" y="580" width="200" height="80" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="610" font-size="14" font-weight="bold" text-anchor="middle" fill="#9a3412">📊 Increment</text>
+                <text x="700" y="630" font-size="11" text-anchor="middle" fill="#9a3412">retry_count++</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 660 L 700 720" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Decision: Retries Exhausted? -->
+            <g class="component">
+                <path d="M 700 720 L 830 800 L 700 880 L 570 800 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="790" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">retry_count</text>
+                <text x="700" y="808" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">&lt; max_retries?</text>
+            </g>
+
+            <!-- YES Path (More retries available) -->
+            <path d="M 570 800 L 200 800 L 200 240 L 600 240" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="350" y="790" font-size="12" fill="#059669" font-weight="700">YES (Retry)</text>
+            <text x="100" y="520" font-size="11" fill="#059669" font-weight="600" transform="rotate(-90 100 520)">Wait: 2^retry_count seconds</text>
+
+            <!-- Exponential Backoff -->
+            <g class="component">
+                <rect x="50" y="380" width="150" height="100" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                <text x="125" y="410" font-size="12" font-weight="bold" text-anchor="middle" fill="#075985">⏱️ Backoff</text>
+                <text x="125" y="430" font-size="10" text-anchor="middle" fill="#075985">Retry 1: 2s</text>
+                <text x="125" y="448" font-size="10" text-anchor="middle" fill="#075985">Retry 2: 4s</text>
+                <text x="125" y="466" font-size="10" text-anchor="middle" fill="#075985">Retry 3: 8s</text>
+            </g>
+
+            <!-- NO Path (Max retries exceeded) -->
+            <path d="M 700 880 L 700 960" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="925" font-size="12" fill="#dc2626" font-weight="700">NO (Exhausted)</text>
+
+            <!-- Dead Letter Queue -->
+            <g class="component">
+                <rect x="550" y="960" width="300" height="120" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="1000" font-size="16" font-weight="bold" text-anchor="middle" fill="#991b1b">💀 Dead Letter Queue</text>
+                <text x="700" y="1020" font-size="11" text-anchor="middle" fill="#991b1b">status='failed'</text>
+                <text x="700" y="1038" font-size="11" text-anchor="middle" fill="#991b1b">Send to DLQ for investigation</text>
+                <text x="700" y="1056" font-size="10" text-anchor="middle" fill="#991b1b">Alert: PagerDuty / Slack</text>
+            </g>
+
+            <!-- Alert -->
+            <path d="M 850 1020 L 1050 1020" stroke="#dc2626" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <g class="component">
+                <rect x="1050" y="970" width="180" height="100" rx="10" fill="#fecaca" stroke="#dc2626" stroke-width="2"/>
+                <text x="1140" y="1005" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">🚨 Alert OPS</text>
+                <text x="1140" y="1025" font-size="10" text-anchor="middle" fill="#991b1b">PagerDuty incident</text>
+                <text x="1140" y="1043" font-size="10" text-anchor="middle" fill="#991b1b">Slack notification</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🔄 Retry & Failure Handling Steps</h3>
+            <ol>
+                <li><strong>Job Execution Attempt:</strong> Worker executes job with initial retry_count = 0</li>
+                <li><strong>Result Evaluation:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Success (exit_code = 0):</strong> Mark as completed, update database, release lock → DONE ✓</li>
+                        <li><strong>Failure (exit_code ≠ 0 or exception):</strong> Proceed to retry logic ↓</li>
+                    </ul>
+                </li>
+                <li><strong>Increment Retry Count:</strong> retry_count++ (1, 2, 3...)</li>
+                <li><strong>Check Retry Limit:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>If retry_count &lt; max_retries:</strong> Schedule retry with exponential backoff</li>
+                        <li><strong>If retry_count ≥ max_retries:</strong> Max retries exhausted → Send to DLQ</li>
+                    </ul>
+                </li>
+                <li><strong>Exponential Backoff:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Delay = 2^retry_count seconds (with optional jitter to prevent thundering herd)</li>
+                        <li>Retry 1: Wait 2 seconds, then re-execute</li>
+                        <li>Retry 2: Wait 4 seconds, then re-execute</li>
+                        <li>Retry 3: Wait 8 seconds, then re-execute</li>
+                        <li>Cap maximum delay at 60 seconds to prevent excessive waits</li>
+                    </ul>
+                </li>
+                <li><strong>Dead Letter Queue (DLQ):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Publish failed job to DLQ Kafka topic</li>
+                        <li>Store failure details (error message, stack trace, retry history)</li>
+                        <li>Mark job status as 'failed' in database</li>
+                        <li>Trigger alerts to operations team (PagerDuty, Slack, email)</li>
+                    </ul>
+                </li>
+                <li><strong>Manual Intervention:</strong> Operations team investigates DLQ messages, fixes root cause, and can manually retry or delete</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>📈 Reliability Pattern:</strong> Exponential backoff with jitter prevents overwhelming downstream services during outages. DLQ ensures no job is silently lost—every failure is tracked and alertable!
+            </div>
+        </div>
+    </div>
+
+    <!-- Full System Orchestration -->
+    <div id="full-diagram" class="diagram-container">
+        <svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="800" y="35" font-size="28" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Complete Job Scheduler Orchestration
+            </text>
+
+            <!-- Layer Labels -->
+            <text x="50" y="90" font-size="14" font-weight="bold" fill="#64748b">CLIENTS</text>
+            <text x="50" y="200" font-size="14" font-weight="bold" fill="#64748b">GATEWAY</text>
+            <text x="50" y="330" font-size="14" font-weight="bold" fill="#64748b">SCHEDULER</text>
+            <text x="50" y="510" font-size="14" font-weight="bold" fill="#64748b">QUEUE</text>
+            <text x="50" y="650" font-size="14" font-weight="bold" fill="#64748b">WORKERS</text>
+            <text x="50" y="800" font-size="14" font-weight="bold" fill="#64748b">DATA</text>
+
+            <!-- Clients -->
+            <g class="component">
+                <rect x="250" y="70" width="130" height="60" rx="8" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="315" y="105" font-size="13" font-weight="bold" text-anchor="middle" fill="white">CLI / SDK</text>
+            </g>
+            <g class="component">
+                <rect x="420" y="70" width="130" height="60" rx="8" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="485" y="105" font-size="13" font-weight="bold" text-anchor="middle" fill="white">Web UI</text>
+            </g>
+            <g class="component">
+                <rect x="590" y="70" width="130" height="60" rx="8" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="655" y="105" font-size="13" font-weight="bold" text-anchor="middle" fill="white">Webhooks</text>
+            </g>
+
+            <!-- Arrows -->
+            <path d="M 315 130 L 400 180" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 485 130 L 450 180" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 655 130 L 500 180" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="300" y="180" width="300" height="80" rx="10" fill="url(#grad-gateway)" stroke="#0891b2" stroke-width="2"/>
+                <text x="450" y="215" font-size="15" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway (Kong)</text>
+                <text x="450" y="235" font-size="10" text-anchor="middle" fill="white">Auth • Rate Limit • Validation</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 450 260 L 450 310" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Scheduler Cluster -->
+            <g class="component">
+                <rect x="250" y="310" width="400" height="150" rx="10" fill="url(#grad-scheduler)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="450" y="345" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🧠 Scheduler Cluster (Leader-Elected)</text>
+                <text x="450" y="370" font-size="11" text-anchor="middle" fill="white">• Cron Parser • Priority Queue • DAG Resolver</text>
+                <text x="450" y="388" font-size="11" text-anchor="middle" fill="white">• Time Wheel (O(1) scheduling)</text>
+                <text x="450" y="406" font-size="11" text-anchor="middle" fill="white">• Job Dispatcher</text>
+                <text x="450" y="430" font-size="10" text-anchor="middle" fill="white">HA: 3 nodes (1 leader, 2 standby) via ZooKeeper</text>
+            </g>
+
+            <!-- Coordination -->
+            <g class="component">
+                <rect x="700" y="310" width="150" height="80" rx="8" fill="#fde047" stroke="#eab308" stroke-width="2"/>
+                <text x="775" y="345" font-size="12" font-weight="bold" text-anchor="middle" fill="#854d0e">🔗 ZooKeeper</text>
+                <text x="775" y="363" font-size="9" text-anchor="middle" fill="#854d0e">Leader Election</text>
+                <text x="775" y="378" font-size="9" text-anchor="middle" fill="#854d0e">Service Discovery</text>
+            </g>
+
+            <path d="M 650 360 L 700 360" stroke="#eab308" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+
+            <!-- Arrow -->
+            <path d="M 450 460 L 450 490" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Kafka Queue -->
+            <g class="component">
+                <rect x="250" y="490" width="500" height="100" rx="10" fill="url(#grad-queue)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="500" y="525" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka / RabbitMQ (Distributed Queue)</text>
+                <text x="500" y="548" font-size="10" text-anchor="middle" fill="white">Partitions: 0-2 (High Pri) | 3-6 (Med Pri) | 7-9 (Low Pri)</text>
+                <text x="500" y="566" font-size="10" text-anchor="middle" fill="white">Replication Factor: 3 | Retention: 7 days</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 500 590 L 500 630" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Worker Pool -->
+            <g class="component">
+                <rect x="250" y="630" width="500" height="130" rx="10" fill="#d9f99d" stroke="#65a30d" stroke-width="2"/>
+                <text x="500" y="665" font-size="16" font-weight="bold" text-anchor="middle" fill="#3f6212">⚙️ Worker Pool (Kubernetes Pods)</text>
+                <text x="500" y="688" font-size="11" text-anchor="middle" fill="#3f6212">Auto-Scaling: HPA based on queue depth (10-1000 pods)</text>
+                <text x="500" y="706" font-size="11" text-anchor="middle" fill="#3f6212">• Acquire Distributed Lock (Redis) → Execute → Release</text>
+                <text x="500" y="724" font-size="11" text-anchor="middle" fill="#3f6212">• Resource Isolation: CPU/Memory Limits</text>
+                <text x="500" y="742" font-size="11" text-anchor="middle" fill="# • Retry with Exponential Backoff</text>
+            </g>
+
+            <!-- Redis Lock -->
+            <g class="component">
+                <rect x="800" y="630" width="150" height="80" rx="8" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/>
+                <text x="875" y="665" font-size="12" font-weight="bold" text-anchor="middle" fill="#831843">🔒 Redis</text>
+                <text x="875" y="683" font-size="9" text-anchor="middle" fill="#831843">Distributed Locks</text>
+                <text x="875" y="698" font-size="9" text-anchor="middle" fill="#831843">Hot Job Cache</text>
+            </g>
+
+            <path d="M 750 685 L 800 685" stroke="#db2777" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+
+            <!-- Arrow -->
+            <path d="M 500 760 L 500 780" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Data Layer -->
+            <g class="component">
+                <rect x="250" y="780" width="180" height="80" rx="8" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="340" y="810" font-size="13" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="340" y="828" font-size="9" text-anchor="middle" fill="white">Job Metadata</text>
+                <text x="340" y="843" font-size="9" text-anchor="middle" fill="white">Executions</text>
+            </g>
+
+            <g class="component">
+                <rect x="460" y="780" width="180" height="80" rx="8" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="550" y="810" font-size="13" font-weight="bold" text-anchor="middle" fill="#581c87">📊 ClickHouse</text>
+                <text x="550" y="828" font-size="9" text-anchor="middle" fill="#581c87">Execution Logs</text>
+                <text x="550" y="843" font-size="9" text-anchor="middle" fill="#581c87">Time-Series Data</text>
+            </g>
+
+            <g class="component">
+                <rect x="670" y="780" width="180" height="80" rx="8" fill="#bae6fd" stroke="#0284c7" stroke-width="2"/>
+                <text x="760" y="810" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">☁️ S3 / Blob</text>
+                <text x="760" y="828" font-size="9" text-anchor="middle" fill="#075985">Artifacts</text>
+                <text x="760" y="843" font-size="9" text-anchor="middle" fill="#075985">Backups</text>
+            </g>
+
+            <!-- Monitoring -->
+            <g class="component">
+                <rect x="1000" y="310" width="250" height="120" rx="10" fill="#99f6e4" stroke="#14b8a6" stroke-width="2"/>
+                <text x="1125" y="345" font-size="14" font-weight="bold" text-anchor="middle" fill="#134e4a">📈 MONITORING</text>
+                <text x="1125" y="365" font-size="10" text-anchor="middle" fill="#134e4a">• Prometheus + Grafana</text>
+                <text x="1125" y="383" font-size="10" text-anchor="middle" fill="#134e4a">• ELK Stack (Logs)</text>
+                <text x="1125" y="401" font-size="10" text-anchor="middle" fill="#134e4a">• Jaeger (Tracing)</text>
+                <text x="1125" y="419" font-size="10" text-anchor="middle" fill="#134e4a">• PagerDuty (Alerts)</text>
+            </g>
+
+            <path d="M 750 700 L 1000 380" stroke="#14b8a6" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+            <text x="850" y="540" font-size="10" fill="#14b8a6" font-weight="600">Metrics & Logs</text>
+
+            <!-- DLQ -->
+            <g class="component">
+                <rect x="1000" y="490" width="250" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="1125" y="520" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">💀 Dead Letter Queue</text>
+                <text x="1125" y="540" font-size="10" text-anchor="middle" fill="#991b1b">Failed jobs after max retries</text>
+                <text x="1125" y="558" font-size="10" text-anchor="middle" fill="#991b1b">Alert → Manual investigation</text>
+            </g>
+
+            <path d="M 750 540 L 1000 540" stroke="#dc2626" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🏗️ Full System Orchestration Overview</h3>
+            <p style="margin-bottom: 15px; line-height: 1.8;">
+                This diagram shows the complete Job Scheduler system with all components working together.
+                The architecture follows a <strong>distributed, event-driven pattern</strong> with <strong>strong consistency guarantees</strong>
+                for job scheduling and <strong>exactly-once execution semantics</strong>.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #0284c7;">
+                    <h4 style="color: #075985; margin-bottom: 8px;">⬆️ Job Submission Path</h4>
+                    <p style="font-size: 0.9em; color: #0c4a6e; line-height: 1.6;">
+                        Client → API Gateway → <strong>Scheduler Service</strong> →
+                        PostgreSQL → (Immediate: Kafka Queue) OR (Scheduled: Time Wheel)
+                    </p>
+                </div>
+                <div style="background: #f0fdf4; padding: 15px; border-radius: 10px; border-left: 4px solid #10b981;">
+                    <h4 style="color: #065f46; margin-bottom: 8px;">⬇️ Job Execution Path</h4>
+                    <p style="font-size: 0.9em; color: #064e3b; line-height: 1.6;">
+                        Kafka Queue → <strong>Worker Pool (K8s)</strong> →
+                        Redis Lock → Execute → Logs (ClickHouse) → Status (PostgreSQL)
+                    </p>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Key Architectural Decisions:</strong>
+                <ul style="margin-left: 20px; margin-top: 8px; line-height: 1.8;">
+                    <li><strong>Leader Election (ZooKeeper):</strong> Prevents duplicate scheduling, enables HA</li>
+                    <li><strong>Queue Partitioning:</strong> High-priority jobs get dedicated partitions (no head-of-line blocking)</li>
+                    <li><strong>Distributed Locks (Redis):</strong> Exactly-once execution guarantee</li>
+                    <li><strong>Time Wheel:</strong> O(1) scheduling for millions of delayed jobs</li>
+                    <li><strong>Separation of Concerns:</strong> Metadata (PostgreSQL) vs. Logs (ClickHouse) vs. Artifacts (S3)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">10M+</div>
+                <div class="metric-label">Jobs/Day</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">35K</div>
+                <div class="metric-label">Concurrent Jobs</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;1s</div>
+                <div class="metric-label">Scheduling Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;10s</div>
+                <div class="metric-label">Failover Time</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100%</div>
+                <div class="metric-label">Exactly-Once</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);"></div>
+            <span>Clients</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #22d3ee, #06b6d4);"></div>
+            <span>Gateway</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #818cf8, #6366f1);"></div>
+            <span>Scheduler</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+            <span>Queue</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #84cc16, #65a30d);"></div>
+            <span>Workers</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fb923c, #f97316);"></div>
+            <span>Database</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
