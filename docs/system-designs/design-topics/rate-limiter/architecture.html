@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limiter System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.distributed { background: #fef3c7; color: #92400e; }
+        .tag.coordination { background: #fee2e2; color: #991b1b; }
+        .tag.consensus { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 3;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 3;
+        }
+
+        .limiter-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 12;
+        }
+
+        .algorithms-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg: #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .coordinator-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⏱️ Distributed Rate Limiter System Design Blueprint</h1>
+        <div class="subtitle">Enterprise-Grade Traffic Control Architecture</div>
+        <div class="tags">
+            <span class="tag distributed">Distributed Consensus</span>
+            <span class="tag coordination">Node Coordination</span>
+            <span class="tag consensus">Fault Tolerant</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👤 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">API Clients</div>
+                <div class="component-details">
+                    <strong>Request Types:</strong>
+                    <ul>
+                        <li>REST API calls</li>
+                        <li>GraphQL queries</li>
+                        <li>WebSocket connections</li>
+                        <li>gRPC streams</li>
+                    </ul>
+                    <strong>Identification:</strong>
+                    <ul>
+                        <li>API Key</li>
+                        <li>User ID</li>
+                        <li>IP Address</li>
+                        <li>Token/Session</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTP/HTTPS Request</div>
+        </div>
+
+        <!-- Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway / Envoy</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Request Routing:</strong> Route to backend services</li>
+                        <li><strong>Authentication:</strong> Verify API keys, JWT tokens</li>
+                        <li><strong>Rate Limit Check:</strong> First line of defense</li>
+                        <li><strong>Request Enrichment:</strong> Add metadata (IP, region)</li>
+                    </ul>
+                    <div class="code-snippet">
+// Pseudocode
+if (!rateLimiter.allowRequest(apiKey)) {
+    return 429 Too Many Requests {
+        "error": "Rate limit exceeded",
+        "retry_after": 60
+    }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Consistent hashing</li>
+                        <li>Health checks</li>
+                        <li>Sticky sessions (optional)</li>
+                        <li>Rate limit per IP</li>
+                    </ul>
+                    <strong>Algorithms:</strong>
+                    <ul>
+                        <li>Round Robin</li>
+                        <li>Least Connections</li>
+                        <li>IP Hash</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route Traffic</div>
+        </div>
+
+        <!-- Core Rate Limiter Service -->
+        <div class="section limiter-section">
+            <div class="section-title">🔐 DISTRIBUTED RATE LIMITER SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Rate Limiter Middleware</div>
+                <div class="component-details">
+                    <strong>Multi-Tier Rate Limiting:</strong>
+                    <div class="code-snippet">
+// Hierarchy of limits
+1. Global Limit:    100K requests/minute (all users)
+2. API Key Limit:   1K requests/minute (per API key)
+3. Endpoint Limit:  100 requests/minute (per endpoint per user)
+4. IP Limit:        50 requests/minute (per IP)
+5. Burst Limit:     10 requests/second (spike protection)</div>
+
+                    <strong>Decision Flow:</strong>
+                    <ul>
+                        <li>Extract identifier (API key, IP, User ID)</li>
+                        <li>Check all applicable limits</li>
+                        <li>Query distributed cache (Redis)</li>
+                        <li>Apply algorithm (Token Bucket, Sliding Window)</li>
+                        <li>Update counters atomically</li>
+                        <li>Return Allow/Deny decision</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Limit Configuration Service</div>
+                <div class="component-details">
+                    <strong>Dynamic Configuration:</strong>
+                    <ul>
+                        <li>Per-tenant rate limits</li>
+                        <li>Per-endpoint limits</li>
+                        <li>Time-based limits (peak hours)</li>
+                        <li>Geographic limits</li>
+                    </ul>
+                    <div class="code-snippet">
+{
+  "tenant_id": "stripe_customer_123",
+  "limits": {
+    "tier": "premium",
+    "requests_per_second": 100,
+    "requests_per_minute": 5000,
+    "burst_capacity": 200,
+    "quota_monthly": 1000000
+  },
+  "overrides": {
+    "endpoint:/payments": 50,
+    "peak_hours": {
+      "09:00-17:00": 150
+    }
+  }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rate Limiting Algorithms -->
+        <div class="section algorithms-section">
+            <div class="section-title">🧮 RATE LIMITING ALGORITHMS</div>
+
+            <div class="component">
+                <div class="component-name">1. Token Bucket Algorithm</div>
+                <div class="component-details">
+                    <strong>How it works:</strong>
+                    <ul>
+                        <li>Bucket holds tokens (max = burst capacity)</li>
+                        <li>Tokens refill at constant rate</li>
+                        <li>Each request consumes 1 token</li>
+                        <li>If no tokens → reject request</li>
+                    </ul>
+                    <div class="code-snippet">
+class TokenBucket:
+    def __init__(self, capacity, refill_rate):
+        self.capacity = capacity
+        self.tokens = capacity
+        self.refill_rate = refill_rate  # tokens per second
+        self.last_refill = time.now()
+
+    def allow_request(self):
+        self.refill()
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
+        return False
+
+    def refill(self):
+        now = time.now()
+        elapsed = now - self.last_refill
+        new_tokens = elapsed * self.refill_rate
+        self.tokens = min(self.capacity,
+                         self.tokens + new_tokens)
+        self.last_refill = now</div>
+                    <strong>Pros:</strong> Handles bursts, smooth rate
+                    <br><strong>Cons:</strong> Memory overhead per key
+                    <br><strong>Used by:</strong> AWS, Stripe, Shopify
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">2. Sliding Window Log</div>
+                <div class="component-details">
+                    <strong>How it works:</strong>
+                    <ul>
+                        <li>Store timestamp of each request</li>
+                        <li>Sliding window = last N seconds</li>
+                        <li>Count requests in window</li>
+                        <li>If count > limit → reject</li>
+                    </ul>
+                    <div class="code-snippet">
+class SlidingWindowLog:
+    def __init__(self, limit, window_seconds):
+        self.limit = limit
+        self.window = window_seconds
+        self.requests = []  # Sorted list of timestamps
+
+    def allow_request(self):
+        now = time.now()
+        # Remove old requests
+        cutoff = now - self.window
+        self.requests = [t for t in self.requests
+                        if t > cutoff]
+
+        if len(self.requests) < self.limit:
+            self.requests.append(now)
+            return True
+        return False</div>
+                    <strong>Pros:</strong> Accurate, no boundary issues
+                    <br><strong>Cons:</strong> High memory (stores all timestamps)
+                    <br><strong>Used by:</strong> Twitter API, GitHub API
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">3. Sliding Window Counter</div>
+                <div class="component-details">
+                    <strong>How it works:</strong>
+                    <ul>
+                        <li>Hybrid: Fixed window + smoothing</li>
+                        <li>Track current + previous window</li>
+                        <li>Weighted average for estimation</li>
+                        <li>Memory efficient, accurate</li>
+                    </ul>
+                    <div class="code-snippet">
+def allow_request(key, limit, window_sec):
+    now = time.now()
+    current_window = now // window_sec
+    prev_window = current_window - 1
+
+    # Get counts
+    curr_count = redis.get(f"{key}:{current_window}")
+    prev_count = redis.get(f"{key}:{prev_window}")
+
+    # Calculate position in current window
+    elapsed_in_window = now % window_sec
+    weight = elapsed_in_window / window_sec
+
+    # Estimated count
+    estimated = prev_count * (1 - weight) + curr_count
+
+    if estimated < limit:
+        redis.incr(f"{key}:{current_window}")
+        redis.expire(f"{key}:{current_window}",
+                    window_sec * 2)
+        return True
+    return False</div>
+                    <strong>Pros:</strong> Memory efficient, smooth
+                    <br><strong>Cons:</strong> Approximate
+                    <br><strong>Used by:</strong> Cloudflare, Redis Enterprise
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">4. Leaky Bucket Algorithm</div>
+                <div class="component-details">
+                    <strong>How it works:</strong>
+                    <ul>
+                        <li>Requests enter queue (bucket)</li>
+                        <li>Processed at fixed rate (leak)</li>
+                        <li>If queue full → reject</li>
+                        <li>Smooths traffic spikes</li>
+                    </ul>
+                    <div class="code-snippet">
+class LeakyBucket:
+    def __init__(self, capacity, leak_rate):
+        self.capacity = capacity
+        self.queue = deque()
+        self.leak_rate = leak_rate  # req/sec
+
+    def allow_request(self):
+        self.leak()
+
+        if len(self.queue) < self.capacity:
+            self.queue.append(time.now())
+            return True
+        return False
+
+    def leak(self):
+        now = time.now()
+        # Process requests at fixed rate
+        while self.queue:
+            if now - self.queue[0] >= 1/self.leak_rate:
+                self.queue.popleft()
+            else:
+                break</div>
+                    <strong>Pros:</strong> Smooth output, predictable
+                    <br><strong>Cons:</strong> Doesn't allow bursts
+                    <br><strong>Used by:</strong> Network QoS, Uber API
+                </div>
+            </div>
+        </div>
+
+        <!-- Distributed Storage -->
+        <div class="section storage-section">
+            <div class="section-title">💾 DISTRIBUTED STORAGE</div>
+
+            <div class="component">
+                <div class="component-name">Redis Cluster (Primary)</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Master-Slave replication</li>
+                        <li>Cluster mode with 16K hash slots</li>
+                        <li>Automatic failover</li>
+                        <li>Persistence: RDB + AOF</li>
+                    </ul>
+                    <strong>Data Structures Used:</strong>
+                    <div class="code-snippet">
+# Token Bucket
+HSET rate:user123 tokens 100 last_refill 1699999999
+
+# Sliding Window Counter
+ZADD rate:user456 1699999990 req1
+ZADD rate:user456 1699999995 req2
+ZREMRANGEBYSCORE rate:user456 0 (now-60)
+
+# Fixed Window
+INCR rate:user789:window:1699999800
+EXPIRE rate:user789:window:1699999800 120</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 100K ops/sec per node</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Atomic operations: INCR, HINCRBY</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Configuration Database</div>
+                <div class="component-details">
+                    <strong>PostgreSQL / DynamoDB:</strong>
+                    <ul>
+                        <li>Store rate limit rules</li>
+                        <li>Tenant configurations</li>
+                        <li>Historical quota data</li>
+                        <li>Audit logs</li>
+                    </ul>
+                    <div class="code-snippet">
+CREATE TABLE rate_limit_config (
+    id BIGSERIAL PRIMARY KEY,
+    tenant_id VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(50),
+    limit_per_second INT,
+    limit_per_minute INT,
+    limit_per_hour INT,
+    burst_capacity INT,
+    algorithm VARCHAR(20),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE INDEX idx_tenant ON rate_limit_config(tenant_id);</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distributed Coordination -->
+        <div class="section coordinator-section">
+            <div class="section-title">🤝 DISTRIBUTED COORDINATION</div>
+
+            <div class="component">
+                <div class="component-name">Apache ZooKeeper / etcd</div>
+                <div class="component-details">
+                    <strong>Coordination Tasks:</strong>
+                    <ul>
+                        <li><strong>Leader Election:</strong> Select primary rate limiter node</li>
+                        <li><strong>Configuration Sync:</strong> Distribute rate limit updates</li>
+                        <li><strong>Node Discovery:</strong> Track active limiter instances</li>
+                        <li><strong>Distributed Locks:</strong> Prevent race conditions</li>
+                    </ul>
+                    <div class="code-snippet">
+// Leader election for quota reset coordination
+class QuotaResetCoordinator:
+    def __init__(self):
+        self.zk = ZooKeeper("zk://cluster")
+        self.leader_path = "/rate-limiter/leader"
+
+    def try_become_leader(self):
+        try:
+            self.zk.create(self.leader_path,
+                          ephemeral=True)
+            return True  # I'm the leader
+        except NodeExistsException:
+            return False  # Another node is leader
+
+    def reset_daily_quotas(self):
+        if self.is_leader():
+            # Only leader resets quotas
+            reset_all_quotas()
+            publish_reset_event()</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Consensus Protocol</div>
+                <div class="component-details">
+                    <strong>Raft / Paxos for:</strong>
+                    <ul>
+                        <li>Global counter synchronization</li>
+                        <li>Quota enforcement across regions</li>
+                        <li>Configuration changes</li>
+                        <li>Failover coordination</li>
+                    </ul>
+                    <strong>Conflict Resolution:</strong>
+                    <ul>
+                        <li>Last-write-wins (LWW) for configs</li>
+                        <li>Vector clocks for causality</li>
+                        <li>CRDTs for counter merging</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka / RabbitMQ</div>
+                <div class="component-details">
+                    <strong>Event Topics:</strong>
+                    <ul>
+                        <li><strong>rate.limit.exceeded:</strong> Throttling events</li>
+                        <li><strong>quota.reset:</strong> Daily/monthly reset</li>
+                        <li><strong>config.updated:</strong> Limit changes</li>
+                        <li><strong>alert.anomaly:</strong> Unusual patterns</li>
+                    </ul>
+                    <div class="code-snippet">
+// Event Schema
+{
+  "event_type": "rate.limit.exceeded",
+  "tenant_id": "customer_123",
+  "api_key": "sk_live_xyz",
+  "endpoint": "/api/v1/payments",
+  "timestamp": "2025-11-15T10:30:00Z",
+  "limit": 100,
+  "current_count": 101,
+  "window": "1 minute"
+}</div>
+                    <strong>Consumers:</strong>
+                    <ul>
+                        <li>Analytics service (real-time dashboards)</li>
+                        <li>Alerting service (notify admins)</li>
+                        <li>Audit logger (compliance)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li><strong>Rate Limiter Metrics:</strong>
+                            <ul>
+                                <li>Requests allowed vs rejected (per tenant)</li>
+                                <li>Throttle rate percentage</li>
+                                <li>Algorithm execution time</li>
+                            </ul>
+                        </li>
+                        <li><strong>Redis Metrics:</strong>
+                            <ul>
+                                <li>Cache hit/miss ratio</li>
+                                <li>Memory usage per key pattern</li>
+                                <li>Command latency</li>
+                            </ul>
+                        </li>
+                        <li><strong>System Health:</strong>
+                            <ul>
+                                <li>Node availability</li>
+                                <li>Consensus latency</li>
+                                <li>Queue backlog</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="code-snippet">
+# Sample Prometheus queries
+rate_limiter_requests_total{status="allowed"}
+rate_limiter_requests_total{status="rejected"}
+rate_limiter_latency_seconds{quantile="0.99"}
+redis_connected_clients
+zookeeper_leader_election_count</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing</div>
+                <div class="component-details">
+                    <strong>Jaeger / Zipkin:</strong>
+                    <ul>
+                        <li>Trace rate limit check across services</li>
+                        <li>Identify bottlenecks (Redis, ZooKeeper)</li>
+                        <li>Latency breakdown by component</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics & Reporting -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS & REPORTING</div>
+            <div class="component">
+                <div class="component-name">Time-Series Database</div>
+                <div class="component-details">
+                    <strong>InfluxDB / TimescaleDB:</strong>
+                    <ul>
+                        <li>Store rate limit events over time</li>
+                        <li>Aggregate metrics per tenant</li>
+                        <li>Anomaly detection (ML-based)</li>
+                        <li>Capacity planning insights</li>
+                    </ul>
+                    <div class="code-snippet">
+-- TimescaleDB query
+SELECT
+    tenant_id,
+    time_bucket('1 hour', timestamp) AS hour,
+    SUM(requests_allowed) as allowed,
+    SUM(requests_rejected) as rejected,
+    (SUM(requests_rejected)::float /
+     SUM(requests_allowed + requests_rejected))
+        AS throttle_rate
+FROM rate_limit_events
+WHERE timestamp > NOW() - INTERVAL '7 days'
+GROUP BY tenant_id, hour
+ORDER BY throttle_rate DESC;</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Real-time Dashboards</div>
+                <div class="component-details">
+                    <strong>Dashboards for:</strong>
+                    <ul>
+                        <li>Top throttled tenants</li>
+                        <li>Quota utilization trends</li>
+                        <li>Geographic traffic patterns</li>
+                        <li>Cost per tenant (for billing)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">1M</div>
+                <div class="metric-label">Concurrent rate limit checks/sec</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;5ms</div>
+                <div class="metric-label">P99 rate limit decision latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100M</div>
+                <div class="metric-label">Active rate limit keys (tenants × endpoints)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.999%</div>
+                <div class="metric-label">Availability SLA (5 nines)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10TB</div>
+                <div class="metric-label">Redis cluster total memory</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">50ms</div>
+                <div class="metric-label">Consensus protocol latency (cross-region)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADVANCED SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Distributed Challenges</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Race Conditions:</strong> Use Redis Lua scripts for atomicity</li>
+                    <li><strong>Clock Skew:</strong> Use logical clocks (Lamport, Vector)</li>
+                    <li><strong>Network Partitions:</strong> CAP theorem - favor AP with eventual consistency</li>
+                    <li><strong>Thundering Herd:</strong> Exponential backoff, jittered retries</li>
+                    <li><strong>Split Brain:</strong> Quorum-based decisions (ZooKeeper)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless rate limiter nodes</li>
+                    <li><strong>Redis Sharding:</strong> Partition by tenant ID or key hash</li>
+                    <li><strong>Local Caching:</strong> Per-node LRU cache for hot keys</li>
+                    <li><strong>Batch Processing:</strong> Aggregate low-priority updates</li>
+                    <li><strong>Geographic Distribution:</strong> Edge rate limiters per region</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Consistency Models</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Strong Consistency:</strong> Critical for payment APIs (Stripe)</li>
+                    <li><strong>Eventual Consistency:</strong> Acceptable for social media</li>
+                    <li><strong>Bounded Staleness:</strong> Max 10% over-limit tolerance</li>
+                    <li><strong>Relaxed Limits:</strong> Allow 5-10% burst during failover</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Failure Scenarios & Recovery</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Redis Failover:</strong> Sentinel auto-promotion (30s RTO)</li>
+                    <li><strong>ZooKeeper Failure:</strong> Continue with cached config</li>
+                    <li><strong>Rate Limiter Crash:</strong> Fail-open vs fail-closed strategy</li>
+                    <li><strong>Network Partition:</strong> Use local quotas, sync on heal</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Industry Examples -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🏢 REAL-WORLD IMPLEMENTATIONS</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Stripe Payment API</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Algorithm:</strong> Token Bucket<br>
+                    <strong>Limits:</strong> 100 req/sec (test), 1000 req/sec (live)<br>
+                    <strong>Storage:</strong> Redis Cluster<br>
+                    <strong>Strategy:</strong> Per-API-key + per-endpoint<br>
+                    <strong>Fail Mode:</strong> Fail-open during outages
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">AWS API Gateway</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Algorithm:</strong> Token Bucket<br>
+                    <strong>Limits:</strong> 10K req/sec (default), burst 5K<br>
+                    <strong>Storage:</strong> DynamoDB + local cache<br>
+                    <strong>Features:</strong> Per-stage, per-method limits<br>
+                    <strong>Monitoring:</strong> CloudWatch metrics
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">GitHub API</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Algorithm:</strong> Sliding Window Log<br>
+                    <strong>Limits:</strong> 5K req/hour (authenticated)<br>
+                    <strong>Headers:</strong> X-RateLimit-Remaining<br>
+                    <strong>Strategy:</strong> OAuth-based + IP fallback<br>
+                    <strong>Reset:</strong> Top of the hour
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Twitter API</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Algorithm:</strong> Sliding Window Counter<br>
+                    <strong>Limits:</strong> 15 req/15min (user timeline)<br>
+                    <strong>Strategy:</strong> Per-user + per-app<br>
+                    <strong>Coordination:</strong> Manhattan distributed DB<br>
+                    <strong>Scale:</strong> Billions of checks per day
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Key Principle:</strong> Rate limiting is about fairness, not just protection - ensure legitimate users get their share!</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Java/Go • Redis Cluster • ZooKeeper/etcd • Kafka • Prometheus • Kubernetes</p>
+    </div>
+</div>
+</body>
+</html>
