@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location-Based Services Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #10b981;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .flow-description {
+            background: #ecfdf5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #10b981;
+        }
+
+        .flow-description h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #059669;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-radius: 15px;
+            border: 2px solid #10b981;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #059669;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📍 Location-Based Services Flow Diagram</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('search')">🔍 Search Flow (Nearby Businesses)</button>
+            <button class="tab" onclick="showDiagram('review')">⭐ Review Submission Flow</button>
+            <button class="tab" onclick="showDiagram('realtime')">📡 Real-Time Updates Flow</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System Architecture</button>
+        </div>
+    </div>
+
+    <!-- Search Flow Diagram -->
+    <div id="search-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#059669" />
+                </marker>
+                <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Search Flow: Finding Nearby Businesses
+            </text>
+
+            <!-- User -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-green)" stroke="#059669" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Mobile App / Browser</text>
+            </g>
+
+            <!-- Arrow 1 -->
+            <path d="M 700 140 L 700 180" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#065f46" font-weight="600">GET /search/nearby</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="#fca5a5" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="white">Auth + Rate Limit</text>
+            </g>
+
+            <!-- Arrow 2 -->
+            <path d="M 700 260 L 700 300" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="285" font-size="11" fill="#065f46" font-weight="600">Validated Request</text>
+
+            <!-- Search Service -->
+            <g class="component">
+                <rect x="550" y="300" width="300" height="100" rx="10" fill="#84cc16" stroke="#65a30d" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔍 Search Service</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Proximity Query Engine</text>
+                <text x="700" y="375" font-size="11" text-anchor="middle" fill="white">• Geohash Calculation • Ranking</text>
+            </g>
+
+            <!-- Arrow to Cache -->
+            <path d="M 850 350 L 1020 350" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="900" y="340" font-size="11" fill="#065f46" font-weight="600">Check Cache</text>
+
+            <!-- Redis Cache -->
+            <g class="component">
+                <rect x="1020" y="300" width="200" height="100" rx="10" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                <text x="1120" y="335" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💾 Redis Cache</text>
+                <text x="1120" y="355" font-size="11" text-anchor="middle" fill="white">Geohash-based</text>
+                <text x="1120" y="375" font-size="11" text-anchor="middle" fill="white">Hit Rate: 85%</text>
+            </g>
+
+            <!-- Cache Decision -->
+            <g class="component">
+                <path d="M 700 440 L 800 500 L 700 560 L 600 500 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="495" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Cache</text>
+                <text x="700" y="513" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Hit?</text>
+            </g>
+
+            <!-- Cache Hit Path (Right) -->
+            <path d="M 800 500 L 950 500" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="850" y="490" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <g class="component">
+                <rect x="950" y="450" width="180" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="1040" y="485" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Return Results</text>
+                <text x="1040" y="505" font-size="12" text-anchor="middle" fill="#065f46">Cached Response</text>
+                <text x="1040" y="525" font-size="11" text-anchor="middle" fill="#065f46">Latency: ~50ms</text>
+            </g>
+
+            <!-- Cache Miss Path (Bottom) -->
+            <path d="M 700 560 L 700 620" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="595" font-size="12" fill="#dc2626" font-weight="700">NO ✗ (15%)</text>
+
+            <!-- Elasticsearch -->
+            <g class="component">
+                <rect x="550" y="620" width="300" height="100" rx="10" fill="#fb923c" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="655" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔎 Elasticsearch</text>
+                <text x="700" y="675" font-size="12" text-anchor="middle" fill="white">Geo-Distance Query</text>
+                <text x="700" y="695" font-size="11" text-anchor="middle" fill="white">Filter: category, rating, price</text>
+            </g>
+
+            <!-- Arrow to PostGIS -->
+            <path d="M 550 670 L 380 670" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="440" y="660" font-size="11" fill="#065f46" font-weight="600">Fallback</text>
+
+            <!-- PostGIS -->
+            <g class="component">
+                <rect x="200" y="620" width="180" height="100" rx="10" fill="#2dd4bf" stroke="#0891b2" stroke-width="2"/>
+                <text x="290" y="655" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🗺️ PostGIS</text>
+                <text x="290" y="675" font-size="11" text-anchor="middle" fill="white">ST_DWithin Query</text>
+                <text x="290" y="695" font-size="11" text-anchor="middle" fill="white">Geospatial Index</text>
+            </g>
+
+            <!-- Arrow to Ranking -->
+            <path d="M 700 720 L 700 780" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="755" font-size="11" fill="#065f46" font-weight="600">Raw Results</text>
+
+            <!-- Ranking Engine -->
+            <g class="component">
+                <rect x="550" y="780" width="300" height="100" rx="10" fill="#a78bfa" stroke="#7c3aed" stroke-width="2"/>
+                <text x="700" y="815" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🎯 Ranking Engine</text>
+                <text x="700" y="835" font-size="11" text-anchor="middle" fill="white">Distance × Rating × Popularity</text>
+                <text x="700" y="855" font-size="11" text-anchor="middle" fill="white">Personalization Score</text>
+            </g>
+
+            <!-- Arrow to Update Cache -->
+            <path d="M 850 830 L 1120 400" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="950" y="620" font-size="11" fill="#065f46" font-weight="600">Update Cache</text>
+
+            <!-- Response Arrow -->
+            <path d="M 550 830 L 350 830 L 350 220 L 600 220" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="280" y="530" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="280" y="550" font-size="11" fill="#059669">200 OK</text>
+            <text x="280" y="565" font-size="11" fill="#059669">[businesses array]</text>
+
+            <!-- Async Analytics -->
+            <path d="M 700 880 L 700 950" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="720" y="920" font-size="11" fill="#7c3aed" font-weight="600">Async Log</text>
+
+            <g class="component">
+                <rect x="600" y="950" width="200" height="80" rx="10" fill="#c084fc" stroke="#9333ea" stroke-width="2"/>
+                <text x="700" y="980" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📊 Analytics</text>
+                <text x="700" y="1000" font-size="11" text-anchor="middle" fill="white">Search Event Logging</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="220" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="227" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="350" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="357" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="1120" cy="350" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1120" y="357" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="700" cy="670" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="677" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="700" cy="830" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="837" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🔍 Search Flow Steps</h3>
+            <ol>
+                <li><strong>User Request:</strong> Mobile app captures GPS location (37.7749, -122.4194), user searches "coffee near me, radius: 5km"</li>
+                <li><strong>API Gateway:</strong> Validates JWT token, checks rate limit (100 req/hour for free tier), validates lat/lon bounds</li>
+                <li><strong>Search Service:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Calculates geohash at precision 6: "9q8yy9"</li>
+                        <li>Generates 9 search cells (center + 8 neighbors)</li>
+                        <li>Checks Redis cache: <code>GET search:9q8yy9:coffee:5km</code></li>
+                    </ul>
+                </li>
+                <li><strong>Cache Check:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Hit (85%):</strong> Returns cached results (~50ms latency) ✅</li>
+                        <li><strong>Miss (15%):</strong> Query database ↓</li>
+                    </ul>
+                </li>
+                <li><strong>Elasticsearch Query:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Geo-distance query with filters</li>
+                        <li>Returns top 100 candidates (~100ms)</li>
+                        <li>Fallback to PostGIS if Elasticsearch down</li>
+                    </ul>
+                </li>
+                <li><strong>Ranking Engine:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Calculate multi-factor score for each business</li>
+                        <li>Apply personalization (user history, preferences)</li>
+                        <li>Sort and paginate (top 20 results)</li>
+                    </ul>
+                </li>
+                <li><strong>Response:</strong> Return JSON with businesses, update cache asynchronously</li>
+                <li><strong>Analytics (Async):</strong> Log search event to Kafka for ML model training</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Performance Optimization:</strong> Geohash-based caching reduces database queries by 85%, enabling 5,000+ QPS search throughput!
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Submission Flow -->
+    <div id="review-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Review Submission Flow
+            </text>
+
+            <!-- User -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-green)" stroke="#059669" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Submits Review</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 140 L 700 180" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#065f46" font-weight="600">POST /reviews</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="#fca5a5" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="white">Auth Check</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 700 260 L 700 300" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Review Service -->
+            <g class="component">
+                <rect x="550" y="300" width="300" height="100" rx="10" fill="#f472b6" stroke="#ec4899" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⭐ Review Service</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Validation & Processing</text>
+            </g>
+
+            <!-- Arrow to Spam Detection -->
+            <path d="M 850 350 L 1020 350" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="900" y="340" font-size="11" fill="#065f46" font-weight="600">Check Spam</text>
+
+            <!-- Spam Detection -->
+            <g class="component">
+                <rect x="1020" y="300" width="200" height="100" rx="10" fill="#fde047" stroke="#facc15" stroke-width="2"/>
+                <text x="1120" y="335" font-size="14" font-weight="bold" text-anchor="middle" fill="#854d0e">🛡️ Spam Detector</text>
+                <text x="1120" y="355" font-size="11" text-anchor="middle" fill="#854d0e">ML Model</text>
+                <text x="1120" y="375" font-size="11" text-anchor="middle" fill="#854d0e">Sentiment Analysis</text>
+            </g>
+
+            <!-- Arrow back -->
+            <path d="M 1020 360 L 850 360" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="900" y="380" font-size="11" fill="#059669" font-weight="600">Valid ✓</text>
+
+            <!-- Arrow down -->
+            <path d="M 700 400 L 700 460" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- MongoDB -->
+            <g class="component">
+                <rect x="600" y="460" width="200" height="100" rx="10" fill="#38bdf8" stroke="#0284c7" stroke-width="2"/>
+                <text x="700" y="495" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📚 MongoDB</text>
+                <text x="700" y="515" font-size="12" text-anchor="middle" fill="white">Store Review</text>
+                <text x="700" y="535" font-size="11" text-anchor="middle" fill="white">Shard by business_id</text>
+            </g>
+
+            <!-- Arrow to Kafka -->
+            <path d="M 700 560 L 700 620" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="595" font-size="11" fill="#065f46" font-weight="600">Publish Event</text>
+
+            <!-- Kafka -->
+            <g class="component">
+                <rect x="550" y="620" width="300" height="100" rx="10" fill="#fcd34d" stroke="#fbbf24" stroke-width="2"/>
+                <text x="700" y="655" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka</text>
+                <text x="700" y="675" font-size="12" text-anchor="middle" fill="white">Topic: review.created</text>
+                <text x="700" y="695" font-size="11" text-anchor="middle" fill="white">Event: {business_id, rating, user_id}</text>
+            </g>
+
+            <!-- Three consumers -->
+            <path d="M 600 720 L 350 820" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <path d="M 700 720 L 700 820" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <path d="M 800 720 L 1050 820" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+
+            <!-- Consumer 1: Aggregation -->
+            <g class="component">
+                <rect x="200" y="820" width="200" height="100" rx="10" fill="#c084fc" stroke="#9333ea" stroke-width="2"/>
+                <text x="300" y="855" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📊 Aggregation</text>
+                <text x="300" y="875" font-size="11" text-anchor="middle" fill="white">Update avg_rating</text>
+                <text x="300" y="895" font-size="11" text-anchor="middle" fill="white">→ PostgreSQL</text>
+            </g>
+
+            <!-- Consumer 2: Notification -->
+            <g class="component">
+                <rect x="600" y="820" width="200" height="100" rx="10" fill="#fb7185" stroke="#e11d48" stroke-width="2"/>
+                <text x="700" y="855" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🔔 Notification</text>
+                <text x="700" y="875" font-size="11" text-anchor="middle" fill="white">Email Business Owner</text>
+                <text x="700" y="895" font-size="11" text-anchor="middle" fill="white">Push to mobile</text>
+            </g>
+
+            <!-- Consumer 3: Indexing -->
+            <g class="component">
+                <rect x="1000" y="820" width="200" height="100" rx="10" fill="#fb923c" stroke="#ea580c" stroke-width="2"/>
+                <text x="1100" y="855" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🔎 Index Update</text>
+                <text x="1100" y="875" font-size="11" text-anchor="middle" fill="white">Update Elasticsearch</text>
+                <text x="1100" y="895" font-size="11" text-anchor="middle" fill="white">Near real-time</text>
+            </g>
+
+            <!-- Response -->
+            <path d="M 550 510 L 400 510 L 400 220 L 600 220" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="330" y="370" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="330" y="390" font-size="11" fill="#059669">201 Created</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>⭐ Review Submission Flow Steps</h3>
+            <ol>
+                <li><strong>User Submits Review:</strong> Rating (1-5 stars), text, optional photos</li>
+                <li><strong>API Gateway:</strong> Validates user authentication, checks rate limit</li>
+                <li><strong>Review Service:</strong> Validates input (text length, profanity filter)</li>
+                <li><strong>Spam Detection:</strong> ML model checks for duplicate content, suspicious patterns, sentiment extremes</li>
+                <li><strong>MongoDB Write:</strong> Store review document, shard by business_id for co-location</li>
+                <li><strong>Kafka Event:</strong> Publish <code>review.created</code> event for async processing</li>
+                <li><strong>Async Consumers:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Aggregation Service:</strong> Recalculate business avg_rating, update PostgreSQL</li>
+                        <li><strong>Notification Service:</strong> Email business owner, push notification to followers</li>
+                        <li><strong>Search Index:</strong> Update Elasticsearch for real-time search</li>
+                    </ul>
+                </li>
+                <li><strong>Response:</strong> Return review_id and success message to user (non-blocking)</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Real-Time Updates Flow -->
+    <div id="realtime-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Real-Time Updates Flow (WebSocket)
+            </text>
+
+            <!-- Mobile Clients -->
+            <g class="component">
+                <rect x="200" y="100" width="150" height="70" rx="10" fill="url(#grad-green)" stroke="#059669" stroke-width="2"/>
+                <text x="275" y="130" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📱 Client A</text>
+            </g>
+            <g class="component">
+                <rect x="400" y="100" width="150" height="70" rx="10" fill="url(#grad-green)" stroke="#059669" stroke-width="2"/>
+                <text x="475" y="130" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📱 Client B</text>
+            </g>
+            <g class="component">
+                <rect x="600" y="100" width="150" height="70" rx="10" fill="url(#grad-green)" stroke="#059669" stroke-width="2"/>
+                <text x="675" y="130" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📱 Client C</text>
+            </g>
+
+            <!-- Arrows down -->
+            <path d="M 275 170 L 400 250" stroke="#059669" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 475 170 L 475 250" stroke="#059669" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 675 170 L 550 250" stroke="#059669" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- WebSocket Server -->
+            <g class="component">
+                <rect x="350" y="250" width="250" height="100" rx="10" fill="#a78bfa" stroke="#7c3aed" stroke-width="2"/>
+                <text x="475" y="285" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔌 WebSocket Server</text>
+                <text x="475" y="305" font-size="12" text-anchor="middle" fill="white">Connection Pool</text>
+                <text x="475" y="325" font-size="11" text-anchor="middle" fill="white">Subscribe to channels</text>
+            </g>
+
+            <!-- Arrow to Redis Pub/Sub -->
+            <path d="M 600 300 L 800 300" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="670" y="290" font-size="11" fill="#065f46" font-weight="600">Subscribe</text>
+
+            <!-- Redis Pub/Sub -->
+            <g class="component">
+                <rect x="800" y="250" width="250" height="100" rx="10" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                <text x="925" y="285" font-size="16" font-weight="bold" text-anchor="middle" fill="white">💾 Redis Pub/Sub</text>
+                <text x="925" y="305" font-size="12" text-anchor="middle" fill="white">Channel: business.*</text>
+                <text x="925" y="325" font-size="11" text-anchor="middle" fill="white">Real-time message broker</text>
+            </g>
+
+            <!-- Event Source -->
+            <g class="component">
+                <rect x="800" y="450" width="250" height="100" rx="10" fill="#fcd34d" stroke="#fbbf24" stroke-width="2"/>
+                <text x="925" y="485" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka Consumer</text>
+                <text x="925" y="505" font-size="12" text-anchor="middle" fill="white">Listen: review.created</text>
+                <text x="925" y="525" font-size="11" text-anchor="middle" fill="white">business.updated</text>
+            </g>
+
+            <!-- Arrow from Kafka to Redis -->
+            <path d="M 925 450 L 925 350" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="945" y="405" font-size="11" fill="#065f46" font-weight="600">Publish Event</text>
+
+            <!-- Arrow from Redis to WebSocket -->
+            <path d="M 800 300 L 600 300" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="670" y="320" font-size="11" fill="#059669" font-weight="600">Broadcast ←</text>
+
+            <!-- Arrows to clients -->
+            <path d="M 400 250 L 275 170" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <path d="M 475 250 L 475 170" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <path d="M 550 250 L 675 170" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+
+            <!-- Example Events -->
+            <rect x="150" y="600" width="1100" height="200" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+            <text x="700" y="630" font-size="16" font-weight="bold" text-anchor="middle" fill="#065f46">Example Real-Time Events</text>
+
+            <text x="200" y="670" font-size="13" fill="#065f46" font-weight="600">1. New Review Posted:</text>
+            <text x="220" y="690" font-size="12" fill="#4a5568">→ Clients viewing business get instant notification</text>
+            <text x="220" y="710" font-size="12" fill="#4a5568">→ Rating badge updates in real-time</text>
+
+            <text x="700" y="670" font-size="13" fill="#065f46" font-weight="600">2. Business Hours Changed:</text>
+            <text x="720" y="690" font-size="12" fill="#4a5568">→ All users near business see updated hours</text>
+            <text x="720" y="710" font-size="12" fill="#4a5568">→ "Open Now" badge updates</text>
+
+            <text x="200" y="750" font-size="13" fill="#065f46" font-weight="600">3. Popular Time Update:</text>
+            <text x="220" y="770" font-size="12" fill="#4a5568">→ Crowd level graph updates live</text>
+
+            <text x="700" y="750" font-size="13" fill="#065f46" font-weight="600">4. Photo Uploaded:</text>
+            <text x="720" y="770" font-size="12" fill="#4a5568">→ New photos appear in gallery</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📡 Real-Time Updates Flow</h3>
+            <ol>
+                <li><strong>WebSocket Connection:</strong> Clients establish persistent connections to WebSocket server</li>
+                <li><strong>Channel Subscription:</strong> Subscribe to specific business channels (e.g., <code>business:12345:*</code>)</li>
+                <li><strong>Event Generation:</strong> Any update (review, hours, photos) publishes to Kafka</li>
+                <li><strong>Kafka Consumer:</strong> Dedicated service consumes events, publishes to Redis Pub/Sub</li>
+                <li><strong>Redis Broadcast:</strong> All WebSocket servers subscribed to channel receive message</li>
+                <li><strong>Client Push:</strong> WebSocket servers push updates to connected clients</li>
+                <li><strong>UI Update:</strong> Mobile/web app updates UI without page refresh</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>⚡ Performance:</strong> Sub-second latency for real-time updates. Redis Pub/Sub handles 1M+ messages/sec per instance!
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Architecture -->
+    <div id="full-diagram" class="diagram-container">
+        <p style="text-align: center; padding: 100px; font-size: 1.2em; color: #64748b;">
+            📌 See the comprehensive full system architecture in the <strong>architecture.html</strong> file for complete component visualization.
+        </p>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #065f46;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">5K QPS</div>
+                <div class="metric-label">Search Throughput</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100 QPS</div>
+                <div class="metric-label">Write Throughput</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">50ms</div>
+                <div class="metric-label">P50 Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">150ms</div>
+                <div class="metric-label">P95 Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.95%</div>
+                <div class="metric-label">Availability</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(16, 185, 129, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
