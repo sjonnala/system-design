@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top K Leaderboard System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #8b5cf6;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #8b5cf6;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.realtime { background: #dcfce7; color: #166534; }
+        .tag.performance { background: #fef3c7; color: #92400e; }
+        .tag.gaming { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 3;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 3;
+        }
+
+        .services-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .update-service-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 3;
+        }
+
+        .query-service-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 3;
+        }
+
+        .redis-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .anti-cheat-section {
+            background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #8b5cf6;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #8b5cf6;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏆 Top K Leaderboard System Design Blueprint</h1>
+        <div class="subtitle">Real-Time Ranking System Architecture</div>
+        <div class="tags">
+            <span class="tag realtime">Real-Time Updates</span>
+            <span class="tag performance">Sub-50ms Queries</span>
+            <span class="tag gaming">Gaming Grade</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👤 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Mobile/Web Clients</div>
+                <div class="component-details">
+                    <strong>Request Types:</strong>
+                    <ul>
+                        <li>POST /scores (update score)</li>
+                        <li>GET /leaderboard/top?k=100</li>
+                        <li>GET /rank/{userId}</li>
+                        <li>GET /nearby/{rank}</li>
+                    </ul>
+                    <strong>Scale:</strong>
+                    <ul>
+                        <li>10M DAU</li>
+                        <li>2M concurrent peak</li>
+                        <li>6K write QPS peak</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS Request</div>
+        </div>
+
+        <!-- CDN/Edge -->
+        <div class="section gateway-section">
+            <div class="section-title">⚡ EDGE NETWORK</div>
+            <div class="component">
+                <div class="component-name">CloudFront / Fastly</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Static content:</strong> Game assets, UI</li>
+                        <li><strong>Edge caching:</strong> Top 100 leaderboard (5-10 sec TTL)</li>
+                        <li><strong>DDoS protection:</strong> AWS Shield / Cloudflare</li>
+                        <li><strong>SSL/TLS termination</strong></li>
+                        <li><strong>Geographic routing</strong></li>
+                    </ul>
+                    <div class="code-snippet">
+Cache-Control: public, max-age=10
+X-Cache-Key: top100:global:alltime
+Vary: Accept-Language, Region</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Round Robin distribution</li>
+                        <li>Health checks (every 10s)</li>
+                        <li>Auto-scaling (2-50 instances)</li>
+                        <li>Session affinity (optional)</li>
+                        <li>Rate limiting: 50 req/sec/user</li>
+                    </ul>
+                    <strong>Capacity:</strong>
+                    <ul>
+                        <li>Handle 10K QPS peak</li>
+                        <li>SSL offloading</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Backend</div>
+        </div>
+
+        <!-- Update Service -->
+        <div class="section update-service-section">
+            <div class="section-title">✍️ UPDATE SERVICE</div>
+            <div class="component">
+                <div class="component-name">Score Update Microservice</div>
+                <div class="component-details">
+                    <strong>Node.js / Go Service</strong>
+                    <div class="code-snippet">
+POST /api/v1/scores
+{
+  "user_id": "12345",
+  "score_delta": 50,
+  "leaderboard_type": "global"
+}
+
+Response:
+{
+  "new_score": 1550,
+  "rank": 2345,
+  "previous_rank": 2456
+}</div>
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li>Validate score updates (anti-cheat)</li>
+                        <li>Update Redis sorted sets</li>
+                        <li>Publish events to Kafka</li>
+                        <li>Return new rank instantly</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Latency: <100ms P95</li>
+                        <li>Throughput: 6K writes/sec</li>
+                        <li>Stateless (horizontal scaling)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Service -->
+        <div class="section query-service-section">
+            <div class="section-title">🔍 QUERY SERVICE</div>
+            <div class="component">
+                <div class="component-name">Leaderboard Read Service</div>
+                <div class="component-details">
+                    <strong>Python / Go Service</strong>
+                    <div class="code-snippet">
+GET /api/v1/leaderboard/top?k=100
+
+Response:
+{
+  "top_users": [
+    {"rank": 1, "user_id": "999", "score": 9850},
+    {"rank": 2, "user_id": "777", "score": 9720},
+    ...
+  ],
+  "as_of": "2025-11-15T10:30:00Z"
+}</div>
+                    <strong>Query Types:</strong>
+                    <ul>
+                        <li><strong>Top K:</strong> ZREVRANGE (O(log N + K))</li>
+                        <li><strong>User Rank:</strong> ZREVRANK (O(log N))</li>
+                        <li><strong>User Score:</strong> ZSCORE (O(1))</li>
+                        <li><strong>Nearby Ranks:</strong> ZREVRANGE with offset</li>
+                    </ul>
+                    <strong>Optimizations:</strong>
+                    <ul>
+                        <li>Application cache (10 sec TTL)</li>
+                        <li>Connection pooling (Redis)</li>
+                        <li>Batch requests (pipeline)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Gateway (spans both services) -->
+        <div class="section services-section">
+            <div class="section-title">🚪 API GATEWAY & AUTH</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT validation, OAuth2</li>
+                        <li><strong>Rate Limiting:</strong> Per user, per IP
+                            <div class="code-snippet">
+Free tier: 10 updates/min, 100 queries/min
+Premium: 100 updates/min, 1000 queries/min
+VIP: Unlimited</div>
+                        </li>
+                        <li><strong>Request validation:</strong> Score bounds, user existence</li>
+                        <li><strong>Metrics collection:</strong> Request counts, latency</li>
+                        <li><strong>Circuit breaker:</strong> Fallback to cached data</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis Cluster (Primary Data Store) -->
+        <div class="section redis-section">
+            <div class="section-title">💾 REDIS CLUSTER (PRIMARY STORE)</div>
+
+            <div class="component">
+                <div class="component-name">Redis Sorted Sets (ZSET)</div>
+                <div class="component-details">
+                    <strong>Core Data Structure:</strong>
+                    <div class="code-snippet">
+# Global Leaderboard
+ZADD global:alltime:world 1500 "user:12345"
+ZADD global:alltime:world 2300 "user:67890"
+
+# Get top 100 (descending)
+ZREVRANGE global:alltime:world 0 99 WITHSCORES
+
+# Get user rank (0-indexed)
+ZREVRANK global:alltime:world "user:12345"  → 2345
+
+# Increment score
+ZINCRBY global:alltime:world 50 "user:12345"
+
+# Get users around rank 100
+ZREVRANGE global:alltime:world 95 105 WITHSCORES</div>
+                    <strong>Time Complexity:</strong>
+                    <ul>
+                        <li>ZADD (update): O(log N) - ~27 ops for 100M users</li>
+                        <li>ZREVRANK (rank): O(log N)</li>
+                        <li>ZSCORE (score): O(1)</li>
+                        <li>ZREVRANGE (top K): O(log N + K)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Leaderboard Types & Keys</div>
+                <div class="component-details">
+                    <strong>Naming Convention:</strong>
+                    <div class="code-snippet">
+Format: {scope}:{timeframe}:{region}
+
+Examples:
+- global:alltime:world        (100M users, 7 GB)
+- global:daily:2024-11-15     (10M DAU, 700 MB)
+- regional:weekly:US          (30M users, 2 GB)
+- friends:alltime:user123     (500 friends, 35 KB)</div>
+                    <strong>Sharding Strategy:</strong>
+                    <ul>
+                        <li><strong>Shard 1:</strong> Global + Daily (8 GB)</li>
+                        <li><strong>Shard 2:</strong> Regional US/EU (10 GB)</li>
+                        <li><strong>Shard 3:</strong> Regional Asia/Others (12 GB)</li>
+                        <li><strong>Shard 4:</strong> Weekly/Monthly (6 GB)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Redis Cluster Configuration</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>Master-Replica setup (3 masters, 3 replicas)</li>
+                        <li>Consistent hashing for sharding</li>
+                        <li>Sentinel for automatic failover</li>
+                        <li>AOF + RDB persistence</li>
+                    </ul>
+                    <strong>Capacity per Shard:</strong>
+                    <ul>
+                        <li>Memory: 64 GB (r7g.2xlarge)</li>
+                        <li>Throughput: ~100K ops/sec</li>
+                        <li>Connections: 65K max</li>
+                    </ul>
+                    <strong>Persistence:</strong>
+                    <div class="code-snippet">
+# Append-Only File (AOF)
+appendonly yes
+appendfsync everysec
+
+# RDB snapshots
+save 900 1      # 1 change in 15 min
+save 300 10     # 10 changes in 5 min
+save 60 10000   # 10K changes in 1 min</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Cache -->
+        <div class="section cache-section">
+            <div class="section-title">⚡ APP CACHE</div>
+            <div class="component">
+                <div class="component-name">In-Memory Cache Layer</div>
+                <div class="component-details">
+                    <strong>Guava Cache / Caffeine</strong>
+                    <div class="code-snippet">
+# Cache top 100 global leaderboard
+Cache&lt;String, List&lt;User&gt;&gt; topKCache =
+  CacheBuilder.newBuilder()
+    .expireAfterWrite(10, TimeUnit.SECONDS)
+    .maximumSize(1000)
+    .build();
+
+# Hit rate: 70-80% for top K queries
+# Reduces Redis load by 4x</div>
+                    <strong>Cached Queries:</strong>
+                    <ul>
+                        <li>Top 100 global (10 sec TTL)</li>
+                        <li>Top 100 regional (15 sec TTL)</li>
+                        <li>User rank (5 sec TTL, per user)</li>
+                    </ul>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>Latency: <5ms (vs 20-50ms Redis)</li>
+                        <li>Reduces network hops</li>
+                        <li>Handles traffic spikes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PostgreSQL Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ PERSISTENT DATABASE</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL Primary</div>
+                <div class="component-details">
+                    <strong>Schema Design:</strong>
+                    <div class="code-snippet">
+-- Score History (audit trail)
+CREATE TABLE score_history (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  score BIGINT NOT NULL,
+  delta BIGINT,
+  leaderboard_type VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_score_user_time
+  ON score_history(user_id, created_at DESC);
+
+-- Leaderboard Snapshots (daily archives)
+CREATE TABLE leaderboard_snapshots (
+  id BIGSERIAL PRIMARY KEY,
+  leaderboard_key VARCHAR(100),
+  user_id BIGINT NOT NULL,
+  rank INTEGER NOT NULL,
+  score BIGINT NOT NULL,
+  snapshot_time TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_snapshot_key_time
+  ON leaderboard_snapshots(leaderboard_key, snapshot_time);</div>
+                    <strong>Purpose:</strong>
+                    <ul>
+                        <li>Historical score data (1 year+)</li>
+                        <li>Audit trail for anti-cheat</li>
+                        <li>Analytics queries (batch jobs)</li>
+                        <li>Disaster recovery (restore Redis)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Read Replicas</div>
+                <div class="component-details">
+                    <ul>
+                        <li>3 read replicas for analytics</li>
+                        <li>Asynchronous replication (lag <1s)</li>
+                        <li>Used for reporting dashboards</li>
+                        <li>Offload historical queries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 EVENT STREAMING</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka Cluster</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <div class="code-snippet">
+# Score Update Events
+Topic: score.updated
+Partitions: 10
+Replication: 3
+
+Event Schema:
+{
+  "event_type": "score_updated",
+  "user_id": "12345",
+  "old_score": 1500,
+  "new_score": 1550,
+  "delta": 50,
+  "leaderboard": "global:alltime:world",
+  "timestamp": "2025-11-15T10:30:00Z",
+  "metadata": {
+    "session_id": "abc123",
+    "ip": "203.0.113.42"
+  }
+}</div>
+                    <strong>Consumer Groups:</strong>
+                    <ul>
+                        <li><strong>Analytics processor:</strong> Real-time stats</li>
+                        <li><strong>PostgreSQL writer:</strong> Persist history</li>
+                        <li><strong>Anti-cheat detector:</strong> Flag anomalies</li>
+                        <li><strong>Notification service:</strong> Rank change alerts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS ENGINE</div>
+            <div class="component">
+                <div class="component-name">Apache Spark / Flink</div>
+                <div class="component-details">
+                    <strong>Real-Time Processing:</strong>
+                    <ul>
+                        <li>Score trend analysis (moving averages)</li>
+                        <li>Leaderboard volatility metrics</li>
+                        <li>User engagement tracking</li>
+                        <li>Peak hour detection</li>
+                    </ul>
+                    <strong>Batch Jobs:</strong>
+                    <ul>
+                        <li>Daily leaderboard snapshots</li>
+                        <li>Weekly/monthly aggregations</li>
+                        <li>Historical trend reports</li>
+                    </ul>
+                    <div class="code-snippet">
+# Spark Streaming Job
+kafkaStream
+  .filter(e => e.delta > 1000)  # Large score jumps
+  .window(5.minutes)
+  .groupBy("user_id")
+  .count()
+  .filter(count > 10)  # >10 large jumps in 5 min
+  .foreach(flagForReview)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li><strong>Throughput:</strong> Writes/sec, Reads/sec</li>
+                        <li><strong>Latency:</strong> P50, P95, P99 per operation</li>
+                        <li><strong>Redis metrics:</strong> Memory usage, hit rate, connections</li>
+                        <li><strong>Error rate:</strong> Failed validations, timeouts</li>
+                    </ul>
+                    <div class="code-snippet">
+# Alert Rules
+- Alert: HighLatency
+  Expr: p95_latency > 100ms for 2m
+  Severity: warning
+
+- Alert: RedisMemoryHigh
+  Expr: redis_memory_usage > 90%
+  Severity: critical
+
+- Alert: SuspiciousScoreSpike
+  Expr: score_updates_rate > baseline * 10
+  Severity: warning</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Jaeger:</strong> End-to-end request tracing</li>
+                        <li><strong>Spans:</strong> API Gateway → Service → Redis → Response</li>
+                        <li><strong>Debug:</strong> Slow queries, bottleneck identification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anti-Cheat -->
+        <div class="section anti-cheat-section">
+            <div class="section-title">🛡️ ANTI-CHEAT SYSTEM</div>
+            <div class="component">
+                <div class="component-name">Score Validation Engine</div>
+                <div class="component-details">
+                    <strong>Validation Rules:</strong>
+                    <div class="code-snippet">
+# Rate Limiting
+MAX_SCORE_DELTA_PER_MINUTE = 1000
+if (delta > MAX_SCORE_DELTA_PER_MINUTE):
+    flag_suspicious()
+
+# Statistical Anomaly
+user_avg_delta = get_avg_delta(user_id, 7_days)
+if (delta > user_avg_delta * 10):
+    flag_for_review()
+
+# Impossible Scores
+if (new_score > MAX_POSSIBLE_SCORE):
+    reject_update()</div>
+                    <strong>Detection Patterns:</strong>
+                    <ul>
+                        <li>Sudden score spikes (>10x normal)</li>
+                        <li>Impossible score values</li>
+                        <li>Rapid consecutive updates (<1 sec apart)</li>
+                        <li>Geographic anomalies (location jumps)</li>
+                    </ul>
+                    <strong>Actions:</strong>
+                    <ul>
+                        <li>Auto-reject: Impossible scores</li>
+                        <li>Flag for review: Statistical anomalies</li>
+                        <li>Temporary ban: Repeated violations</li>
+                        <li>Manual review queue: Edge cases</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">100M</div>
+                <div class="metric-label">Total users supported</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">6K QPS</div>
+                <div class="metric-label">Peak write throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">3K QPS</div>
+                <div class="metric-label">Peak read throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;50ms</div>
+                <div class="metric-label">P95 query latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">40 GB</div>
+                <div class="metric-label">Redis memory (all leaderboards)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">O(log N)</div>
+                <div class="metric-label">Update & rank query complexity</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">5.2 TB</div>
+                <div class="metric-label">Historical storage (1 year)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 SYSTEM DESIGN PRINCIPLES</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #8b5cf6; margin-bottom: 10px;">Data Structure Choice</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Redis Sorted Sets:</strong> Perfect for leaderboards (auto-sorting, O(log N))</li>
+                    <li><strong>Skip List internals:</strong> Provides ordered traversal</li>
+                    <li><strong>Atomic operations:</strong> ZINCRBY is thread-safe</li>
+                    <li><strong>Memory efficient:</strong> 70 bytes per user entry</li>
+                    <li><strong>Fast range queries:</strong> Top K in O(log N + K)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #8b5cf6; margin-bottom: 10px;">Scalability Patterns</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Sharding:</strong> By leaderboard type (global, regional, time-based)</li>
+                    <li><strong>Read Replicas:</strong> Scale read traffic independently</li>
+                    <li><strong>Stateless Services:</strong> Update & Query services can scale infinitely</li>
+                    <li><strong>Caching Layers:</strong> App cache → Redis → PostgreSQL</li>
+                    <li><strong>Async Processing:</strong> Kafka decouples writes from analytics</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #8b5cf6; margin-bottom: 10px;">Performance Optimizations</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>In-Memory Primary:</strong> All active leaderboards in Redis RAM</li>
+                    <li><strong>Connection Pooling:</strong> Reuse Redis connections (65K max)</li>
+                    <li><strong>Pipeline Requests:</strong> Batch multiple operations</li>
+                    <li><strong>Application Cache:</strong> 10-sec TTL for top K queries</li>
+                    <li><strong>Lazy Evaluation:</strong> Update only queried leaderboards</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #8b5cf6; margin-bottom: 10px;">Consistency & Durability</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Eventual Consistency:</strong> Acceptable for gaming leaderboards</li>
+                    <li><strong>AOF + RDB:</strong> Redis persistence for crash recovery</li>
+                    <li><strong>PostgreSQL Backup:</strong> Daily snapshots for historical data</li>
+                    <li><strong>Kafka Retention:</strong> 7-day event log for replay</li>
+                    <li><strong>Multi-AZ Deployment:</strong> Cross-AZ replicas</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redis Sorted Set Deep Dive -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); border-radius: 15px;">
+        <h2 style="color: #be185d; margin-bottom: 20px;">💾 REDIS SORTED SET DEEP DIVE</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Why Sorted Sets?</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Built for Rankings:</strong><br>
+                    • Members (users) auto-sorted by score<br>
+                    • Efficient rank lookups: O(log N)<br>
+                    • Range queries: Get top K or nearby ranks<br>
+                    • Atomic updates: Thread-safe increments<br>
+                    • No need for manual sorting
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Internal Structure</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Skip List + Hash Table:</strong><br>
+                    • Skip list: Ordered traversal (O(log N))<br>
+                    • Hash table: Fast member lookup (O(1))<br>
+                    • Hybrid: Best of both worlds<br>
+                    • Memory overhead: ~2-4x raw data<br>
+                    • Optimized for both reads & writes
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Performance Characteristics</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Time Complexity:</strong><br>
+                    • ZADD: O(log N) - 27 ops for 100M users<br>
+                    • ZREVRANK: O(log N) - constant time feel<br>
+                    • ZSCORE: O(1) - instant lookup<br>
+                    • ZREVRANGE: O(log N + K) - fast top K<br>
+                    • ZINCRBY: O(log N) - atomic increment
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Design Philosophy:</strong> In-memory is non-negotiable for real-time leaderboards. Redis Sorted Sets provide O(log N) operations - the sweet spot between performance and scalability.</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Go/Node.js • Redis Cluster • PostgreSQL • Kafka • Kubernetes • Prometheus</p>
+        <p style="font-size: 0.9em; margin-top: 10px; color: #8b5cf6; font-weight: 600;">Used by: Riot Games, King, Blizzard, Steam, Discord</p>
+    </div>
+</div>
+</body>
+</html>
