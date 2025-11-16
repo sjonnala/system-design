@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Bidding System Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #ec4899;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #ec4899;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .flow-description {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #ec4899;
+        }
+
+        .flow-description h3 {
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description strong {
+            color: #ec4899;
+        }
+
+        .code-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .success-path {
+            stroke: #10b981;
+            stroke-width: 4;
+        }
+
+        .error-path {
+            stroke: #ef4444;
+            stroke-width: 4;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏛️ eBay Bidding System Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Flow Visualization - Bid Placement, Real-Time Updates, Auction End</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('bid-placement')">💰 Bid Placement Flow</button>
+            <button class="tab" onclick="showDiagram('realtime')">🔔 Real-Time Updates</button>
+            <button class="tab" onclick="showDiagram('auction-end')">⏰ Auction End Flow</button>
+            <button class="tab" onclick="showDiagram('auto-bid')">🤖 Auto-Bidding Logic</button>
+        </div>
+    </div>
+
+    <!-- Bid Placement Flow -->
+    <div id="bid-placement-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#ec4899" />
+                </marker>
+                <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+                </marker>
+                <marker id="arrowhead-error" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
+                </marker>
+                <linearGradient id="grad-client" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-service" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f87171;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-redis" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-kafka" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Bid Placement Flow with Optimistic Locking
+            </text>
+
+            <!-- User/Client -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Places Bid</text>
+            </g>
+
+            <!-- Arrow 1 -->
+            <path d="M 700 140 L 700 180" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#991b1b" font-weight="600">POST /api/v1/bids</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="700" y="210" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">🚪 API Gateway</text>
+                <text x="700" y="230" font-size="11" text-anchor="middle" fill="#92400e">Auth + Rate Limit</text>
+            </g>
+
+            <!-- Arrow 2 -->
+            <path d="M 700 260 L 700 300" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="285" font-size="11" fill="#991b1b" font-weight="600">Validated Request</text>
+
+            <!-- Bid Service -->
+            <g class="component">
+                <rect x="550" y="300" width="300" height="120" rx="10" fill="url(#grad-service)" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">💰 Bid Service</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Validation Logic</text>
+                <text x="700" y="375" font-size="10" text-anchor="middle" fill="white">• Check auction active</text>
+                <text x="700" y="390" font-size="10" text-anchor="middle" fill="white">• Validate bid amount</text>
+                <text x="700" y="405" font-size="10" text-anchor="middle" fill="white">• Check user balance</text>
+            </g>
+
+            <!-- Decision Diamond 1 -->
+            <g class="component">
+                <path d="M 700 460 L 800 520 L 700 580 L 600 520 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="515" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Valid</text>
+                <text x="700" y="533" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Bid?</text>
+            </g>
+
+            <!-- Error Path (Left) -->
+            <path d="M 600 520 L 400 520" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="480" y="510" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="200" y="470" width="200" height="100" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="3"/>
+                <text x="300" y="505" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Reject Bid</text>
+                <text x="300" y="525" font-size="11" text-anchor="middle" fill="#991b1b">Return Error:</text>
+                <text x="300" y="543" font-size="10" text-anchor="middle" fill="#991b1b">• Bid too low</text>
+                <text x="300" y="558" font-size="10" text-anchor="middle" fill="#991b1b">• Insufficient funds</text>
+            </g>
+
+            <!-- Success Path (Down) -->
+            <path d="M 700 580 L 700 640" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="630" y="615" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- Redis Lock -->
+            <g class="component">
+                <rect x="550" y="640" width="300" height="100" rx="10" fill="url(#grad-redis)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="675" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔒 Acquire Redis Lock</text>
+                <text x="700" y="695" font-size="11" text-anchor="middle" fill="white">SET lock:auction:a123 uuid NX EX 2</text>
+                <text x="700" y="715" font-size="10" text-anchor="middle" fill="white">Prevent concurrent bids on same auction</text>
+            </g>
+
+            <!-- Arrow to DB -->
+            <path d="M 700 740 L 700 800" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="775" font-size="11" fill="#991b1b" font-weight="600">Lock acquired</text>
+
+            <!-- PostgreSQL - Optimistic Locking -->
+            <g class="component">
+                <rect x="500" y="800" width="400" height="160" rx="10" fill="url(#grad-db)" stroke="#7c3aed" stroke-width="2"/>
+                <text x="700" y="835" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL - Optimistic Locking</text>
+                <text x="700" y="855" font-size="11" text-anchor="middle" fill="white">BEGIN TRANSACTION</text>
+                <foreignObject x="520" y="870" width="360" height="80">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: white; line-height: 1.4;">
+                        <code style="display: block;">
+-- Read auction WITH current version<br/>
+SELECT * FROM auctions WHERE id = 123;<br/>
+current_version = 5<br/><br/>
+-- Update with version check (CRITICAL!)<br/>
+UPDATE auctions<br/>
+SET current_price = 1500, winner_id = 789,<br/>
+    version = version + 1<br/>
+WHERE id = 123 AND version = 5;<br/><br/>
+-- If rows_updated = 0 → Concurrent bid! Retry
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Decision Diamond 2 -->
+            <g class="component">
+                <path d="M 700 1000 L 800 1060 L 700 1120 L 600 1060 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="1050" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Version</text>
+                <text x="700" y="1068" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Match?</text>
+            </g>
+
+            <!-- Retry Path (Left) -->
+            <path d="M 600 1060 L 400 1060 L 400 690 L 550 690" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="420" y="1050" font-size="12" fill="#92400e" font-weight="700">NO - Retry (max 3x)</text>
+            <text x="380" y="870" font-size="11" fill="#92400e">Exponential</text>
+            <text x="380" y="885" font-size="11" fill="#92400e">Backoff</text>
+
+            <!-- Success Path (Down) -->
+            <path d="M 700 1120 L 700 1180" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="630" y="1155" font-size="12" fill="#059669" font-weight="700">YES ✓ Commit</text>
+
+            <!-- Kafka Event Publishing -->
+            <g class="component">
+                <rect x="550" y="1180" width="300" height="100" rx="10" fill="url(#grad-kafka)" stroke="#0891b2" stroke-width="2"/>
+                <text x="700" y="1215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📨 Kafka - Publish Event</text>
+                <text x="700" y="1235" font-size="11" text-anchor="middle" fill="white">Topic: bid-events</text>
+                <foreignObject x="570" y="1245" width="260" height="30">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: white;">
+                        <code>
+{type: "bid.placed", auction_id: 123,<br/>
+ bid_amount: 1500, bidder_id: 789}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Parallel Paths -->
+            <path d="M 850 1230 L 1020 1230" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="900" y="1220" font-size="11" fill="#991b1b" font-weight="600">Async</text>
+
+            <path d="M 550 1230 L 380 1230" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+
+            <!-- Notification Service (Right) -->
+            <g class="component">
+                <rect x="1020" y="1180" width="180" height="100" rx="10" fill="#fbcfe8" stroke="#ec4899" stroke-width="2"/>
+                <text x="1110" y="1215" font-size="13" font-weight="bold" text-anchor="middle" fill="#831843">🔔 Notify Service</text>
+                <text x="1110" y="1235" font-size="10" text-anchor="middle" fill="#831843">WebSocket</text>
+                <text x="1110" y="1250" font-size="10" text-anchor="middle" fill="#831843">Push Notification</text>
+                <text x="1110" y="1265" font-size="10" text-anchor="middle" fill="#831843">Email (Outbid)</text>
+            </g>
+
+            <!-- Cache Update (Left) -->
+            <g class="component">
+                <rect x="200" y="1180" width="180" height="100" rx="10" fill="url(#grad-redis)" stroke="#ea580c" stroke-width="2"/>
+                <text x="290" y="1215" font-size="13" font-weight="bold" text-anchor="middle" fill="white">💾 Update Cache</text>
+                <text x="290" y="1235" font-size="10" text-anchor="middle" fill="white">SET auction:123</text>
+                <text x="290" y="1250" font-size="10" text-anchor="middle" fill="white">current_price: 1500</text>
+                <text x="290" y="1265" font-size="10" text-anchor="middle" fill="white">DEL lock:auction:123</text>
+            </g>
+
+            <!-- Response -->
+            <path d="M 700 1280 L 700 1340" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+
+            <g class="component">
+                <rect x="550" y="1340" width="300" height="50" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="700" y="1370" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Return Success to User</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="700" cy="100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="220" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="227" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="360" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="367" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="700" cy="690" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="697" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="700" cy="880" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="887" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="700" cy="1230" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="1237" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>💰 Bid Placement Flow - Step by Step</h3>
+            <ol>
+                <li><strong>User Submits Bid:</strong> Client sends POST request with auction_id and bid_amount</li>
+                <li><strong>API Gateway:</strong> Validates JWT token, checks rate limits (max 100 bids/hour), sanitizes input</li>
+                <li><strong>Bid Service Validation:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Check auction exists and is active (not ended)</li>
+                        <li>Validate bid meets minimum increment: <code>bid_amount >= current_price + bid_increment</code></li>
+                        <li>Check user has sufficient funds/credit</li>
+                        <li>Prevent seller from bidding on own auction</li>
+                    </ul>
+                </li>
+                <li><strong>Acquire Distributed Lock (Redis):</strong>
+                    <div class="code-box">
+SET lock:auction:123 "uuid-random" NX EX 2
+// NX = only set if not exists
+// EX 2 = expire after 2 seconds
+                    </div>
+                    This prevents thundering herd on hot auctions
+                </li>
+                <li><strong>Optimistic Locking (PostgreSQL):</strong>
+                    <div class="code-box">
+BEGIN TRANSACTION;
+-- Read with current version
+SELECT * FROM auctions WHERE id = 123;
+current_version = 5
+
+-- Attempt update with version check
+UPDATE auctions
+SET current_price = 1500,
+    winner_id = 789,
+    total_bids = total_bids + 1,
+    version = version + 1
+WHERE id = 123 AND version = 5;
+
+-- If rows_updated = 0:
+--   → Concurrent bid modified auction
+--   → ROLLBACK and retry (max 3 attempts)
+-- Else:
+--   → COMMIT transaction
+                    </div>
+                </li>
+                <li><strong>Publish Event & Update Cache:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Publish <code>bid.placed</code> event to Kafka (async)</li>
+                        <li>Update Redis cache with new current_price</li>
+                        <li>Release distributed lock</li>
+                        <li>Trigger notifications to previous bidder (outbid) and watchers</li>
+                    </ul>
+                </li>
+                <li><strong>Return Success:</strong>
+                    <div class="code-box">
+{
+  "bid_id": "b123",
+  "auction_id": "a123",
+  "bid_amount": 1500.00,
+  "is_winning": true,
+  "next_minimum_bid": 1600.00,
+  "time_remaining": "2h 45m"
+}
+                    </div>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>⚠️ Why Optimistic Locking?</strong><br/>
+                Pessimistic locking (SELECT FOR UPDATE) would serialize all bids, creating a bottleneck.
+                Optimistic locking allows concurrent reads and only fails conflicting writes, achieving 10x better throughput while maintaining strong consistency.
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-Time Updates Flow -->
+    <div id="realtime-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1000" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Real-Time Notification Flow (WebSocket)
+            </text>
+
+            <!-- Multiple Users Watching Auction -->
+            <g class="component">
+                <rect x="200" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="275" y="105" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User A</text>
+                <text x="275" y="125" font-size="10" text-anchor="middle" fill="white">(Watching)</text>
+            </g>
+
+            <g class="component">
+                <rect x="400" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="475" y="105" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User B</text>
+                <text x="475" y="125" font-size="10" text-anchor="middle" fill="white">(Previous Winner)</text>
+            </g>
+
+            <g class="component">
+                <rect x="600" y="70" width="150" height="70" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="675" y="105" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User C</text>
+                <text x="675" y="125" font-size="10" text-anchor="middle" fill="white">(New Bidder)</text>
+            </g>
+
+            <!-- WebSocket Connections -->
+            <path d="M 275 140 L 275 220" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+            <text x="220" y="180" font-size="10" fill="#7c3aed">ws://</text>
+
+            <path d="M 475 140 L 475 220" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+            <text x="420" y="180" font-size="10" fill="#7c3aed">ws://</text>
+
+            <path d="M 675 140 L 675 220" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+            <text x="620" y="180" font-size="10" fill="#7c3aed">ws://</text>
+
+            <!-- WebSocket Server -->
+            <g class="component">
+                <rect x="200" y="220" width="550" height="120" rx="10" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="2"/>
+                <text x="475" y="255" font-size="16" font-weight="bold" text-anchor="middle" fill="#6b21a8">🔌 WebSocket Server</text>
+                <text x="475" y="275" font-size="12" text-anchor="middle" fill="#6b21a8">Connection Manager (Room-based)</text>
+                <foreignObject x="220" y="285" width="510" height="50">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: #6b21a8; line-height: 1.3;">
+                        <code>
+rooms['auction:123'] = {<br/>
+  connections: [ws_userA, ws_userB, ws_userC],<br/>
+  active: true<br/>
+}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Bid Placement Event (Right Side) -->
+            <g class="component">
+                <rect x="900" y="70" width="200" height="80" rx="10" fill="url(#grad-service)" stroke="#dc2626" stroke-width="2"/>
+                <text x="1000" y="105" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💰 New Bid Placed</text>
+                <text x="1000" y="125" font-size="11" text-anchor="middle" fill="white">User C bids $1600</text>
+            </g>
+
+            <path d="M 1000 150 L 1000 230" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="1020" y="195" font-size="11" fill="#991b1b" font-weight="600">Publishes Event</text>
+
+            <!-- Kafka -->
+            <g class="component">
+                <rect x="900" y="230" width="200" height="100" rx="10" fill="url(#grad-kafka)" stroke="#0891b2" stroke-width="2"/>
+                <text x="1000" y="265" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📨 Kafka</text>
+                <text x="1000" y="285" font-size="11" text-anchor="middle" fill="white">Topic: bid-events</text>
+                <foreignObject x="920" y="295" width="160" height="30">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: white;">
+                        <code>
+{type: "bid.placed",<br/>
+ auction_id: 123,<br/>
+ new_price: 1600}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Notification Service Consumes -->
+            <path d="M 900 280 L 750 280" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="800" y="270" font-size="11" fill="#991b1b" font-weight="600">Consumes</text>
+
+            <!-- Notification Service -->
+            <g class="component">
+                <rect x="200" y="400" width="550" height="100" rx="10" fill="#fbcfe8" stroke="#ec4899" stroke-width="2"/>
+                <text x="475" y="435" font-size="16" font-weight="bold" text-anchor="middle" fill="#831843">🔔 Notification Service</text>
+                <text x="475" y="455" font-size="11" text-anchor="middle" fill="#831843">Processes event & routes to WebSocket rooms</text>
+                <foreignObject x="220" y="465" width="510" height="30">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: #831843;">
+                        <code>
+websocket_manager.broadcast_to_room("auction:123", message)
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Arrows to different users -->
+            <path d="M 300 500 L 300 600" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead-success)"/>
+            <path d="M 475 500 L 475 600" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrowhead-error)"/>
+            <path d="M 650 500 L 650 600" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead-success)"/>
+
+            <!-- User A Receives Update -->
+            <g class="component">
+                <rect x="200" y="600" width="200" height="120" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="300" y="635" font-size="13" font-weight="bold" text-anchor="middle" fill="#065f46">User A - New Bid Alert</text>
+                <foreignObject x="210" y="645" width="180" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: #065f46; line-height: 1.3;">
+                        <code>
+{<br/>
+  type: "bid_placed",<br/>
+  auction_id: 123,<br/>
+  current_price: 1600,<br/>
+  total_bids: 16,<br/>
+  time_remaining: "2h 40m"<br/>
+}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- User B Receives Outbid -->
+            <g class="component">
+                <rect x="425" y="600" width="200" height="120" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="525" y="635" font-size="13" font-weight="bold" text-anchor="middle" fill="#991b1b">User B - OUTBID!</text>
+                <foreignObject x="435" y="645" width="180" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: #991b1b; line-height: 1.3;">
+                        <code>
+{<br/>
+  type: "outbid",<br/>
+  auction_id: 123,<br/>
+  message: "You've been outbid!",<br/>
+  current_price: 1600,<br/>
+  your_bid: 1500,<br/>
+  next_min: 1700<br/>
+}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- User C Receives Confirmation -->
+            <g class="component">
+                <rect x="650" y="600" width="200" height="120" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="750" y="635" font-size="13" font-weight="bold" text-anchor="middle" fill="#065f46">User C - Winning!</text>
+                <foreignObject x="660" y="645" width="180" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: #065f46; line-height: 1.3;">
+                        <code>
+{<br/>
+  type: "bid_confirmed",<br/>
+  auction_id: 123,<br/>
+  is_winning: true,<br/>
+  bid_amount: 1600,<br/>
+  message: "You're winning!"<br/>
+}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Push Notifications (Mobile) -->
+            <g class="component">
+                <rect x="900" y="600" width="200" height="100" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1000" y="635" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">📱 Push Notification</text>
+                <text x="1000" y="655" font-size="10" text-anchor="middle" fill="#92400e">For mobile apps (FCM/APNS)</text>
+                <text x="1000" y="675" font-size="10" text-anchor="middle" fill="#92400e">"You've been outbid on</text>
+                <text x="1000" y="690" font-size="10" text-anchor="middle" fill="#92400e">Vintage Rolex Watch"</text>
+            </g>
+
+            <path d="M 625 660 L 900 660" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="720" y="650" font-size="10" fill="#92400e">Fallback</text>
+
+            <!-- Latency Metrics -->
+            <rect x="200" y="800" width="900" height="150" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+            <text x="650" y="830" font-size="16" font-weight="bold" text-anchor="middle" fill="#075985">⚡ Real-Time Performance Metrics</text>
+            <foreignObject x="220" y="845" width="860" height="100">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 13px; color: #075985; line-height: 1.8;">
+                    <strong>End-to-End Latency Breakdown:</strong><br/>
+                    • Bid Service → Kafka: <span style="color: #10b981; font-weight: bold;">&lt;10ms</span> (async publish)<br/>
+                    • Kafka → Notification Service: <span style="color: #10b981; font-weight: bold;">&lt;20ms</span> (consumer lag)<br/>
+                    • Notification Service → WebSocket: <span style="color: #10b981; font-weight: bold;">&lt;20ms</span> (in-memory broadcast)<br/>
+                    • <strong>Total: &lt;50ms from bid placed to user notified</strong> 🚀
+                </div>
+            </foreignObject>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🔔 Real-Time Update Flow - Multi-User Scenario</h3>
+            <ol>
+                <li><strong>WebSocket Connection Setup:</strong> Users subscribe to auction updates
+                    <div class="code-box">
+ws = new WebSocket('wss://api.ebay.com/ws');
+ws.send(JSON.stringify({
+  action: 'subscribe',
+  auction_id: '123',
+  token: 'jwt-token'
+}));
+                    </div>
+                </li>
+                <li><strong>New Bid Placed:</strong> User C places bid of $1600 on auction</li>
+                <li><strong>Event Publishing:</strong> Bid Service publishes event to Kafka <code>bid-events</code> topic</li>
+                <li><strong>Notification Service Consumes:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Reads event from Kafka</li>
+                        <li>Identifies all users watching auction:123</li>
+                        <li>Determines notification type per user (outbid, new bid, confirmation)</li>
+                    </ul>
+                </li>
+                <li><strong>WebSocket Broadcast:</strong> Sends personalized message to each user
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>User A (Watcher):</strong> Generic "new bid" update</li>
+                        <li><strong>User B (Previous Winner):</strong> "You've been outbid" alert</li>
+                        <li><strong>User C (New Bidder):</strong> "Bid confirmed, you're winning!" message</li>
+                    </ul>
+                </li>
+                <li><strong>Fallback Notifications:</strong> If WebSocket connection lost, send push notification (mobile) or email</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dbeafe; border-left: 4px solid #0284c7; border-radius: 5px;">
+                <strong>🎯 Why Kafka for Events?</strong><br/>
+                Kafka provides guaranteed delivery, ordering, and replay capability. If Notification Service crashes, it can resume from last processed offset without losing any bid events.
+            </div>
+        </div>
+    </div>
+
+    <!-- Auction End Flow (omitted for brevity - similar structure) -->
+    <div id="auction-end-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Auction End Flow - Scheduled Job + Winner Determination
+            </text>
+
+            <text x="700" y="60" font-size="14" text-anchor="middle" fill="#64748b">
+                Precise timing critical - auctions must end exactly at scheduled time
+            </text>
+
+            <!-- Clock/Timer -->
+            <g class="component">
+                <rect x="600" y="90" width="200" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="700" y="125" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400e">⏰ Auction End Time</text>
+                <text x="700" y="145" font-size="12" text-anchor="middle" fill="#92400e">2025-11-22 10:00:00 UTC</text>
+            </g>
+
+            <path d="M 700 170 L 700 230" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="205" font-size="11" fill="#991b1b" font-weight="600">T - 1 minute</text>
+
+            <!-- Scheduler Service -->
+            <g class="component">
+                <rect x="550" y="230" width="300" height="120" rx="10" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="2"/>
+                <text x="700" y="265" font-size="16" font-weight="bold" text-anchor="middle" fill="#6b21a8">⚙️ Scheduler Service</text>
+                <text x="700" y="285" font-size="12" text-anchor="middle" fill="#6b21a8">APScheduler / Quartz</text>
+                <foreignObject x="570" y="295" width="260" height="50">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: #6b21a8; line-height: 1.3;">
+                        <code>
+-- Runs every minute<br/>
+SELECT * FROM auctions<br/>
+WHERE status = 'active'<br/>
+  AND end_time BETWEEN<br/>
+      NOW() AND NOW() + INTERVAL '1 min';
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <path d="M 700 350 L 700 410" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="385" font-size="11" fill="#991b1b" font-weight="600">Schedule precise job</text>
+
+            <!-- End Auction Job -->
+            <g class="component">
+                <rect x="550" y="410" width="300" height="140" rx="10" fill="url(#grad-service)" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="445" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🏁 End Auction Job</text>
+                <text x="700" y="465" font-size="12" text-anchor="middle" fill="white">Runs at EXACT end_time</text>
+                <foreignObject x="570" y="475" width="260" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: white; line-height: 1.3;">
+                        <code>
+def end_auction(auction_id):<br/>
+  1. Lock auction row<br/>
+  2. Update status = 'ended'<br/>
+  3. Check reserve price<br/>
+  4. Determine winner<br/>
+  5. Trigger payment<br/>
+  6. Send notifications
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Decision: Reserve Met? -->
+            <g class="component">
+                <path d="M 700 590 L 800 650 L 700 710 L 600 650 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="645" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Reserve</text>
+                <text x="700" y="663" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Met?</text>
+            </g>
+
+            <!-- Reserve Not Met (Left) -->
+            <path d="M 600 650 L 400 650" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="480" y="640" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="200" y="600" width="200" height="100" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="300" y="635" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ No Winner</text>
+                <text x="300" y="655" font-size="11" text-anchor="middle" fill="#991b1b">Reserve: $2000</text>
+                <text x="300" y="673" font-size="11" text-anchor="middle" fill="#991b1b">Final Bid: $1600</text>
+                <text x="300" y="691" font-size="10" text-anchor="middle" fill="#991b1b">Notify seller to relist</text>
+            </g>
+
+            <!-- Reserve Met (Right) -->
+            <path d="M 800 650 L 1000 650" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="880" y="640" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- Winner Determination -->
+            <g class="component">
+                <rect x="1000" y="600" width="200" height="120" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="1100" y="635" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">🏆 Determine Winner</text>
+                <foreignObject x="1010" y="645" width="180" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: #065f46; line-height: 1.3;">
+                        <code>
+SELECT * FROM bids<br/>
+WHERE auction_id = 123<br/>
+  AND is_winning = true;<br/><br/>
+UPDATE auctions<br/>
+SET winner_id = bid.bidder_id,<br/>
+    status = 'ended'<br/>
+WHERE id = 123;
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <path d="M 1100 720 L 1100 800" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+
+            <!-- Payment Flow -->
+            <g class="component">
+                <rect x="1000" y="800" width="200" height="100" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1100" y="835" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">💳 Initiate Payment</text>
+                <text x="1100" y="855" font-size="11" text-anchor="middle" fill="#92400e">Stripe / PayPal</text>
+                <foreignObject x="1010" y="865" width="180" height="30">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 9px; color: #92400e;">
+                        <code>
+charge_buyer(winner_id, amount)<br/>
+transfer_to_seller(seller_id, amount * 0.9)
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <path d="M 1000 850 L 850 850 L 850 920" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Notifications -->
+            <g class="component">
+                <rect x="550" y="920" width="600" height="150" rx="10" fill="#fbcfe8" stroke="#ec4899" stroke-width="2"/>
+                <text x="850" y="955" font-size="16" font-weight="bold" text-anchor="middle" fill="#831843">🔔 Send Notifications</text>
+                <foreignObject x="570" y="970" width="560" height="95">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 12px; color: #831843; line-height: 1.8;">
+                        <strong>Winner:</strong> "Congratulations! You won [Vintage Rolex Watch] for $1600. Please complete payment."<br/>
+                        <strong>Seller:</strong> "Your auction ended! Winner: User C. Final price: $1600."<br/>
+                        <strong>All Watchers:</strong> "Auction for [Vintage Rolex Watch] has ended."<br/>
+                        <strong>Losers:</strong> "Auction ended. You were outbid. Similar items: [...]"
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Analytics Event -->
+            <path d="M 550 995 L 200 995" stroke="#ec4899" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="350" y="985" font-size="10" fill="#991b1b">Async</text>
+
+            <g class="component">
+                <rect x="50" y="920" width="150" height="100" rx="10" fill="url(#grad-kafka)" stroke="#0891b2" stroke-width="2"/>
+                <text x="125" y="955" font-size="12" font-weight="bold" text-anchor="middle" fill="white">📊 Analytics</text>
+                <text x="125" y="975" font-size="10" text-anchor="middle" fill="white">Log auction end</text>
+                <text x="125" y="993" font-size="9" text-anchor="middle" fill="white">Final price, duration,</text>
+                <text x="125" y="1008" font-size="9" text-anchor="middle" fill="white">total bids, conversion</text>
+            </g>
+
+            <!-- Failure Handling Box -->
+            <rect x="50" y="1100" width="1300" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="1130" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">⚠️ Failure Handling & Redundancy</text>
+            <foreignObject x="70" y="1140" width="1260" height="35">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 11px; color: #92400e; line-height: 1.6;">
+                    • <strong>Leader Election:</strong> Multiple scheduler instances with Zookeeper/Consul (only leader schedules jobs)<br/>
+                    • <strong>Idempotency:</strong> end_auction() can be called multiple times safely (check status first)<br/>
+                    • <strong>Backup Jobs:</strong> If auction end job fails, cron job runs every 5 min to catch missed auctions
+                </div>
+            </foreignObject>
+        </svg>
+
+        <div class="flow-description">
+            <h3>⏰ Auction End Flow - Precise Timing & Winner Logic</h3>
+            <ol>
+                <li><strong>Scheduled Monitoring:</strong> Scheduler service runs every 1 minute, queries for auctions ending in next minute</li>
+                <li><strong>Precise Job Scheduling:</strong> For each auction, schedule exact end job at <code>end_time</code> (down to the second)</li>
+                <li><strong>Auction End Execution:</strong>
+                    <div class="code-box">
+def end_auction(auction_id):
+    with db.transaction():
+        # Lock auction row
+        auction = Auction.query.filter_by(id=auction_id).with_for_update().first()
+
+        # Idempotency check
+        if auction.status != 'active':
+            return  # Already ended
+
+        # Update status
+        auction.status = 'ended'
+
+        # Check reserve price
+        if auction.current_price >= auction.reserve_price:
+            # Reserve met - determine winner
+            winning_bid = Bid.query.filter_by(
+                auction_id=auction_id,
+                is_winning=True
+            ).first()
+
+            auction.winner_id = winning_bid.bidder_id
+
+            # Publish events
+            publish_event('auction.ended', auction.to_dict())
+
+            # Initiate payment
+            payment_service.charge(winning_bid.bidder_id, auction.current_price)
+
+            # Notify winner
+            notify_auction_won(winning_bid.bidder_id, auction_id)
+        else:
+            # Reserve not met
+            auction.status = 'ended_no_winner'
+            notify_seller_reserve_not_met(auction.seller_id, auction_id)
+
+        db.commit()
+                    </div>
+                </li>
+                <li><strong>Winner Notifications:</strong> Send congratulations email, push notification, and initiate payment flow</li>
+                <li><strong>Loser Notifications:</strong> Notify all watchers and bidders, suggest similar items</li>
+                <li><strong>Analytics:</strong> Log completion metrics (conversion rate, final price vs starting price, total bids, etc.)</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>🚨 Critical: Handling Auction End Failures</strong><br/>
+                If end_auction() fails (server crash, DB timeout), we have:
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li><strong>Backup Cron:</strong> Runs every 5 min, finds auctions with <code>end_time < NOW() AND status = 'active'</code></li>
+                    <li><strong>Leader Election:</strong> Only one scheduler instance active (prevents duplicate end jobs)</li>
+                    <li><strong>Audit Log:</strong> All auction state changes logged immutably for dispute resolution</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-Bidding Logic -->
+    <div id="auto-bid-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Auto-Bidding (Proxy Bidding) Algorithm
+            </text>
+
+            <text x="700" y="60" font-size="14" text-anchor="middle" fill="#64748b">
+                User sets max bid, system automatically bids minimum amount to stay winning
+            </text>
+
+            <!-- User Sets Max Bid -->
+            <g class="component">
+                <rect x="550" y="90" width="300" height="100" rx="10" fill="url(#grad-client)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="125" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User Sets Max Bid</text>
+                <foreignObject x="570" y="135" width="260" height="50">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 11px; color: white; line-height: 1.4;">
+                        <code>
+POST /api/v1/bids<br/>
+{<br/>
+  auction_id: 123,<br/>
+  bid_amount: 1000,<br/>
+  max_bid_amount: 2500  // Hidden<br/>
+}
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <path d="M 700 190 L 700 250" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Initial Bid Placement -->
+            <g class="component">
+                <rect x="550" y="250" width="300" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="700" y="285" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Initial Bid Placed</text>
+                <foreignObject x="570" y="295" width="260" height="50">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 11px; color: #065f46; line-height: 1.5;">
+                        • <strong>Visible Bid:</strong> $1000<br/>
+                        • <strong>Hidden Max:</strong> $2500<br/>
+                        • <strong>Status:</strong> Winning<br/>
+                        • <strong>Current Price:</strong> $1000
+                    </div>
+                </foreignObject>
+            </g>
+
+            <path d="M 700 350 L 700 410" stroke="#ec4899" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="720" y="385" font-size="11" fill="#991b1b" font-weight="600">Competitor bids $1200</text>
+
+            <!-- Competitor Manual Bid -->
+            <g class="component">
+                <rect x="950" y="250" width="200" height="80" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1050" y="285" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">👤 Competitor</text>
+                <text x="1050" y="305" font-size="12" text-anchor="middle" fill="#92400e">Bids $1200 (manual)</text>
+            </g>
+
+            <path d="M 950 290 L 850 450" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Auto-Bid Processor -->
+            <g class="component">
+                <rect x="500" y="410" width="400" height="140" rx="10" fill="url(#grad-service)" stroke="#dc2626" stroke-width="2"/>
+                <text x="700" y="445" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🤖 Auto-Bid Processor</text>
+                <text x="700" y="465" font-size="12" text-anchor="middle" fill="white">Triggered on new bid</text>
+                <foreignObject x="520" y="475" width="360" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 10px; color: white; line-height: 1.3;">
+                        <code>
+// Check if any auto-bidder can counter<br/>
+max_auto_bid = max(bid.max_bid_amount<br/>
+                   WHERE auction_id = 123<br/>
+                   AND max_bid_amount > 1200);<br/><br/>
+if max_auto_bid exists:<br/>
+  counter_bid = min(1200 + increment, max_auto_bid)<br/>
+  place_auto_bid(counter_bid)
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- Decision -->
+            <g class="component">
+                <path d="M 700 590 L 800 650 L 700 710 L 600 650 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="645" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Max > $1200</text>
+                <text x="700" y="663" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">?</text>
+            </g>
+
+            <!-- Yes - Auto Counter-bid -->
+            <path d="M 800 650 L 1000 650" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="880" y="640" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <g class="component">
+                <rect x="1000" y="600" width="250" height="120" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="1125" y="635" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">🤖 Auto Counter-Bid</text>
+                <foreignObject x="1010" y="645" width="230" height="70">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 10px; color: #065f46; line-height: 1.4;">
+                        <code>
+counter_bid = min(<br/>
+  1200 + 100,  // increment<br/>
+  2500         // max_bid<br/>
+) = $1300<br/><br/>
+Place automatic bid of $1300<br/>
+Status: User still winning!
+                        </code>
+                    </div>
+                </foreignObject>
+            </g>
+
+            <!-- No - Manual bidder wins -->
+            <path d="M 600 650 L 400 650" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="480" y="640" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="200" y="600" width="200" height="100" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="300" y="635" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Outbid</text>
+                <text x="300" y="655" font-size="11" text-anchor="middle" fill="#991b1b">Manual bid > Max auto-bid</text>
+                <text x="300" y="675" font-size="11" text-anchor="middle" fill="#991b1b">User loses, gets notified</text>
+            </g>
+
+            <!-- Example Scenario Box -->
+            <rect x="100" y="760" width="1200" height="120" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+            <text x="700" y="790" font-size="16" font-weight="bold" text-anchor="middle" fill="#075985">📖 Example Scenario: Bidding War</text>
+            <foreignObject x="120" y="800" width="1160" height="75">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 12px; color: #075985; line-height: 1.7;">
+                    <strong>Setup:</strong> Current price $1000. User A sets max $2500. User B (manual bidder) enters.<br/>
+                    1. User B bids $1200 → Auto-bid triggers → User A automatically bids $1300 ✓<br/>
+                    2. User B bids $1500 → Auto-bid triggers → User A automatically bids $1600 ✓<br/>
+                    3. User B bids $2600 → Auto-bid checks → User A's max is $2500 → User B wins ✗<br/>
+                    <strong>Result:</strong> User A only paid $1600 (not $2500!) because that's what was needed to stay winning until outbid.
+                </div>
+            </foreignObject>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🤖 Auto-Bidding (Proxy Bidding) - How It Works</h3>
+            <ol>
+                <li><strong>User Sets Maximum Bid:</strong> User specifies highest amount they're willing to pay (<code>max_bid_amount</code>)</li>
+                <li><strong>Initial Bid:</strong> System places minimum bid needed to win (usually current_price + increment)</li>
+                <li><strong>Competitor Bids:</strong> When another user places manual bid, auto-bid processor is triggered</li>
+                <li><strong>Auto Counter-Bid Logic:</strong>
+                    <div class="code-box">
+def process_auto_bid(auction_id, new_manual_bid):
+    # Find highest auto-bidder who can still counter
+    auto_bidders = Bid.query.filter(
+        Bid.auction_id == auction_id,
+        Bid.max_bid_amount.isnot(None),
+        Bid.max_bid_amount > new_manual_bid.bid_amount,
+        Bid.bidder_id != new_manual_bid.bidder_id  # Exclude manual bidder
+    ).order_by(Bid.max_bid_amount.desc()).all()
+
+    if not auto_bidders:
+        # No auto-bidder can counter
+        return new_manual_bid
+
+    highest_auto = auto_bidders[0]
+
+    # Calculate counter-bid
+    counter_bid_amount = min(
+        new_manual_bid.bid_amount + auction.bid_increment,
+        highest_auto.max_bid_amount
+    )
+
+    # Place automatic counter-bid
+    counter_bid = Bid(
+        auction_id=auction_id,
+        bidder_id=highest_auto.bidder_id,
+        bid_amount=counter_bid_amount,
+        max_bid_amount=highest_auto.max_bid_amount,
+        bid_type='auto',
+        is_winning=True
+    )
+
+    db.session.add(counter_bid)
+    db.session.commit()
+
+    # Notify manual bidder they're outbid
+    notify_outbid(new_manual_bid.bidder_id, auction_id)
+
+    return counter_bid
+                    </div>
+                </li>
+                <li><strong>Incremental Bidding:</strong> Auto-bid only increases by minimum increment, preserving user's budget</li>
+                <li><strong>Multiple Auto-Bidders:</strong> If two users have auto-bids, system automatically increments between them until one reaches max</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #dbeafe; border-left: 4px solid #0284c7; border-radius: 5px;">
+                <strong>💡 Benefits of Auto-Bidding:</strong><br/>
+                • <strong>Convenience:</strong> Users don't need to monitor auction 24/7<br/>
+                • <strong>Fair Pricing:</strong> Only pay minimum amount needed to win<br/>
+                • <strong>Prevents Sniping:</strong> Last-second manual bids automatically countered<br/>
+                • <strong>Privacy:</strong> Max bid amount never revealed to competitors
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(236, 72, 153, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>

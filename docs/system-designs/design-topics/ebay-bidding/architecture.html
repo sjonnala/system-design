@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Bidding System Architecture Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #ec4899;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #ec4899;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.realtime { background: #fee2e2; color: #991b1b; }
+        .tag.consistency { background: #dbeafe; color: #1e40af; }
+        .tag.scale { background: #fef3c7; color: #92400e; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .edge-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 8;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 12;
+        }
+
+        .bid-service-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .auction-service-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .search-service-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 4;
+        }
+
+        .notification-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .websocket-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .search-db-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #d1f4e0 0%, #86efac 100%);
+            grid-column: span 12;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #ec4899;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(236, 72, 153, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ec4899;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #ec4899;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏛️ eBay Bidding System Architecture Blueprint</h1>
+        <div class="subtitle">Complete Real-Time Auction Platform</div>
+        <div class="tags">
+            <span class="tag realtime">Real-Time Updates</span>
+            <span class="tag consistency">Strong Consistency</span>
+            <span class="tag scale">Highly Scalable</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Web / Mobile Clients</div>
+                <div class="component-details">
+                    <strong>User Actions:</strong>
+                    <ul>
+                        <li>Browse auctions</li>
+                        <li>Place bids</li>
+                        <li>Watch items</li>
+                        <li>Real-time updates</li>
+                        <li>Search & filter</li>
+                    </ul>
+                    <strong>Technologies:</strong>
+                    <ul>
+                        <li>React/Vue.js (Web)</li>
+                        <li>React Native (Mobile)</li>
+                        <li>WebSocket client</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS / WSS</div>
+        </div>
+
+        <!-- Edge Network -->
+        <div class="section edge-section">
+            <div class="section-title">⚡ EDGE / CDN LAYER</div>
+            <div class="component">
+                <div class="component-name">CloudFlare / AWS CloudFront</div>
+                <div class="component-details">
+                    <strong>Capabilities:</strong>
+                    <ul>
+                        <li><strong>Static Content:</strong> Images, CSS, JS, auction photos</li>
+                        <li><strong>DDoS Protection:</strong> AWS Shield, rate limiting</li>
+                        <li><strong>SSL/TLS:</strong> Certificate management, TLS 1.3</li>
+                        <li><strong>Geo-routing:</strong> Route to nearest region</li>
+                        <li><strong>WAF Rules:</strong> Block malicious traffic, bot detection</li>
+                    </ul>
+                    <div class="code-snippet">
+Cache-Control: public, max-age=3600
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Backend</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY & LOAD BALANCER</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway + ALB</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT validation, OAuth2, API keys</li>
+                        <li><strong>Rate Limiting:</strong> 100 bids/min per user, 1000 API calls/min
+                            <div class="code-snippet">
+Rate Limit: Token bucket algorithm
+- Free tier: 10 bids/hour
+- Premium: 100 bids/hour
+- Seller: 1000 auctions/day</div>
+                        </li>
+                        <li><strong>Request Routing:</strong> Route to appropriate microservice</li>
+                        <li><strong>Load Balancing:</strong> Round-robin, least connections</li>
+                        <li><strong>Circuit Breaker:</strong> Fail fast on service downtime</li>
+                        <li><strong>Request Validation:</strong> Schema validation, input sanitization</li>
+                        <li><strong>Metrics:</strong> Request count, latency, error rates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bid Service (CRITICAL) -->
+        <div class="section bid-service-section">
+            <div class="section-title">💰 BID SERVICE (CRITICAL)</div>
+
+            <div class="component">
+                <div class="component-name">Bid Placement Engine</div>
+                <div class="component-details">
+                    <strong>Go Microservice - High Performance</strong>
+                    <div class="code-snippet">
+POST /api/v1/bids
+{
+  "auction_id": "a123",
+  "bid_amount": 1500.00,
+  "max_bid": 2000.00  // auto-bid
+}
+
+// Processing Flow:
+1. Validate auction is active
+2. Check bid increment rules
+3. Distributed lock (Redis)
+4. Optimistic locking (DB version)
+5. Update current price
+6. Publish bid event (Kafka)
+7. Return success/failure</div>
+                    <strong>Key Features:</strong>
+                    <ul>
+                        <li><strong>Concurrency Control:</strong> Optimistic locking with retry</li>
+                        <li><strong>Auto-bidding:</strong> Proxy bid algorithm</li>
+                        <li><strong>Validation:</strong> Bid increment, user funds, rate limits</li>
+                        <li><strong>Idempotency:</strong> Prevent duplicate bids (idempotency key)</li>
+                        <li><strong>Fraud Detection:</strong> Pattern analysis, IP checks</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Latency: P95 < 100ms</li>
+                        <li>Throughput: 10K bids/sec</li>
+                        <li>Retry: 3 attempts with backoff</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Bid History Service</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Query bid history (paginated)</li>
+                        <li>User bid tracking</li>
+                        <li>Winning status checks</li>
+                        <li>Cached with Redis (5 min TTL)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auction Service -->
+        <div class="section auction-service-section">
+            <div class="section-title">🏛️ AUCTION SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Auction Management</div>
+                <div class="component-details">
+                    <strong>Spring Boot Microservice</strong>
+                    <div class="code-snippet">
+POST /api/v1/auctions
+{
+  "title": "Vintage Watch",
+  "starting_price": 1000.00,
+  "reserve_price": 2000.00,
+  "duration_hours": 168,
+  "category": "Watches",
+  "buy_now_price": 5000.00
+}
+
+GET /api/v1/auctions/{id}
+// Returns: auction details + current bid</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li><strong>CRUD Operations:</strong> Create, read, update, cancel auctions</li>
+                        <li><strong>Lifecycle Management:</strong> Draft → Active → Ended</li>
+                        <li><strong>Buy Now:</strong> Instant purchase at fixed price</li>
+                        <li><strong>Reserve Price:</strong> Minimum price to sell</li>
+                        <li><strong>Scheduling:</strong> Start time, end time handling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Auction End Processor</div>
+                <div class="component-details">
+                    <strong>APScheduler / Quartz</strong>
+                    <ul>
+                        <li>Scan for ending auctions (every minute)</li>
+                        <li>Schedule precise end jobs</li>
+                        <li>Determine winners (reserve check)</li>
+                        <li>Trigger payment flow</li>
+                        <li>Send notifications</li>
+                    </ul>
+                    <div class="code-snippet">
+// Every minute: check auctions ending soon
+SELECT * FROM auctions
+WHERE status = 'active'
+  AND end_time BETWEEN NOW() AND NOW() + INTERVAL '1 minute';
+
+// Schedule end job at exact time
+schedule_job(end_auction, run_at=auction.end_time)</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Seller Dashboard</div>
+                <div class="component-details">
+                    <ul>
+                        <li>View active auctions</li>
+                        <li>Analytics: views, bids, watchers</li>
+                        <li>Edit auction (before first bid)</li>
+                        <li>Relist ended auctions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Service -->
+        <div class="section search-service-section">
+            <div class="section-title">🔍 SEARCH SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Elasticsearch Query Engine</div>
+                <div class="component-details">
+                    <strong>FastAPI + Elasticsearch</strong>
+                    <div class="code-snippet">
+GET /api/v1/search?q=watch&category=luxury
+  &price_min=1000&price_max=5000
+  &ending_soon=true&sort=ending_asc
+
+// ES Query:
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"title": "watch"}},
+        {"term": {"category": "luxury"}},
+        {"range": {"current_price": {"gte": 1000, "lte": 5000}}}
+      ],
+      "filter": [{"term": {"status": "active"}}]
+    }
+  },
+  "sort": [{"end_time": "asc"}]
+}</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Full-text search (fuzzy matching)</li>
+                        <li>Faceted navigation (category, price ranges)</li>
+                        <li>Auto-complete suggestions</li>
+                        <li>Trending searches</li>
+                        <li>Personalized recommendations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Category Browser</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Hierarchical categories (Electronics > Phones > iPhone)</li>
+                        <li>Browse by category</li>
+                        <li>Filter by attributes (brand, condition, shipping)</li>
+                        <li>Sort: price, ending soon, most bids</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Service -->
+        <div class="section notification-section">
+            <div class="section-title">📬 NOTIFICATION SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Multi-Channel Notifications</div>
+                <div class="component-details">
+                    <strong>Node.js Microservice</strong>
+                    <div class="code-snippet">
+// Kafka Consumer
+topic: 'bid-events'
+event: {
+  type: 'outbid',
+  auction_id: 'a123',
+  previous_bidder_id: 'u456',
+  new_bid: 1600.00
+}
+
+// Send notifications:
+1. WebSocket (real-time)
+2. Push notification (mobile)
+3. Email (backup)
+4. SMS (high-value auctions)</div>
+                    <strong>Notification Types:</strong>
+                    <ul>
+                        <li><strong>Outbid:</strong> "You've been outbid on [item]"</li>
+                        <li><strong>Auction Won:</strong> "Congratulations! You won [item]"</li>
+                        <li><strong>Auction Ended:</strong> "Auction ended - you didn't win"</li>
+                        <li><strong>Ending Soon:</strong> "Auction ends in 5 minutes"</li>
+                        <li><strong>New Bid:</strong> "New bid on item you're watching"</li>
+                        <li><strong>Price Drop:</strong> "Buy now price reduced"</li>
+                    </ul>
+                    <strong>Delivery Preferences:</strong>
+                    <ul>
+                        <li>User-configurable channels</li>
+                        <li>Quiet hours (no notifications 10PM-8AM)</li>
+                        <li>Digest mode (hourly summary)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- WebSocket Server -->
+        <div class="section websocket-section">
+            <div class="section-title">🔌 WEBSOCKET SERVER</div>
+
+            <div class="component">
+                <div class="component-name">Real-Time Connection Manager</div>
+                <div class="component-details">
+                    <strong>Socket.IO / FastAPI WebSocket</strong>
+                    <div class="code-snippet">
+// Client connects
+ws.connect('wss://api.ebay.com/ws')
+
+// Subscribe to auction
+ws.send({
+  action: 'subscribe',
+  auction_id: 'a123'
+})
+
+// Receive live updates
+{
+  type: 'bid_placed',
+  auction_id: 'a123',
+  current_price: 1600.00,
+  total_bids: 15,
+  time_remaining: '2h 45m'
+}
+
+// Heartbeat every 30s
+ping/pong to keep connection alive</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li><strong>Connection Pooling:</strong> Manage 100K+ concurrent connections</li>
+                        <li><strong>Room-based:</strong> Subscribe to specific auctions</li>
+                        <li><strong>Sticky Sessions:</strong> Load balancer affinity</li>
+                        <li><strong>Fallback:</strong> Long-polling if WebSocket fails</li>
+                        <li><strong>Reconnection:</strong> Auto-reconnect with exponential backoff</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Latency: <50ms for message delivery</li>
+                        <li>Throughput: 100K messages/sec</li>
+                        <li>Connection limit: 10K per server</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>6 nodes (3 masters + 3 replicas)</li>
+                        <li>Cluster mode for sharding</li>
+                        <li>LRU eviction policy</li>
+                        <li>Persistence: RDB + AOF</li>
+                    </ul>
+                    <strong>Data Structures:</strong>
+                    <div class="code-snippet">
+# Hot auction data
+SET auction:a123 "{...json...}" EX 300
+
+# Current bid (sorted set)
+ZADD auction:a123:bids 1500 "bid:b456"
+
+# Watchlist (set)
+SADD user:u789:watchlist "a123"
+
+# Distributed lock
+SET lock:auction:a123 "uuid" NX EX 2
+
+# Session store
+SET session:token "{user_id, expires}" EX 3600</div>
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>Auction metadata (5 min TTL)</li>
+                        <li>Current highest bid (real-time)</li>
+                        <li>User watchlists</li>
+                        <li>Session management</li>
+                        <li>Rate limiting counters</li>
+                        <li>Distributed locks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Layer -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL Primary</div>
+                <div class="component-details">
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>Version: PostgreSQL 15</li>
+                        <li>Instance: r6g.2xlarge (8 vCPU, 64GB RAM)</li>
+                        <li>Storage: 2TB SSD (gp3)</li>
+                        <li>Sharding: By auction_id (16 shards)</li>
+                    </ul>
+                    <strong>Critical Tables:</strong>
+                    <div class="code-snippet">
+auctions (id, seller_id, current_price,
+          end_time, status, version)
+bids (id, auction_id, bidder_id,
+      bid_amount, placed_at, is_winning)
+users (id, email, balance, reputation)
+watchlist (user_id, auction_id)</div>
+                    <strong>Optimizations:</strong>
+                    <ul>
+                        <li>B-tree indexes on hot columns</li>
+                        <li>Partial indexes (WHERE status = 'active')</li>
+                        <li>Connection pooling (PgBouncer)</li>
+                        <li>Query optimization (EXPLAIN ANALYZE)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Read Replicas (3x)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Async replication (< 100ms lag)</li>
+                        <li>Read-only queries (auction details, search)</li>
+                        <li>Geographic distribution (US, EU, APAC)</li>
+                        <li>Auto-failover to primary</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📨 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka Cluster</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <div class="code-snippet">
+bid-events (100 partitions)
+  - bid.placed
+  - bid.failed
+  - bid.auto
+
+auction-events (50 partitions)
+  - auction.created
+  - auction.ended
+  - auction.cancelled
+
+notification-events (20 partitions)
+  - outbid
+  - auction_won
+  - auction_ending_soon
+
+analytics-events (10 partitions)
+  - user_action
+  - search_query
+  - page_view</div>
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>3 brokers (m5.xlarge)</li>
+                        <li>Replication factor: 3</li>
+                        <li>Retention: 7 days</li>
+                        <li>Compression: LZ4</li>
+                    </ul>
+                    <strong>Consumer Groups:</strong>
+                    <ul>
+                        <li>notification-service (push notifications)</li>
+                        <li>analytics-service (data pipeline)</li>
+                        <li>search-indexer (ES updates)</li>
+                        <li>audit-logger (compliance)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Database -->
+        <div class="section search-db-section">
+            <div class="section-title">🔎 SEARCH DATABASE</div>
+            <div class="component">
+                <div class="component-name">Elasticsearch Cluster</div>
+                <div class="component-details">
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>6 data nodes (r5.2xlarge)</li>
+                        <li>3 master nodes (coordination)</li>
+                        <li>Index: auctions-v1 (time-based alias)</li>
+                        <li>Shards: 12 primary + 12 replica</li>
+                    </ul>
+                    <strong>Index Schema:</strong>
+                    <div class="code-snippet">
+{
+  "auction_id": "a123",
+  "title": "Vintage Rolex",
+  "category": ["Watches", "Luxury"],
+  "current_price": 1500.00,
+  "end_time": "2025-11-20T10:00:00Z",
+  "total_bids": 15,
+  "seller_reputation": 4.8,
+  "shipping_free": true,
+  "images": ["url1", "url2"],
+  "watchers_count": 45
+}</div>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Full-text search (autocomplete, fuzzy)</li>
+                        <li>Aggregations (price ranges, categories)</li>
+                        <li>Geo-search (location-based auctions)</li>
+                        <li>Real-time indexing (< 1 sec latency)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Database -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS DATABASE</div>
+            <div class="component">
+                <div class="component-name">ClickHouse</div>
+                <div class="component-details">
+                    <strong>Time-Series Analytics:</strong>
+                    <div class="code-snippet">
+CREATE TABLE bid_events (
+  auction_id String,
+  bidder_id String,
+  bid_amount Decimal(10,2),
+  timestamp DateTime,
+  ip_address String,
+  user_agent String
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMMDD(timestamp)
+ORDER BY (auction_id, timestamp);</div>
+                    <strong>Analytics Queries:</strong>
+                    <ul>
+                        <li>Top auctions by bid volume</li>
+                        <li>Average bid amount per category</li>
+                        <li>User bidding patterns</li>
+                        <li>Conversion rates (views → bids)</li>
+                        <li>Revenue projections</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Data Warehouse (Redshift)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Historical data (> 1 year)</li>
+                        <li>Business intelligence dashboards</li>
+                        <li>ML model training data</li>
+                        <li>Compliance reports</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li><strong>Business:</strong> Active auctions, bids/sec, GMV (Gross Merchandise Value)</li>
+                        <li><strong>Application:</strong> API latency (P50, P95, P99), error rate, throughput</li>
+                        <li><strong>Infrastructure:</strong> CPU, memory, disk I/O, network</li>
+                        <li><strong>Database:</strong> Query time, connection pool, replication lag</li>
+                        <li><strong>Cache:</strong> Hit rate, memory usage, evictions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ELK Stack (Logging)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Centralized logging (Elasticsearch, Logstash, Kibana)</li>
+                        <li>Structured logs (JSON format)</li>
+                        <li>Log aggregation across services</li>
+                        <li>Error tracking (Sentry integration)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing (Jaeger)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Trace bid placement flow end-to-end</li>
+                        <li>Identify bottlenecks</li>
+                        <li>Latency breakdown by service</li>
+                        <li>OpenTelemetry instrumentation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Alerting (PagerDuty)</div>
+                <div class="component-details">
+                    <strong>Critical Alerts:</strong>
+                    <ul>
+                        <li>Bid placement latency > 500ms (5 min)</li>
+                        <li>Failed bid rate > 5% (2 min)</li>
+                        <li>Database replication lag > 200ms</li>
+                        <li>WebSocket disconnections > 10%</li>
+                        <li>Auction end job failure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">10M</div>
+                <div class="metric-label">Concurrent Active Auctions</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">120 QPS</div>
+                <div class="metric-label">Bid Placement (Avg)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">600 QPS</div>
+                <div class="metric-label">Bid Placement (Peak)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">P95 Bid Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.95%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100K</div>
+                <div class="metric-label">WebSocket Connections</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">6 TB</div>
+                <div class="metric-label">Total Storage (3 years)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;50ms</div>
+                <div class="metric-label">Real-time Update Latency</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 CRITICAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Concurrency Control</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Optimistic Locking:</strong> Version-based concurrency control</li>
+                    <li><strong>Distributed Locks:</strong> Redis-based locks for hot auctions</li>
+                    <li><strong>Retry Strategy:</strong> Exponential backoff (3 attempts max)</li>
+                    <li><strong>Idempotency:</strong> Prevent duplicate bids with idempotency keys</li>
+                    <li><strong>Transaction Isolation:</strong> READ COMMITTED level</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Data Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Strong Consistency:</strong> ACID transactions for bids</li>
+                    <li><strong>Eventual Consistency:</strong> Search index, analytics</li>
+                    <li><strong>No Duplicate Winners:</strong> Guaranteed by DB constraints</li>
+                    <li><strong>Audit Trail:</strong> All bids logged immutably</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Authentication:</strong> OAuth2 + JWT tokens</li>
+                    <li><strong>Authorization:</strong> Role-based access control (RBAC)</li>
+                    <li><strong>Rate Limiting:</strong> Per-user and per-IP limits</li>
+                    <li><strong>Fraud Detection:</strong> ML models for shill bidding</li>
+                    <li><strong>Input Validation:</strong> Prevent SQL injection, XSS</li>
+                    <li><strong>HTTPS Only:</strong> TLS 1.3, HSTS headers</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services, auto-scaling</li>
+                    <li><strong>Database Sharding:</strong> By auction_id for write distribution</li>
+                    <li><strong>Read Replicas:</strong> Separate read from write traffic</li>
+                    <li><strong>Caching:</strong> Multi-tier (CDN, Redis, Application)</li>
+                    <li><strong>Async Processing:</strong> Event-driven architecture</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Real-Time Updates</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>WebSocket:</strong> Persistent connections for live updates</li>
+                    <li><strong>Pub/Sub:</strong> Redis Pub/Sub for broadcasting</li>
+                    <li><strong>Event Streaming:</strong> Kafka for reliable delivery</li>
+                    <li><strong>Fallback:</strong> Long-polling if WebSocket unavailable</li>
+                    <li><strong>Notification Queue:</strong> Guaranteed delivery with retries</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #ec4899; margin-bottom: 10px;">Failure Handling</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Database Failover:</strong> Auto-promote replica (30s RTO)</li>
+                    <li><strong>Service Failures:</strong> Circuit breakers, graceful degradation</li>
+                    <li><strong>Auction End Backup:</strong> Multiple schedulers with leader election</li>
+                    <li><strong>Message Delivery:</strong> At-least-once with deduplication</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 15px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px;">🛠️ TECHNOLOGY STACK</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Backend Services</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    • <strong>Bid Service:</strong> Go (high performance)<br>
+                    • <strong>Auction Service:</strong> Java/Spring Boot<br>
+                    • <strong>Search:</strong> Python/FastAPI<br>
+                    • <strong>Notifications:</strong> Node.js/Express<br>
+                    • <strong>API Gateway:</strong> Kong/NGINX
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #8b5cf6;">
+                <h4 style="color: #8b5cf6; margin-bottom: 10px;">Data Stores</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    • <strong>Primary DB:</strong> PostgreSQL 15<br>
+                    • <strong>Cache:</strong> Redis Cluster<br>
+                    • <strong>Search:</strong> Elasticsearch 8<br>
+                    • <strong>Analytics:</strong> ClickHouse<br>
+                    • <strong>Queue:</strong> Apache Kafka
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Infrastructure</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    • <strong>Cloud:</strong> AWS / GCP<br>
+                    • <strong>Containers:</strong> Docker + Kubernetes<br>
+                    • <strong>CI/CD:</strong> Jenkins / GitLab CI<br>
+                    • <strong>IaC:</strong> Terraform + Ansible<br>
+                    • <strong>Service Mesh:</strong> Istio
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Design Principle:</strong> This architecture prioritizes strong consistency for bids while maintaining high availability and real-time performance</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built for: 10M concurrent auctions • 600 peak bids/sec • 100K WebSocket connections • <100ms bid latency</p>
+    </div>
+</div>
+</body>
+</html>
