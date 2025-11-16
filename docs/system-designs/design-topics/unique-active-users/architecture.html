@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unique Active Users System Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.realtime { background: #fef3c7; color: #92400e; }
+        .tag.scalable { background: #fee2e2; color: #991b1b; }
+        .tag.analytics { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 4;
+        }
+
+        .ingestion-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .kafka-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .fastpath-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 6;
+        }
+
+        .stream-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 4;
+        }
+
+        .batch-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 4;
+        }
+
+        .ml-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .olap-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .datalake-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .query-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);
+            grid-column: span 6;
+        }
+
+        .viz-section {
+            background: linear-gradient(135deg, #fecdd3 0%, #fb7185 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 12;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Unique Active Users System Architecture</h1>
+        <div class="subtitle">Real-time Analytics at Scale</div>
+        <div class="tags">
+            <span class="tag realtime">Real-time Processing</span>
+            <span class="tag scalable">Horizontally Scalable</span>
+            <span class="tag analytics">Big Data Analytics</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- CLIENT LAYER -->
+        <div class="section client-section">
+            <div class="section-title">📱 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Multi-Platform Clients</div>
+                <div class="component-details">
+                    <strong>Platforms:</strong>
+                    <ul>
+                        <li>Web (React/Vue.js)</li>
+                        <li>iOS (Swift)</li>
+                        <li>Android (Kotlin)</li>
+                        <li>Backend Services</li>
+                    </ul>
+                    <strong>Event Tracking:</strong>
+                    <div class="code-snippet">
+analytics.track('page_view', {
+  user_id: 'user_123',
+  page: '/dashboard',
+  timestamp: Date.now(),
+  properties: {
+    referrer: 'google.com',
+    device: 'mobile'
+  }
+});</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS POST /events</div>
+        </div>
+
+        <!-- API GATEWAY -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> API Key, JWT</li>
+                        <li><strong>Rate Limiting:</strong> 1000 req/sec per client</li>
+                        <li><strong>Protocol:</strong> HTTP/2, WebSocket</li>
+                        <li><strong>Compression:</strong> gzip, brotli</li>
+                    </ul>
+                    <div class="code-snippet">
+Rate Limit: Token Bucket Algorithm
+- Burst: 2000 requests
+- Refill: 1000 tokens/sec
+- Penalty: 429 Too Many Requests</div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Validated Events</div>
+        </div>
+
+        <!-- EVENT INGESTION -->
+        <div class="section ingestion-section">
+            <div class="section-title">📥 EVENT INGESTION</div>
+            <div class="component">
+                <div class="component-name">Ingestion Service (Go/Python)</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Schema Validation:</strong> Protobuf/Avro</li>
+                        <li><strong>Enrichment:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>GeoIP lookup (MaxMind)</li>
+                                <li>User-Agent parsing (device, OS, browser)</li>
+                                <li>Timestamp normalization (UTC)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Deduplication:</strong> Redis SET (event_id, 1 hour TTL)</li>
+                        <li><strong>Batching:</strong> 1000 events or 5 seconds</li>
+                    </ul>
+                    <div class="code-snippet">
+// Deduplication check
+if redis.exists(f"evt:{event_id}"):
+    return 409  # Duplicate
+redis.setex(f"evt:{event_id}", 3600, 1)
+
+// Batch and send to Kafka
+batch.append(event)
+if len(batch) >= 1000 or time_elapsed > 5:
+    kafka.send_batch(batch)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KAFKA -->
+        <div class="section kafka-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka Cluster</div>
+                <div class="component-details">
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li><strong>Topic:</strong> user-events</li>
+                        <li><strong>Partitions:</strong> 100 (hash by user_id)</li>
+                        <li><strong>Replication:</strong> 3x</li>
+                        <li><strong>Retention:</strong> 7 days</li>
+                        <li><strong>Throughput:</strong> 150K msgs/sec</li>
+                    </ul>
+                    <div class="code-snippet">
+# Kafka Topic Config
+Topic: user-events
+Partitions: 100
+Replication Factor: 3
+Compression: LZ4 (5:1 ratio)
+Min In-Sync Replicas: 2
+Retention: 7 days
+
+# Consumer Groups:
+- stream-processor (Flink)
+- batch-processor (Spark)
+- ml-pipeline (TensorFlow)
+- data-lake-sink (S3)</div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Kafka Connect</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>S3 Sink:</strong> Parquet files (hourly)</li>
+                        <li><strong>ClickHouse Sink:</strong> Batched inserts (10K/batch)</li>
+                        <li><strong>Elasticsearch Sink:</strong> Search indexing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAST PATH (Redis) -->
+        <div class="section fastpath-section">
+            <div class="section-title">⚡ FAST PATH (Redis)</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>HyperLogLog:</strong> Real-time DAU (last 24h)</li>
+                        <li><strong>Sorted Sets:</strong> Rolling MAU window</li>
+                        <li><strong>Bloom Filter:</strong> Event deduplication</li>
+                        <li><strong>Cache:</strong> Dashboard queries (5 min TTL)</li>
+                    </ul>
+                    <div class="code-snippet">
+# DAU Tracking (HyperLogLog)
+PFADD active:users:2025-11-15 "user_123"
+PFCOUNT active:users:2025-11-15  # ≈ 100M
+
+# Dimensional DAU
+PFADD active:us:ios:2025-11-15 "user_123"
+PFCOUNT active:us:ios:2025-11-15
+
+# WAU (Union of 7 days)
+PFCOUNT active:users:2025-11-15 \
+       active:users:2025-11-14 \
+       ... (7 keys)
+
+# MAU (Sorted Set - Rolling Window)
+ZADD mau:2025-11 {timestamp} "user_123"
+ZCOUNT mau:2025-11 {30_days_ago} +inf</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 200K ops/sec</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Memory: 20GB (HyperLogLogs)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- STREAM PROCESSING -->
+        <div class="section stream-section">
+            <div class="section-title">🌊 STREAM PROCESSING</div>
+            <div class="component">
+                <div class="component-name">Apache Flink Cluster</div>
+                <div class="component-details">
+                    <strong>Jobs:</strong>
+                    <ul>
+                        <li><strong>Real-time DAU Calculator:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>5-minute tumbling windows</li>
+                                <li>HyperLogLog aggregation</li>
+                                <li>Output to ClickHouse + Redis</li>
+                            </ul>
+                        </li>
+                        <li><strong>Session Analyzer:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>30-min session gap</li>
+                                <li>Track session duration, events</li>
+                            </ul>
+                        </li>
+                        <li><strong>Anomaly Detector:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Detect sudden DAU drops (>20%)</li>
+                                <li>Alert to PagerDuty</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="code-snippet">
+// Flink Job: Real-time DAU
+DataStream<UserEvent> events =
+    env.addSource(kafkaConsumer);
+
+DataStream<DAUMetric> dau = events
+    .keyBy(e -> Tuple3.of(
+        e.date, e.country, e.platform
+    ))
+    .window(TumblingEventTime(5.min))
+    .aggregate(new HyperLogLogAgg());
+
+dau.addSink(clickHouseSink);
+dau.addSink(redisSink);</div>
+                    <strong>Resources:</strong>
+                    <ul>
+                        <li>TaskManagers: 20 nodes</li>
+                        <li>Parallelism: 100</li>
+                        <li>Checkpointing: Every 1 min</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- BATCH PROCESSING -->
+        <div class="section batch-section">
+            <div class="section-title">📦 BATCH PROCESSING</div>
+            <div class="component">
+                <div class="component-name">Apache Spark on EMR</div>
+                <div class="component-details">
+                    <strong>Jobs (Scheduled):</strong>
+                    <ul>
+                        <li><strong>Daily Aggregation:</strong> Backfill/corrections</li>
+                        <li><strong>Cohort Analysis:</strong> Retention by signup date</li>
+                        <li><strong>Historical Trends:</strong> YoY comparisons</li>
+                        <li><strong>Data Quality:</strong> Anomaly detection</li>
+                    </ul>
+                    <div class="code-snippet">
+// Spark Job: Cohort Retention
+val cohort = events
+    .filter(e => e.event_type == "signup")
+    .groupBy("signup_date")
+    .agg(countDistinct("user_id") as "cohort_size")
+
+val retention = events
+    .join(cohort, "user_id")
+    .groupBy("signup_date", "activity_date")
+    .agg(countDistinct("user_id") as "retained")
+
+retention
+    .write.partitionBy("signup_date")
+    .mode("overwrite")
+    .parquet("s3://analytics/retention")</div>
+                    <strong>Schedule:</strong>
+                    <ul>
+                        <li>Hourly: Data quality checks</li>
+                        <li>Daily: Aggregations, cohorts</li>
+                        <li>Weekly: Complex analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MACHINE LEARNING -->
+        <div class="section ml-section">
+            <div class="section-title">🤖 MACHINE LEARNING</div>
+            <div class="component">
+                <div class="component-name">ML Pipeline (SageMaker)</div>
+                <div class="component-details">
+                    <strong>Models:</strong>
+                    <ul>
+                        <li><strong>Churn Prediction:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Features: activity frequency, recency</li>
+                                <li>Model: XGBoost classifier</li>
+                                <li>Output: Churn probability (0-1)</li>
+                            </ul>
+                        </li>
+                        <li><strong>User Segmentation:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>K-means clustering</li>
+                                <li>Segments: power users, casual, at-risk</li>
+                            </ul>
+                        </li>
+                        <li><strong>Forecasting:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Prophet (Facebook)</li>
+                                <li>Predict next 30 days DAU</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="code-snippet">
+# Feature Engineering
+features = [
+    'days_since_signup',
+    'events_last_7d',
+    'events_last_30d',
+    'session_count',
+    'avg_session_duration'
+]
+
+# Train model
+model = xgboost.train(params, dtrain)
+
+# Batch prediction (daily)
+predictions = model.predict(dtest)
+store_to_db(predictions)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OLAP DATABASE -->
+        <div class="section olap-section">
+            <div class="section-title">🗄️ OLAP DATABASE</div>
+            <div class="component">
+                <div class="component-name">ClickHouse Cluster</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>10 nodes (distributed table)</li>
+                        <li>Replication: 2x (per shard)</li>
+                        <li>Compression: LZ4 (5:1 ratio)</li>
+                    </ul>
+                    <strong>Tables:</strong>
+                    <div class="code-snippet">
+-- Events Table (7-day retention)
+CREATE TABLE events_distributed AS events
+ENGINE = Distributed(cluster, default, events, rand());
+
+-- DAU Pre-aggregated
+CREATE TABLE dau (
+    date Date,
+    country String,
+    platform String,
+    unique_users AggregateFunction(uniq, String),
+    event_count UInt64
+) ENGINE = AggregatingMergeTree()
+PARTITION BY toYYYYMM(date)
+ORDER BY (date, country, platform);
+
+-- Materialized View
+CREATE MATERIALIZED VIEW dau_mv TO dau AS
+SELECT
+    toDate(timestamp) as date,
+    country, platform,
+    uniqState(user_id) as unique_users,
+    count() as event_count
+FROM events
+GROUP BY date, country, platform;</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Insert: 100K rows/sec per node</li>
+                        <li>Query: <2s (P95)</li>
+                        <li>Storage: 50 TB (compressed)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Apache Druid (Alternative)</div>
+                <div class="component-details">
+                    <strong>When to use:</strong>
+                    <ul>
+                        <li>Sub-second queries</li>
+                        <li>High concurrency (1000+ queries/sec)</li>
+                        <li>Interactive dashboards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA LAKE -->
+        <div class="section datalake-section">
+            <div class="section-title">☁️ DATA LAKE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3 / HDFS</div>
+                <div class="component-details">
+                    <strong>Storage Structure:</strong>
+                    <div class="code-snippet">
+s3://analytics-lake/
+├── raw/
+│   └── events/
+│       └── year=2025/
+│           └── month=11/
+│               └── day=15/
+│                   └── hour=14/
+│                       └── events_part_001.parquet
+├── aggregated/
+│   ├── daily/
+│   │   └── dau_2025_11_15.parquet
+│   └── monthly/
+│       └── mau_2025_11.parquet
+└── ml/
+    └── features/
+        └── user_features_2025_11.parquet</div>
+                    <strong>Format:</strong>
+                    <ul>
+                        <li><strong>Parquet:</strong> Columnar, compressed (10:1)</li>
+                        <li><strong>Partitioning:</strong> year/month/day/hour</li>
+                        <li><strong>Lifecycle:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Standard (90 days)</li>
+                                <li>Infrequent Access (1 year)</li>
+                                <li>Glacier (5 years)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <strong>Cost Optimization:</strong>
+                    <ul>
+                        <li>Compress before upload (5×)</li>
+                        <li>Use S3 Intelligent Tiering</li>
+                        <li>Delete old raw events (>90 days)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">AWS Glue Data Catalog</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Schema registry for Parquet files</li>
+                        <li>Crawlers for automatic schema detection</li>
+                        <li>Athena integration (SQL on S3)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUERY SERVICE -->
+        <div class="section query-section">
+            <div class="section-title">🔍 QUERY SERVICE</div>
+            <div class="component">
+                <div class="component-name">GraphQL API (Node.js)</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li><strong>Flexible Queries:</strong> Get exactly what you need</li>
+                        <li><strong>Batching:</strong> DataLoader for N+1 prevention</li>
+                        <li><strong>Caching:</strong> Redis (5 min TTL for dashboards)</li>
+                        <li><strong>Rate Limiting:</strong> 100 queries/min per user</li>
+                    </ul>
+                    <div class="code-snippet">
+query {
+  analytics(
+    metrics: [DAU, WAU, MAU]
+    dimensions: [country, platform]
+    filters: {
+      dateRange: {
+        start: "2025-11-01"
+        end: "2025-11-15"
+      }
+      country: ["US", "IN", "BR"]
+    }
+    granularity: DAY
+  ) {
+    date
+    country
+    platform
+    dau
+    wau
+    mau
+  }
+}</div>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Query result cache (Redis)</li>
+                        <li>Materialized views in ClickHouse</li>
+                        <li>Query complexity limits</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">REST API (FastAPI)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Legacy dashboard support</li>
+                        <li>CSV/JSON export endpoints</li>
+                        <li>Webhook integrations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISUALIZATION -->
+        <div class="section viz-section">
+            <div class="section-title">📈 VISUALIZATION LAYER</div>
+            <div class="component">
+                <div class="component-name">Grafana Dashboards</div>
+                <div class="component-details">
+                    <strong>Dashboards:</strong>
+                    <ul>
+                        <li><strong>Executive:</strong> DAU/MAU trends, growth rate</li>
+                        <li><strong>Product:</strong> Feature adoption, engagement</li>
+                        <li><strong>Engineering:</strong> System health, latency</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Auto-refresh (1 min intervals)</li>
+                        <li>Alerts (PagerDuty integration)</li>
+                        <li>Variables (country, platform filters)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Tableau / Looker</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Ad-hoc Analysis:</strong> Explore data freely</li>
+                        <li><strong>Custom Reports:</strong> Business intelligence</li>
+                        <li><strong>Data Source:</strong> ClickHouse connector</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Custom React Dashboards</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Real-time updates (WebSocket)</li>
+                        <li>Interactive charts (D3.js, Chart.js)</li>
+                        <li>Mobile-responsive</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONITORING & OBSERVABILITY -->
+        <div class="section monitoring-section">
+            <div class="section-title">📊 MONITORING & OBSERVABILITY</div>
+
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Metrics:</strong>
+                    <ul>
+                        <li><strong>Ingestion:</strong> events_per_sec, kafka_lag, duplicate_rate</li>
+                        <li><strong>Processing:</strong> flink_checkpoints, processing_lag, backpressure</li>
+                        <li><strong>Query:</strong> query_latency_p95, cache_hit_rate, concurrent_queries</li>
+                        <li><strong>Storage:</strong> clickhouse_disk_usage, s3_costs, compression_ratio</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">ELK Stack (Logging)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Centralized logging from all services</li>
+                        <li>Structured JSON logs</li>
+                        <li>7-day retention (hot), 90-day (warm)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Jaeger (Distributed Tracing)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Trace event flow: API → Kafka → Flink → ClickHouse</li>
+                        <li>Identify bottlenecks</li>
+                        <li>Sampling: 1% of requests</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">PagerDuty / OpsGenie</div>
+                <div class="component-details">
+                    <strong>Alerts:</strong>
+                    <ul>
+                        <li>Kafka lag > 10 minutes</li>
+                        <li>Flink job failure</li>
+                        <li>DAU drop > 20% (anomaly)</li>
+                        <li>Query latency > 5s (P95)</li>
+                        <li>Ingestion rate drop > 50%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">100M</div>
+                <div class="metric-label">Daily Active Users (DAU)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">5 Billion</div>
+                <div class="metric-label">Events per day</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">150K</div>
+                <div class="metric-label">Peak events/sec</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;1 min</div>
+                <div class="metric-label">Real-time latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;2s</div>
+                <div class="metric-label">Query latency (P95)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">12 KB</div>
+                <div class="metric-label">HLL memory per dimension</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Accuracy (HLL)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">7 TB</div>
+                <div class="metric-label">Hot storage (7 days)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 SYSTEM DESIGN CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Quality & Validation</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Schema Validation:</strong> Protobuf/Avro for type safety</li>
+                    <li><strong>Timestamp Checks:</strong> Reject events >7 days old or future</li>
+                    <li><strong>Required Fields:</strong> user_id, timestamp, event_type</li>
+                    <li><strong>Dead Letter Queue:</strong> Invalid events for debugging</li>
+                    <li><strong>Data Lineage:</strong> Track transformations (dbt, Great Expectations)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Kafka Partitioning:</strong> Hash by user_id (100 partitions)</li>
+                    <li><strong>Flink Parallelism:</strong> 100 parallel tasks</li>
+                    <li><strong>ClickHouse Sharding:</strong> Distributed tables (10 nodes)</li>
+                    <li><strong>Auto-scaling:</strong> Based on Kafka lag, CPU</li>
+                    <li><strong>Backpressure Handling:</strong> Flink watermarks, checkpointing</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Privacy & Compliance</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>GDPR:</strong> User deletion within 30 days</li>
+                    <li><strong>Anonymization:</strong> Hash user_id after 90 days</li>
+                    <li><strong>Aggregates:</strong> No PII, safe to retain long-term</li>
+                    <li><strong>Consent Management:</strong> Opt-out flags per user</li>
+                    <li><strong>Data Retention:</strong> Automated deletion policies</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Cost Optimization</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Compression:</strong> LZ4 (5:1), Parquet (10:1)</li>
+                    <li><strong>Pre-aggregation:</strong> 30,000× storage reduction</li>
+                    <li><strong>Tiered Storage:</strong> Hot (SSD) → Warm (HDD) → Cold (S3)</li>
+                    <li><strong>Sampling:</strong> 1% sample for ad-hoc exploration</li>
+                    <li><strong>Spot Instances:</strong> 70% savings for batch jobs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lambda Architecture Diagram -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">⚡ LAMBDA ARCHITECTURE PATTERN</h2>
+        <div style="background: white; padding: 20px; border-radius: 10px;">
+            <pre style="font-size: 0.9em; line-height: 1.8; color: #334155;">
+┌─────────────────────────────────────────────────────────────┐
+│                        INGESTION                            │
+│                    (Kafka: 150K EPS)                        │
+└──────────────┬──────────────────────────┬───────────────────┘
+               │                          │
+               ▼                          ▼
+┌──────────────────────────┐   ┌─────────────────────────────┐
+│   SPEED LAYER            │   │   BATCH LAYER               │
+│   (Real-time)            │   │   (Historical)              │
+├──────────────────────────┤   ├─────────────────────────────┤
+│ • Apache Flink           │   │ • Apache Spark (EMR)        │
+│ • 5-min windows          │   │ • Hourly/Daily jobs         │
+│ • HyperLogLog            │   │ • Exact calculations        │
+│ • Redis output           │   │ • ClickHouse output         │
+│ • Latency: <1 min        │   │ • Latency: 1 hour           │
+│ • Data: Last 24 hours    │   │ • Data: > 24 hours          │
+└──────────┬───────────────┘   └──────────┬──────────────────┘
+           │                              │
+           └──────────┬───────────────────┘
+                      ▼
+           ┌──────────────────────┐
+           │   SERVING LAYER      │
+           │   (Query Service)    │
+           ├──────────────────────┤
+           │ • Merge results      │
+           │ • Recent: Redis      │
+           │ • Historical: OLAP   │
+           │ • Cache: 5 min TTL   │
+           └──────────────────────┘
+            </pre>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;"><strong>💡 Key Insight:</strong> This architecture achieves 99.99% accuracy with 99.9% memory savings using HyperLogLog</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Apache Kafka • Flink • Spark • ClickHouse • Redis • S3 • Kubernetes</p>
+        <p style="font-size: 0.9em; margin-top: 10px;"><strong>Scale:</strong> 100M DAU • 5B events/day • 150K peak EPS • <2s query latency</p>
+    </div>
+</div>
+</body>
+</html>
