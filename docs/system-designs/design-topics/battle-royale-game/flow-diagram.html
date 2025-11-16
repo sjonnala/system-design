@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Royale Game Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #7c3aed;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #cbd5e0;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #7c3aed;
+        }
+
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description strong {
+            color: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎮 Battle Royale Game Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive System Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('matchmaking')">🎯 Matchmaking Flow</button>
+            <button class="tab" onclick="showDiagram('game-session')">🎮 Game Session Flow</button>
+            <button class="tab" onclick="showDiagram('combat')">⚔️ Combat & Hit Detection</button>
+            <button class="tab" onclick="showDiagram('state-sync')">🔄 State Synchronization</button>
+        </div>
+    </div>
+
+    <!-- Matchmaking Flow Diagram -->
+    <div id="matchmaking-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#7c3aed" />
+                </marker>
+                <linearGradient id="grad-player" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-mm" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-gsm" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-server" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Matchmaking Flow: From Queue to Game Start
+            </text>
+
+            <!-- Player 1 -->
+            <g class="component">
+                <rect x="200" y="80" width="150" height="70" rx="10" fill="url(#grad-player)" stroke="#2563eb" stroke-width="2"/>
+                <text x="275" y="110" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Player 1</text>
+                <text x="275" y="130" font-size="11" text-anchor="middle" fill="white">MMR: 1500</text>
+            </g>
+
+            <!-- Player 2-100 -->
+            <g class="component">
+                <rect x="400" y="80" width="150" height="70" rx="10" fill="url(#grad-player)" stroke="#2563eb" stroke-width="2"/>
+                <text x="475" y="110" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Players 2-100</text>
+                <text x="475" y="130" font-size="11" text-anchor="middle" fill="white">MMR: 1450-1550</text>
+            </g>
+
+            <!-- Arrows to Queue -->
+            <path d="M 275 150 L 350 200" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <path d="M 475 150 L 450 200" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <text x="300" y="180" font-size="11" fill="#6366f1" font-weight="600">Join Queue</text>
+
+            <!-- Matchmaking Queue (Redis) -->
+            <g class="component">
+                <rect x="250" y="200" width="400" height="100" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="450" y="235" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400e">⏳ Matchmaking Queue (Redis)</text>
+                <text x="450" y="260" font-size="12" text-anchor="middle" fill="#92400e">Region: US-West | Skill Bracket: 1000-1500</text>
+                <text x="450" y="280" font-size="11" text-anchor="middle" fill="#92400e">Current Queue: 247 players waiting</text>
+            </g>
+
+            <!-- Arrow to Matchmaker -->
+            <path d="M 450 300 L 450 360" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="470" y="335" font-size="11" fill="#6366f1" font-weight="600">Poll Queue</text>
+
+            <!-- Matchmaking Service -->
+            <g class="component">
+                <rect x="250" y="360" width="400" height="120" rx="10" fill="url(#grad-mm)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="450" y="395" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🎯 Matchmaking Service</text>
+                <text x="450" y="420" font-size="12" text-anchor="middle" fill="white">Algorithm: Skill-based + Region + Wait Time</text>
+                <text x="450" y="440" font-size="11" text-anchor="middle" fill="white">1. Find 100 players (MMR ± 200)</text>
+                <text x="450" y="460" font-size="11" text-anchor="middle" fill="white">2. Expand tolerance: +50 MMR per 30s wait</text>
+            </g>
+
+            <!-- Decision Diamond -->
+            <g class="component">
+                <path d="M 450 520 L 550 580 L 450 640 L 350 580 Z" fill="#dbeafe" stroke="#0284c7" stroke-width="3"/>
+                <text x="450" y="575" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">100 Players</text>
+                <text x="450" y="593" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">Found?</text>
+            </g>
+
+            <!-- NO path (back to queue) -->
+            <path d="M 350 580 L 200 580 L 200 250 L 250 250" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="180" y="420" font-size="12" fill="#dc2626" font-weight="700">NO</text>
+            <text x="180" y="440" font-size="11" fill="#dc2626">Wait &</text>
+            <text x="180" y="455" font-size="11" fill="#dc2626">Expand</text>
+
+            <!-- YES path -->
+            <path d="M 550 580 L 750 580" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)"/>
+            <text x="630" y="570" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- Match Created -->
+            <g class="component">
+                <rect x="750" y="530" width="200" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="850" y="565" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Match Created</text>
+                <text x="850" y="585" font-size="11" text-anchor="middle" fill="#065f46">Match ID: abc123</text>
+                <text x="850" y="605" font-size="11" text-anchor="middle" fill="#065f46">100 Players Selected</text>
+            </g>
+
+            <!-- Arrow to GSM -->
+            <path d="M 850 630 L 850 700" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="870" y="670" font-size="11" fill="#6366f1" font-weight="600">Request Server</text>
+
+            <!-- Game Session Manager -->
+            <g class="component">
+                <rect x="700" y="700" width="300" height="120" rx="10" fill="url(#grad-gsm)" stroke="#ea580c" stroke-width="2"/>
+                <text x="850" y="735" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🎛️ Game Session Manager</text>
+                <text x="850" y="760" font-size="12" text-anchor="middle" fill="white">Kubernetes + Agones</text>
+                <text x="850" y="780" font-size="11" text-anchor="middle" fill="white">1. Check warm pool (500 standby servers)</text>
+                <text x="850" y="800" font-size="11" text-anchor="middle" fill="white">2. Allocate server in us-west-2</text>
+            </g>
+
+            <!-- Decision: Server Available? -->
+            <g class="component">
+                <path d="M 850 860 L 950 920 L 850 980 L 750 920 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="850" y="915" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Server</text>
+                <text x="850" y="933" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Available?</text>
+            </g>
+
+            <!-- NO path (spin up new) -->
+            <path d="M 950 920 L 1100 920" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <text x="1000" y="910" font-size="12" fill="#dc2626" font-weight="700">NO</text>
+
+            <g class="component">
+                <rect x="1100" y="870" width="180" height="100" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="1190" y="905" font-size="13" font-weight="bold" text-anchor="middle" fill="#991b1b">⚙️ Spin Up Server</text>
+                <text x="1190" y="925" font-size="10" text-anchor="middle" fill="#991b1b">From Container Image</text>
+                <text x="1190" y="945" font-size="10" text-anchor="middle" fill="#991b1b">Time: 20-30 seconds</text>
+            </g>
+
+            <path d="M 1190 970 L 1190 1050 L 850 1050 L 850 980" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <!-- YES path (use warm pool) -->
+            <path d="M 850 980 L 850 1050" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)"/>
+            <text x="730" y="1020" font-size="12" fill="#059669" font-weight="700">YES ✓ (Warm Pool)</text>
+
+            <!-- Game Server Allocated -->
+            <g class="component">
+                <rect x="700" y="1050" width="300" height="100" rx="10" fill="url(#grad-server)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="850" y="1085" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🖥️ Dedicated Game Server</text>
+                <text x="850" y="1105" font-size="11" text-anchor="middle" fill="white">IP: 34.56.78.90 | Port: 7777</text>
+                <text x="850" y="1125" font-size="11" text-anchor="middle" fill="white">Status: Initializing Map...</text>
+            </g>
+
+            <!-- Notify Players -->
+            <path d="M 700 1100 L 300 1100 L 300 1180" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="450" y="1120" font-size="12" fill="#059669" font-weight="700">← Notify All Players</text>
+
+            <!-- Players Connect -->
+            <g class="component">
+                <rect x="150" y="1180" width="400" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="350" y="1215" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Players Connect to Server</text>
+                <text x="350" y="1235" font-size="11" text-anchor="middle" fill="#065f46">UDP Connection: 34.56.78.90:7777</text>
+            </g>
+
+            <!-- Game Starts -->
+            <path d="M 550 1220 L 700 1220 L 700 1280" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="600" y="1280" width="200" height="60" rx="10" fill="#7c3aed" stroke="#6366f1" stroke-width="3"/>
+                <text x="700" y="1315" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🎮 GAME START!</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="275" cy="115" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="275" y="122" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="450" cy="250" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="450" y="257" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="450" cy="420" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="450" y="427" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="850" cy="580" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="850" y="587" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="850" cy="760" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="850" y="767" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="850" cy="1100" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="850" y="1107" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🎯 Matchmaking Flow Steps</h3>
+            <ol>
+                <li><strong>Players Join Queue:</strong> Players click "Find Match" and join regional matchmaking queue (stored in Redis sorted set by timestamp)</li>
+                <li><strong>Queue Storage:</strong> Players organized by region and skill bracket (e.g., us-west:1000-1500 MMR). Current wait time displayed to player.</li>
+                <li><strong>Matchmaker Algorithm:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Find 100 players in same region with similar MMR (±200 initially)</li>
+                        <li>Expand tolerance over time: +50 MMR per 30 seconds waiting</li>
+                        <li>Priority to longest-waiting players after 180 seconds</li>
+                    </ul>
+                </li>
+                <li><strong>Match Created:</strong> Once 100 players found, create match entity with unique ID and notify Game Session Manager</li>
+                <li><strong>Server Allocation:</strong> GSM checks warm pool for available server
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>If available:</strong> Allocate from pool (instant - preferred path)</li>
+                        <li><strong>If not available:</strong> Spin up new container (20-30s delay)</li>
+                    </ul>
+                </li>
+                <li><strong>Players Notified:</strong> All 100 players receive connection info (IP, port, auth token) and connect via UDP</li>
+                <li><strong>Game Start:</strong> Once all players connected, server starts match countdown (60s lobby + game start)</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>⚡ Performance Target:</strong> Matchmaking time P95: <60 seconds | Server allocation: <30 seconds
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Session Flow -->
+    <div id="game-session-diagram" class="diagram-container">
+        <svg viewBox="0 0 1600 1200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="800" y="35" font-size="28" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Game Session Flow: 20-Minute Match Lifecycle
+            </text>
+
+            <!-- Timeline -->
+            <line x1="100" y1="100" x2="1500" y2="100" stroke="#cbd5e0" stroke-width="4"/>
+
+            <!-- Phase markers -->
+            <g class="component">
+                <circle cx="100" cy="100" r="20" fill="#10b981" stroke="#059669" stroke-width="3"/>
+                <text x="100" y="108" font-size="14" font-weight="bold" text-anchor="middle" fill="white">0:00</text>
+                <rect x="50" y="140" width="100" height="60" rx="5" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="100" y="165" font-size="12" font-weight="bold" text-anchor="middle" fill="#065f46">Game Start</text>
+                <text x="100" y="185" font-size="10" text-anchor="middle" fill="#065f46">100 Players</text>
+            </g>
+
+            <g class="component">
+                <circle cx="400" cy="100" r="20" fill="#3b82f6" stroke="#2563eb" stroke-width="3"/>
+                <text x="400" y="108" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5:00</text>
+                <rect x="330" y="140" width="140" height="80" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="400" y="165" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e40af">Storm Phase 2</text>
+                <text x="400" y="183" font-size="9" text-anchor="middle" fill="#1e40af">~60 Players Alive</text>
+                <text x="400" y="200" font-size="9" text-anchor="middle" fill="#1e40af">Zone: 1000m</text>
+            </g>
+
+            <g class="component">
+                <circle cx="700" cy="100" r="20" fill="#f59e0b" stroke="#d97706" stroke-width="3"/>
+                <text x="700" y="108" font-size="14" font-weight="bold" text-anchor="middle" fill="white">10:00</text>
+                <rect x="630" y="140" width="140" height="80" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="700" y="165" font-size="11" font-weight="bold" text-anchor="middle" fill="#92400e">Storm Phase 4</text>
+                <text x="700" y="183" font-size="9" text-anchor="middle" fill="#92400e">~20 Players Alive</text>
+                <text x="700" y="200" font-size="9" text-anchor="middle" fill="#92400e">Zone: 250m</text>
+            </g>
+
+            <g class="component">
+                <circle cx="1000" cy="100" r="20" fill="#ef4444" stroke="#dc2626" stroke-width="3"/>
+                <text x="1000" y="108" font-size="14" font-weight="bold" text-anchor="middle" fill="white">15:00</text>
+                <rect x="930" y="140" width="140" height="80" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="1000" y="165" font-size="11" font-weight="bold" text-anchor="middle" fill="#991b1b">Final Circle</text>
+                <text x="1000" y="183" font-size="9" text-anchor="middle" fill="#991b1b">~5 Players Alive</text>
+                <text x="1000" y="200" font-size="9" text-anchor="middle" fill="#991b1b">Zone: 50m</text>
+            </g>
+
+            <g class="component">
+                <circle cx="1300" cy="100" r="20" fill="#7c3aed" stroke="#6366f1" stroke-width="3"/>
+                <text x="1300" y="108" font-size="14" font-weight="bold" text-anchor="middle" fill="white">20:00</text>
+                <rect x="1230" y="140" width="140" height="80" rx="5" fill="#e9d5ff" stroke="#7c3aed" stroke-width="2"/>
+                <text x="1300" y="165" font-size="11" font-weight="bold" text-anchor="middle" fill="#5b21b6">Winner!</text>
+                <text x="1300" y="183" font-size="9" text-anchor="middle" fill="#5b21b6">1 Player Alive</text>
+                <text x="1300" y="200" font-size="9" text-anchor="middle" fill="#5b21b6">Match End</text>
+            </g>
+
+            <!-- Game Server Activities -->
+            <text x="800" y="280" font-size="20" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Server Processing (Every Tick @ 60Hz)
+            </text>
+
+            <g class="component">
+                <rect x="100" y="320" width="280" height="250" rx="10" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+                <text x="240" y="350" font-size="14" font-weight="bold" text-anchor="middle" fill="#075985">📥 Input Processing</text>
+                <text x="240" y="375" font-size="11" text-anchor="middle" fill="#0c4a6e">Receives from all 100 players:</text>
+                <text x="130" y="400" font-size="10" text-anchor="start" fill="#0c4a6e">• Movement inputs (WASD)</text>
+                <text x="130" y="420" font-size="10" text-anchor="start" fill="#0c4a6e">• Camera rotation</text>
+                <text x="130" y="440" font-size="10" text-anchor="start" fill="#0c4a6e">• Actions (jump, crouch, shoot)</text>
+                <text x="130" y="460" font-size="10" text-anchor="start" fill="#0c4a6e">• Inventory changes</text>
+                <text x="240" y="490" font-size="10" font-weight="600" text-anchor="middle" fill="#0284c7">Validation:</text>
+                <text x="130" y="510" font-size="9" text-anchor="start" fill="#0c4a6e">✓ Timestamp check (no future inputs)</text>
+                <text x="130" y="530" font-size="9" text-anchor="start" fill="#0c4a6e">✓ Speed validation (prevent hacks)</text>
+                <text x="130" y="550" font-size="9" text-anchor="start" fill="#0c4a6e">✓ Action legality (can player shoot?)</text>
+            </g>
+
+            <text x="400" y="440" font-size="20" fill="#7c3aed">→</text>
+
+            <g class="component">
+                <rect x="440" y="320" width="280" height="250" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="580" y="350" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">⚙️ Simulation</text>
+                <text x="580" y="375" font-size="11" text-anchor="middle" fill="#78350f">Server-side physics:</text>
+                <text x="470" y="400" font-size="10" text-anchor="start" fill="#78350f">• Update positions</text>
+                <text x="470" y="420" font-size="10" text-anchor="start" fill="#78350f">• Apply gravity/velocity</text>
+                <text x="470" y="440" font-size="10" text-anchor="start" fill="#78350f">• Collision detection</text>
+                <text x="470" y="460" font-size="10" text-anchor="start" fill="#78350f">• Projectile physics</text>
+                <text x="580" y="490" font-size="10" font-weight="600" text-anchor="middle" fill="#f59e0b">Game Logic:</text>
+                <text x="470" y="510" font-size="9" text-anchor="start" fill="#78350f">✓ Storm damage calculation</text>
+                <text x="470" y="530" font-size="9" text-anchor="start" fill="#78350f">✓ Combat resolution (hit detection)</text>
+                <text x="470" y="550" font-size="9" text-anchor="start" fill="#78350f">✓ Loot spawning</text>
+            </g>
+
+            <text x="740" y="440" font-size="20" fill="#7c3aed">→</text>
+
+            <g class="component">
+                <rect x="780" y="320" width="280" height="250" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="920" y="350" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">📤 State Broadcast</text>
+                <text x="920" y="375" font-size="11" text-anchor="middle" fill="#7f1d1d">Send to all clients:</text>
+                <text x="810" y="400" font-size="10" text-anchor="start" fill="#7f1d1d">• Player positions (delta)</text>
+                <text x="810" y="420" font-size="10" text-anchor="start" fill="#7f1d1d">• Health/shield updates</text>
+                <text x="810" y="440" font-size="10" text-anchor="start" fill="#7f1d1d">• Combat events</text>
+                <text x="810" y="460" font-size="10" text-anchor="start" fill="#7f1d1d">• Storm position</text>
+                <text x="920" y="490" font-size="10" font-weight="600" text-anchor="middle" fill="#ef4444">Optimizations:</text>
+                <text x="810" y="510" font-size="9" text-anchor="start" fill="#7f1d1d">✓ Delta compression (only changes)</text>
+                <text x="810" y="530" font-size="9" text-anchor="start" fill="#7f1d1d">✓ Interest management (nearby only)</text>
+                <text x="810" y="550" font-size="9" text-anchor="start" fill="#7f1d1d">✓ Priority (closer = more updates)</text>
+            </g>
+
+            <text x="1080" y="440" font-size="20" fill="#7c3aed">→</text>
+
+            <g class="component">
+                <rect x="1120" y="320" width="280" height="250" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="1260" y="350" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">📊 Analytics</text>
+                <text x="1260" y="375" font-size="11" text-anchor="middle" fill="#064e3b">Async logging:</text>
+                <text x="1150" y="400" font-size="10" text-anchor="start" fill="#064e3b">• Player events (kills, deaths)</text>
+                <text x="1150" y="420" font-size="10" text-anchor="start" fill="#064e3b">• Performance metrics</text>
+                <text x="1150" y="440" font-size="10" text-anchor="start" fill="#064e3b">• Replay recording</text>
+                <text x="1150" y="460" font-size="10" text-anchor="start" fill="#064e3b">• Anti-cheat data</text>
+                <text x="1260" y="490" font-size="10" font-weight="600" text-anchor="middle" fill="#10b981">Destinations:</text>
+                <text x="1150" y="510" font-size="9" text-anchor="start" fill="#064e3b">→ Kafka (event stream)</text>
+                <text x="1150" y="530" font-size="9" text-anchor="start" fill="#064e3b">→ ClickHouse (analytics)</text>
+                <text x="1150" y="550" font-size="9" text-anchor="start" fill="#064e3b">→ S3 (replay storage)</text>
+            </g>
+
+            <!-- Post-Game Flow -->
+            <text x="800" y="630" font-size="20" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Post-Game Flow
+            </text>
+
+            <g class="component">
+                <rect x="300" y="670" width="200" height="100" rx="10" fill="#7c3aed" stroke="#6366f1" stroke-width="3"/>
+                <text x="400" y="705" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🏆 Winner Determined</text>
+                <text x="400" y="730" font-size="11" text-anchor="middle" fill="white">Last player standing</text>
+                <text x="400" y="750" font-size="11" text-anchor="middle" fill="white">or Storm forced end</text>
+            </g>
+
+            <path d="M 500 720 L 600 720" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="600" y="670" width="200" height="100" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="700" y="705" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">📊 Stats Update</text>
+                <text x="700" y="725" font-size="10" text-anchor="middle" fill="#78350f">• Save to DynamoDB</text>
+                <text x="700" y="742" font-size="10" text-anchor="middle" fill="#78350f">• Update MMR</text>
+                <text x="700" y="759" font-size="10" text-anchor="middle" fill="#78350f">• Leaderboard (Redis)</text>
+            </g>
+
+            <path d="M 800 720 L 900 720" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="900" y="670" width="200" height="100" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="1000" y="705" font-size="13" font-weight="bold" text-anchor="middle" fill="#1e40af">💾 Replay Saved</text>
+                <text x="1000" y="725" font-size="10" text-anchor="middle" fill="#1e3a8a">Compress & Upload</text>
+                <text x="1000" y="742" font-size="10" text-anchor="middle" fill="#1e3a8a">to S3 (290 MB)</text>
+                <text x="1000" y="759" font-size="10" text-anchor="middle" fill="#1e3a8a">Retention: 30 days</text>
+            </g>
+
+            <path d="M 700 770 L 700 850" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="550" y="850" width="300" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="700" y="885" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Server Cleanup</text>
+                <text x="700" y="908" font-size="11" text-anchor="middle" fill="#064e3b">Graceful shutdown → Return to warm pool</text>
+            </g>
+
+            <path d="M 700 930 L 700 1000" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="550" y="1000" width="300" height="80" rx="10" fill="#60a5fa" stroke="#3b82f6" stroke-width="3"/>
+                <text x="700" y="1035" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👥 Return Players to Lobby</text>
+                <text x="700" y="1058" font-size="11" text-anchor="middle" fill="white">Ready for next match!</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🎮 Game Session Lifecycle</h3>
+            <p style="margin-bottom: 10px; line-height: 1.6;">
+                A typical Battle Royale match runs for approximately 20 minutes, processing at 60Hz (60 ticks per second).
+                The server handles 100 concurrent players, processing 6,000+ state updates per second.
+            </p>
+            <strong>Server Loop (Every 16.6ms):</strong>
+            <ol>
+                <li><strong>Input Processing:</strong> Receive and validate inputs from all connected players (buffered from network thread)</li>
+                <li><strong>Simulation:</strong> Run authoritative physics, collision detection, combat resolution, storm mechanics</li>
+                <li><strong>State Broadcast:</strong> Send delta-compressed state updates to all clients (only nearby entities, priority-based)</li>
+                <li><strong>Analytics:</strong> Asynchronously log events to Kafka for replay, stats, anti-cheat analysis</li>
+            </ol>
+            <strong>Post-Game:</strong>
+            <ol start="5">
+                <li><strong>Winner Determined:</strong> Last player alive or storm forces end</li>
+                <li><strong>Stats Updated:</strong> Player profiles, MMR, leaderboards updated in DynamoDB and Redis</li>
+                <li><strong>Replay Saved:</strong> Compressed match replay uploaded to S3 (290MB, retained 30 days)</li>
+                <li><strong>Server Cleanup:</strong> Graceful shutdown, return to warm pool for next match</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Combat & Hit Detection Flow -->
+    <div id="combat-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Combat Flow: Hit Detection with Lag Compensation
+            </text>
+
+            <!-- Shooter Client -->
+            <g class="component">
+                <rect x="100" y="80" width="250" height="100" rx="10" fill="url(#grad-player)" stroke="#2563eb" stroke-width="2"/>
+                <text x="225" y="115" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🎯 Shooter (Player A)</text>
+                <text x="225" y="135" font-size="11" text-anchor="middle" fill="white">Client-side: Fires weapon</text>
+                <text x="225" y="155" font-size="10" text-anchor="middle" fill="white">RTT: 80ms | Time: T0</text>
+            </g>
+
+            <path d="M 350 130 L 500 130" stroke="#ef4444" stroke-width="4" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="400" y="120" font-size="11" fill="#dc2626" font-weight="600">Fire Event (UDP)</text>
+
+            <!-- Server -->
+            <g class="component">
+                <rect x="500" y="80" width="300" height="140" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="650" y="115" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400e">🖥️ Game Server</text>
+                <text x="650" y="135" font-size="11" text-anchor="middle" fill="#78350f">Receives fire event at T0 + 40ms</text>
+                <text x="650" y="155" font-size="11" text-anchor="middle" fill="#78350f">(Half of 80ms RTT)</text>
+                <text x="650" y="180" font-size="10" font-weight="600" text-anchor="middle" fill="#f59e0b">State History Buffer:</text>
+                <text x="650" y="200" font-size="9" text-anchor="middle" fill="#78350f">Stores last 2 seconds (120 ticks @ 60Hz)</text>
+            </g>
+
+            <!-- Lag Compensation -->
+            <g class="component">
+                <rect x="500" y="250" width="300" height="180" rx="10" fill="#e0e7ff" stroke="#7c3aed" stroke-width="3"/>
+                <text x="650" y="280" font-size="14" font-weight="bold" text-anchor="middle" fill="#5b21b6">⏪ Lag Compensation</text>
+                <text x="650" y="305" font-size="11" font-weight="600" text-anchor="middle" fill="#6366f1">Step 1: Calculate Rewind Time</text>
+                <text x="650" y="325" font-size="10" text-anchor="middle" fill="#4338ca">Rewind = Current Time - (RTT / 2)</text>
+                <text x="650" y="343" font-size="10" text-anchor="middle" fill="#4338ca">Rewind = T0+40ms - 40ms = T0</text>
+
+                <text x="650" y="368" font-size="11" font-weight="600" text-anchor="middle" fill="#6366f1">Step 2: Rewind World State</text>
+                <text x="650" y="388" font-size="10" text-anchor="middle" fill="#4338ca">Retrieve state at T0 (shooter's perspective)</text>
+
+                <text x="650" y="413" font-size="11" font-weight="600" text-anchor="middle" fill="#6366f1">Step 3: Raycast Hit Detection</text>
+                <text x="650" y="433" font-size="9" text-anchor="start" fill="#4338ca">• Get target's position at T0 (rewound state)</text>
+            </g>
+
+            <!-- Decision -->
+            <g class="component">
+                <path d="M 650 470 L 750 530 L 650 590 L 550 530 Z" fill="#dbeafe" stroke="#0284c7" stroke-width="3"/>
+                <text x="650" y="525" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">Raycast</text>
+                <text x="650" y="543" font-size="13" font-weight="bold" text-anchor="middle" fill="#075985">Hit?</text>
+            </g>
+
+            <!-- Miss Path -->
+            <path d="M 550 530 L 350 530" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <text x="480" y="520" font-size="12" fill="#dc2626" font-weight="700">MISS ✗</text>
+
+            <g class="component">
+                <rect x="150" y="480" width="200" height="100" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="250" y="515" font-size="13" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ No Damage</text>
+                <text x="250" y="535" font-size="10" text-anchor="middle" fill="#7f1d1d">Log to anti-cheat:</text>
+                <text x="250" y="553" font-size="9" text-anchor="middle" fill="#7f1d1d">Suspicious if many</text>
+                <text x="250" y="568" font-size="9" text-anchor="middle" fill="#7f1d1d">impossible shots</text>
+            </g>
+
+            <!-- Hit Path -->
+            <path d="M 750 530 L 950 530" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)"/>
+            <text x="830" y="520" font-size="12" fill="#059669" font-weight="700">HIT ✓</text>
+
+            <g class="component">
+                <rect x="950" y="460" width="350" height="160" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="1125" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Damage Calculation</text>
+
+                <text x="1125" y="515" font-size="11" font-weight="600" text-anchor="middle" fill="#047857">Damage = Base × Modifiers</text>
+                <text x="980" y="538" font-size="10" text-anchor="start" fill="#064e3b">• Base Damage: 45 (assault rifle)</text>
+                <text x="980" y="558" font-size="10" text-anchor="start" fill="#064e3b">• Headshot: 2.0× multiplier</text>
+                <text x="980" y="578" font-size="10" text-anchor="start" fill="#064e3b">• Distance Falloff: 0.9× (85m)</text>
+                <text x="980" y="598" font-size="10" text-anchor="start" fill="#064e3b">• <strong>Final Damage: 81 HP</strong></text>
+            </g>
+
+            <!-- Apply Damage -->
+            <path d="M 1125 620 L 1125 680" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="975" y="680" width="300" height="120" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1125" y="710" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">🎯 Apply to Target</text>
+                <text x="1125" y="735" font-size="11" text-anchor="middle" fill="#78350f">Target (Player B):</text>
+                <text x="1005" y="755" font-size="10" text-anchor="start" fill="#78350f">• Previous HP: 100</text>
+                <text x="1005" y="773" font-size="10" text-anchor="start" fill="#78350f">• Damage Taken: -81</text>
+                <text x="1005" y="791" font-size="10" font-weight="bold" text-anchor="start" fill="#dc2626">• New HP: 19</text>
+            </g>
+
+            <!-- Broadcast -->
+            <g class="component">
+                <rect x="975" y="830" width="300" height="100" rx="10" fill="#e0e7ff" stroke="#7c3aed" stroke-width="2"/>
+                <text x="1125" y="865" font-size="13" font-weight="bold" text-anchor="middle" fill="#5b21b6">📢 Broadcast Event</text>
+                <text x="1005" y="890" font-size="10" text-anchor="start" fill="#4338ca">To all clients:</text>
+                <text x="1005" y="908" font-size="9" text-anchor="start" fill="#4338ca">• Player B took 81 damage</text>
+                <text x="1005" y="923" font-size="9" text-anchor="start" fill="#4338ca">• Hit marker + blood effect</text>
+            </g>
+
+            <!-- Back to clients -->
+            <path d="M 975 880 L 350 880 L 350 180" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="600" y="900" font-size="11" fill="#059669" font-weight="600">← State Update</text>
+
+            <path d="M 975 880 L 850 880 L 850 1020 L 550 1020" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+
+            <!-- Target Client -->
+            <g class="component">
+                <rect x="200" y="970" width="350" height="100" rx="10" fill="url(#grad-player)" stroke="#2563eb" stroke-width="2"/>
+                <text x="375" y="1005" font-size="14" font-weight="bold" text-anchor="middle" fill="white">😵 Target (Player B) - Client</text>
+                <text x="375" y="1030" font-size="11" text-anchor="middle" fill="white">Receives damage notification</text>
+                <text x="375" y="1050" font-size="10" text-anchor="middle" fill="white">Plays: Hit sound, red screen flash, HP update</text>
+            </g>
+
+            <!-- Timeline -->
+            <text x="100" y="1100" font-size="11" fill="#64748b">T0: Shooter fires</text>
+            <text x="400" y="1100" font-size="11" fill="#64748b">T0+40ms: Server receives</text>
+            <text x="750" y="1100" font-size="11" fill="#64748b">T0+45ms: Damage applied</text>
+            <text x="1050" y="1100" font-size="11" fill="#64748b">T0+85ms: Clients notified</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>⚔️ Combat & Hit Detection with Lag Compensation</h3>
+            <p style="margin-bottom: 10px; line-height: 1.6;">
+                <strong>The Challenge:</strong> In a real-time multiplayer game, players have different latencies (50-150ms typical).
+                Without lag compensation, players would need to "lead" their shots based on their ping, creating a terrible experience.
+            </p>
+            <strong>Solution: Server-side Lag Compensation</strong>
+            <ol>
+                <li><strong>Player Fires Weapon:</strong> Client immediately plays fire animation/sound (client-side prediction). Sends fire event to server via UDP with timestamp.</li>
+                <li><strong>Server Receives Event:</strong> Event arrives 40ms later (half of 80ms RTT). Server notes the shooter's latency.</li>
+                <li><strong>Rewind World State:</strong> Server retrieves historical state from 40ms ago (when shooter actually saw the target on their screen)</li>
+                <li><strong>Raycast Hit Detection:</strong> Server performs raycast using:
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Shooter's aim direction (from fire event)</li>
+                        <li>Target's position at rewound time (where they actually were)</li>
+                        <li>Hitbox collision detection (head, body, limbs)</li>
+                    </ul>
+                </li>
+                <li><strong>If HIT:</strong> Calculate damage based on weapon, hitbox location (headshot bonus), distance falloff. Apply to target's current HP.</li>
+                <li><strong>Broadcast Result:</strong> Send damage event to all clients. Shooter sees hit marker. Target sees HP drop and damage feedback.</li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>⚠️ Anti-Cheat Note:</strong> Server validates every shot. If raycast misses but client claims hit, flag as suspicious (aimbot detection).
+            </div>
+        </div>
+    </div>
+
+    <!-- State Synchronization Flow -->
+    <div id="state-sync-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                State Synchronization: Client-Server Architecture
+            </text>
+
+            <!-- Server (Center) -->
+            <g class="component">
+                <rect x="500" y="350" width="400" height="200" rx="15" fill="#fef3c7" stroke="#f59e0b" stroke-width="4"/>
+                <text x="700" y="390" font-size="18" font-weight="bold" text-anchor="middle" fill="#92400e">🖥️ AUTHORITATIVE SERVER</text>
+                <text x="700" y="415" font-size="12" font-weight="600" text-anchor="middle" fill="#78350f">Source of Truth - 60Hz Tick Rate</text>
+
+                <rect x="520" y="430" width="360" height="100" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+                <text x="700" y="455" font-size="11" font-weight="600" text-anchor="middle" fill="#92400e">World State (Current Tick: 3600)</text>
+                <text x="550" y="475" font-size="9" text-anchor="start" fill="#78350f">Player_1: {pos: [102, 50, 200], hp: 95, vel: [2, 0, 1]}</text>
+                <text x="550" y="492" font-size="9" text-anchor="start" fill="#78350f">Player_2: {pos: [150, 52, 180], hp: 100, vel: [0, 0, 0]}</text>
+                <text x="550" y="509" font-size="9" text-anchor="start" fill="#78350f">... (98 more players)</text>
+            </g>
+
+            <!-- Client 1 (Left) -->
+            <g class="component">
+                <rect x="50" y="100" width="300" height="250" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>
+                <text x="200" y="135" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e40af">💻 Client 1 (Player A)</text>
+                <text x="200" y="155" font-size="10" text-anchor="middle" fill="#1e3a8a">Latency: 80ms | FPS: 144</text>
+
+                <rect x="70" y="170" width="260" height="80" rx="5" fill="white" stroke="#3b82f6" stroke-width="2"/>
+                <text x="200" y="190" font-size="10" font-weight="600" text-anchor="middle" fill="#1e40af">Predicted State (Local)</text>
+                <text x="90" y="210" font-size="8" text-anchor="start" fill="#1e3a8a">Self: {pos: [104, 50, 201]} ← Predicted</text>
+                <text x="90" y="225" font-size="8" text-anchor="start" fill="#1e3a8a">Others: Interpolated from server</text>
+
+                <rect x="70" y="260" width="260" height="70" rx="5" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+                <text x="200" y="280" font-size="9" font-weight="600" text-anchor="middle" fill="#075985">Input Buffer</text>
+                <text x="90" y="297" font-size="8" text-anchor="start" fill="#0c4a6e">[{tick: 3598, move: "forward"},</text>
+                <text x="90" y="312" font-size="8" text-anchor="start" fill="#0c4a6e"> {tick: 3599, move: "forward"}]</text>
+            </g>
+
+            <!-- Client 2 (Right) -->
+            <g class="component">
+                <rect x="1050" y="100" width="300" height="250" rx="10" fill="#fce7f3" stroke="#ec4899" stroke-width="3"/>
+                <text x="1200" y="135" font-size="14" font-weight="bold" text-anchor="middle" fill="#9f1239">💻 Client 2 (Player B)</text>
+                <text x="1200" y="155" font-size="10" text-anchor="middle" fill="#831843">Latency: 120ms | FPS: 60</text>
+
+                <rect x="1070" y="170" width="260" height="80" rx="5" fill="white" stroke="#ec4899" stroke-width="2"/>
+                <text x="1200" y="190" font-size="10" font-weight="600" text-anchor="middle" fill="#9f1239">Predicted State (Local)</text>
+                <text x="1090" y="210" font-size="8" text-anchor="start" fill="#831843">Self: {pos: [152, 52, 181]} ← Predicted</text>
+                <text x="1090" y="225" font-size="8" text-anchor="start" fill="#831843">Others: Interpolated</text>
+
+                <rect x="1070" y="260" width="260" height="70" rx="5" fill="#fdf2f8" stroke="#db2777" stroke-width="2"/>
+                <text x="1200" y="280" font-size="9" font-weight="600" text-anchor="middle" fill="#9f1239">Input Buffer</text>
+                <text x="1090" y="297" font-size="8" text-anchor="start" fill="#831843">[{tick: 3597, action: "idle"},</text>
+                <text x="1090" y="312" font-size="8" text-anchor="start" fill="#831843"> {tick: 3598, action: "idle"}]</text>
+            </g>
+
+            <!-- Arrows: Clients → Server (Inputs) -->
+            <path d="M 350 200 L 500 400" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="400" y="290" font-size="10" fill="#3b82f6" font-weight="600" transform="rotate(-20 400 290)">Input: Move Forward</text>
+
+            <path d="M 1050 200 L 900 400" stroke="#ec4899" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+            <text x="960" y="290" font-size="10" fill="#ec4899" font-weight="600" transform="rotate(20 960 290)">Input: Idle</text>
+
+            <!-- Arrows: Server → Clients (State Updates) -->
+            <path d="M 500 450 L 350 300" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="400" y="370" font-size="10" fill="#059669" font-weight="600" transform="rotate(-45 400 370)">State Update</text>
+
+            <path d="M 900 450 L 1050 300" stroke="#10b981" stroke-width="4" marker-end="url(#arrowhead)" stroke-dasharray="8,4"/>
+            <text x="990" y="370" font-size="10" fill="#059669" font-weight="600" transform="rotate(45 990 370)">State Update</text>
+
+            <!-- Timeline -->
+            <text x="700" y="650" font-size="16" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Frame-by-Frame Timeline
+            </text>
+
+            <g class="component">
+                <rect x="100" y="680" width="1200" height="180" rx="10" fill="#f8fafc" stroke="#cbd5e0" stroke-width="2"/>
+
+                <!-- Frame 1 -->
+                <rect x="130" y="710" width="200" height="120" rx="5" fill="#e0e7ff" stroke="#7c3aed" stroke-width="2"/>
+                <text x="230" y="730" font-size="11" font-weight="bold" text-anchor="middle" fill="#5b21b6">Tick 3598 (T0)</text>
+                <text x="150" y="750" font-size="9" text-anchor="start" fill="#4338ca">Client: Predict move</text>
+                <text x="150" y="767" font-size="9" text-anchor="start" fill="#4338ca">Client: Send input to server</text>
+                <text x="150" y="784" font-size="9" text-anchor="start" fill="#4338ca">Server: Receive input (T0+40ms)</text>
+                <text x="150" y="801" font-size="9" text-anchor="start" fill="#4338ca">Server: Simulate & validate</text>
+
+                <!-- Frame 2 -->
+                <rect x="360" y="710" width="200" height="120" rx="5" fill="#dbeafe" stroke="#0284c7" stroke-width="2"/>
+                <text x="460" y="730" font-size="11" font-weight="bold" text-anchor="middle" fill="#075985">Tick 3599 (T0+16ms)</text>
+                <text x="380" y="750" font-size="9" text-anchor="start" fill="#0c4a6e">Client: Continue prediction</text>
+                <text x="380" y="767" font-size="9" text-anchor="start" fill="#0c4a6e">Server: Broadcast state 3598</text>
+                <text x="380" y="784" font-size="9" text-anchor="start" fill="#0c4a6e">Client: Receive (T0+56ms)</text>
+
+                <!-- Frame 3 -->
+                <rect x="590" y="710" width="200" height="120" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="690" y="730" font-size="11" font-weight="bold" text-anchor="middle" fill="#92400e">Tick 3600 (T0+32ms)</text>
+                <text x="610" y="750" font-size="9" text-anchor="start" fill="#78350f">Client: Reconciliation check</text>
+                <text x="610" y="767" font-size="9" text-anchor="start" fill="#78350f">If error > threshold:</text>
+                <text x="620" y="784" font-size="8" text-anchor="start" fill="#78350f">1. Snap to server pos</text>
+                <text x="620" y="800" font-size="8" text-anchor="start" fill="#78350f">2. Replay inputs 3599-3600</text>
+
+                <!-- Frame 4 -->
+                <rect x="820" y="710" width="200" height="120" rx="5" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <text x="920" y="730" font-size="11" font-weight="bold" text-anchor="middle" fill="#065f46">Tick 3601 (T0+48ms)</text>
+                <text x="840" y="750" font-size="9" text-anchor="start" fill="#064e3b">Smooth gameplay continues</text>
+                <text x="840" y="767" font-size="9" text-anchor="start" fill="#064e3b">Client prediction accurate</text>
+                <text x="840" y="784" font-size="9" text-anchor="start" fill="#064e3b">No visible corrections</text>
+
+                <!-- Frame 5 -->
+                <rect x="1050" y="710" width="200" height="120" rx="5" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+                <text x="1150" y="730" font-size="11" font-weight="bold" text-anchor="middle" fill="#9f1239">Other Players</text>
+                <text x="1070" y="750" font-size="9" text-anchor="start" fill="#831843">No prediction (unreliable)</text>
+                <text x="1070" y="767" font-size="9" text-anchor="start" fill="#831843">Interpolation between</text>
+                <text x="1070" y="784" font-size="9" text-anchor="start" fill="#831843">server state updates</text>
+                <text x="1070" y="801" font-size="9" text-anchor="start" fill="#831843">Smooth visual movement</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🔄 State Synchronization Strategy</h3>
+            <p style="margin-bottom: 10px; line-height: 1.6;">
+                <strong>The Problem:</strong> Network latency (50-150ms) makes real-time multiplayer challenging.
+                Without prediction, games feel sluggish. Without server authority, cheating is trivial.
+            </p>
+            <strong>Our Solution: Hybrid Client-Server Model</strong>
+            <ol>
+                <li><strong>Client-Side Prediction (for local player):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Client immediately applies inputs locally (no waiting for server)</li>
+                        <li>Stores inputs in buffer for potential replay</li>
+                        <li>Game feels responsive despite latency</li>
+                    </ul>
+                </li>
+                <li><strong>Server Authority:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Server receives inputs, validates, simulates physics</li>
+                        <li>Server is source of truth - prevents cheating</li>
+                        <li>Broadcasts authoritative state to all clients @ 60Hz</li>
+                    </ul>
+                </li>
+                <li><strong>Reconciliation:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Client compares predicted state with server state</li>
+                        <li>If error > threshold (e.g., 10cm), correct prediction</li>
+                        <li>Snap to server position, replay buffered inputs</li>
+                    </ul>
+                </li>
+                <li><strong>Interpolation (for other players):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Don't predict other players (unreliable)</li>
+                        <li>Interpolate between received server states</li>
+                        <li>Adds ~100ms visual delay but smooth movement</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #e0e7ff; border-left: 4px solid #7c3aed; border-radius: 5px;">
+                <strong>🎯 Result:</strong> Players see responsive movement for themselves, smooth movement for others,
+                while server maintains authoritative control to prevent cheating. Best of both worlds!
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">60 Hz</div>
+                <div class="metric-label">Server Tick Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">16.6ms</div>
+                <div class="metric-label">Time per Tick</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;50ms</div>
+                <div class="metric-label">Server Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">Player RTT (P95)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">6,000</div>
+                <div class="metric-label">Updates/sec per Match</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100 Kbps</div>
+                <div class="metric-label">Bandwidth per Player</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);"></div>
+            <span>Client</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #84cc16, #65a30d);"></div>
+            <span>Matchmaking</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fb923c, #f97316);"></div>
+            <span>Game Session Manager</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+            <span>Game Server</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #fef3c7;"></div>
+            <span>Processing</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #d1fae5;"></div>
+            <span>Success</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(124, 58, 237, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
