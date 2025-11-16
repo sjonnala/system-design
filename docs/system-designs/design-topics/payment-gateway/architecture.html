@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #7c3aed;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #7c3aed;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.acid { background: #dcfce7; color: #166534; }
+        .tag.security { background: #fee2e2; color: #991b1b; }
+        .tag.compliance { background: #fef3c7; color: #92400e; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 3;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 9;
+        }
+
+        .payment-service-section {
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 100%);
+            grid-column: span 4;
+        }
+
+        .fraud-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .webhook-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 4;
+        }
+
+        .processor-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 12;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 3;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .settlement-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .compliance-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            grid-column: span 6;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .key-metrics {
+            background: #dcfce7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #10b981;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💳 Payment Gateway System Design Blueprint</h1>
+        <div class="subtitle">Enterprise-Grade Financial Transaction Processing</div>
+        <div class="tags">
+            <span class="tag acid">ACID Compliant</span>
+            <span class="tag security">PCI-DSS Level 1</span>
+            <span class="tag compliance">SOC 2 Certified</span>
+            <span class="tag scale">High Availability</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">🌐 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Merchant Applications</div>
+                <div class="component-details">
+                    <strong>Integration Types:</strong>
+                    <ul>
+                        <li>Web checkout (JavaScript SDK)</li>
+                        <li>Mobile SDK (iOS/Android)</li>
+                        <li>Server-to-server API</li>
+                        <li>Payment links</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="font-size: 0.75em; color: #1e40af; font-weight: 600; margin: 10px 0;">
+                ↓ HTTPS + API Key Auth
+            </div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> API key validation, JWT verification</li>
+                        <li><strong>Rate Limiting:</strong> Per merchant (1000 req/min), per IP (100 req/min)</li>
+                        <li><strong>Request Validation:</strong> Schema validation, sanitization</li>
+                        <li><strong>TLS Termination:</strong> TLS 1.3, perfect forward secrecy</li>
+                        <li><strong>Circuit Breaker:</strong> Fail fast on downstream issues</li>
+                        <li><strong>Idempotency:</strong> Enforce idempotency key requirement</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # Rate Limit Configuration
+                        Tier 1 (Free):    100 requests/hour
+                        Tier 2 (Starter): 1,000 requests/hour
+                        Tier 3 (Pro):     10,000 requests/hour
+                        Tier 4 (Enterprise): Custom limits
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Service -->
+        <div class="section payment-service-section">
+            <div class="section-title">💰 PAYMENT SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Core Payment Engine</div>
+                <div class="component-details">
+                    <strong>Java/Spring Boot Microservice</strong>
+                    <div class="code-snippet">
+                        Payment State Machine:
+                        CREATED → PENDING → AUTHORIZED
+                           ↓         ↓           ↓
+                        CANCELED  FAILED    CAPTURED
+                                              ↓     ↓
+                                     PARTIAL_REFUND REFUNDED
+                    </div>
+                    <strong>Core Operations:</strong>
+                    <ul>
+                        <li><strong>Authorization:</strong> Reserve funds (7-day hold)</li>
+                        <li><strong>Capture:</strong> Transfer funds (full or partial)</li>
+                        <li><strong>Void:</strong> Cancel authorization</li>
+                        <li><strong>Refund:</strong> Return funds to customer</li>
+                    </ul>
+                    <strong>ACID Guarantees:</strong>
+                    <ul>
+                        <li>PostgreSQL SERIALIZABLE isolation</li>
+                        <li>Optimistic locking (version field)</li>
+                        <li>Database constraints (amount validations)</li>
+                        <li>Immutable audit log</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Idempotency Handler</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Prevent duplicate payments</li>
+                        <li>Redis cache for 24-hour TTL</li>
+                        <li>SHA-256 request fingerprinting</li>
+                        <li>Return cached response on retry</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fraud Detection -->
+        <div class="section fraud-section">
+            <div class="section-title">🛡️ FRAUD DETECTION</div>
+
+            <div class="component">
+                <div class="component-name">Real-time Fraud Engine</div>
+                <div class="component-details">
+                    <strong>Multi-Layer Detection:</strong>
+                    <div class="code-snippet">
+                        1. Rule-Based (100ms)
+                           - Velocity checks
+                           - Geographic anomaly
+                           - Amount anomaly
+                           - Blacklist check
+
+                        2. ML Model (200ms)
+                           - XGBoost classifier
+                           - 150+ features
+                           - Risk score 0-100
+
+                        3. Device Fingerprinting
+                           - Browser fingerprint
+                           - Device ID
+                           - Behavioral patterns
+                    </div>
+                    <strong>Risk Levels:</strong>
+                    <ul>
+                        <li><strong>0-30:</strong> LOW → Auto-approve</li>
+                        <li><strong>31-50:</strong> MEDIUM → Approve with monitoring</li>
+                        <li><strong>51-80:</strong> HIGH → Manual review queue</li>
+                        <li><strong>81-100:</strong> CRITICAL → Auto-decline</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Velocity Checker</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Same card: 5 attempts per hour</li>
+                        <li>Same IP: 10 attempts per hour</li>
+                        <li>Same device: 20 attempts per hour</li>
+                        <li>Redis sorted sets for tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Webhook Service -->
+        <div class="section webhook-section">
+            <div class="section-title">📬 WEBHOOK SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Async Event Delivery</div>
+                <div class="component-details">
+                    <strong>Event Types:</strong>
+                    <ul>
+                        <li>payment_intent.created</li>
+                        <li>payment_intent.succeeded</li>
+                        <li>payment_intent.failed</li>
+                        <li>charge.refunded</li>
+                        <li>charge.disputed</li>
+                    </ul>
+                    <strong>Retry Strategy:</strong>
+                    <div class="code-snippet">
+                        Exponential Backoff:
+                        Attempt 1: Immediate
+                        Attempt 2: 5 seconds
+                        Attempt 3: 10 seconds
+                        Attempt 4: 20 seconds
+                        Attempt 5: 40 seconds
+
+                        Max retries: 5
+                        Failed → Dead Letter Queue
+                    </div>
+                    <strong>Security:</strong>
+                    <ul>
+                        <li>HMAC-SHA256 signature</li>
+                        <li>Timestamp verification (±5 min)</li>
+                        <li>Secret rotation support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Processor Integration -->
+        <div class="section processor-section">
+            <div class="section-title">🔌 PAYMENT PROCESSOR INTEGRATION</div>
+
+            <div class="component">
+                <div class="component-name">Multi-Processor Adapter</div>
+                <div class="component-details">
+                    <strong>Supported Processors:</strong>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
+                        <div style="background: #f0f9ff; padding: 10px; border-radius: 5px; text-align: center;">
+                            <strong>Stripe</strong><br>
+                            <small>Primary (80%)</small>
+                        </div>
+                        <div style="background: #fef3c7; padding: 10px; border-radius: 5px; text-align: center;">
+                            <strong>Visa Direct</strong><br>
+                            <small>Card Network</small>
+                        </div>
+                        <div style="background: #fee2e2; padding: 10px; border-radius: 5px; text-align: center;">
+                            <strong>PayPal</strong><br>
+                            <small>Wallets (15%)</small>
+                        </div>
+                        <div style="background: #e0e7ff; padding: 10px; border-radius: 5px; text-align: center;">
+                            <strong>Adyen</strong><br>
+                            <small>Backup (5%)</small>
+                        </div>
+                    </div>
+                    <strong>Resilience Patterns:</strong>
+                    <ul>
+                        <li><strong>Circuit Breaker:</strong> Open after 5 consecutive failures, half-open after 30s</li>
+                        <li><strong>Timeout:</strong> 10s connect, 30s read</li>
+                        <li><strong>Retry:</strong> 3 attempts with jitter (100ms, 200ms, 400ms)</li>
+                        <li><strong>Fallback:</strong> Route to backup processor on primary failure</li>
+                        <li><strong>Bulkhead:</strong> Isolated connection pools per processor (max 50 connections)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        // Smart Routing Logic
+                        if (processor_health["stripe"] > 0.95) {
+                            route_to("stripe")  // Primary
+                        } else if (processor_health["adyen"] > 0.90) {
+                            route_to("adyen")   // Failover
+                        } else {
+                            route_to("paypal")  // Last resort
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER</div>
+
+            <div class="component">
+                <div class="component-name">PostgreSQL (Primary)</div>
+                <div class="component-details">
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li><strong>Version:</strong> PostgreSQL 15+</li>
+                        <li><strong>Instance:</strong> db.r6g.2xlarge (8 vCPU, 64 GB RAM)</li>
+                        <li><strong>Storage:</strong> 1 TB SSD (io2, 10K IOPS)</li>
+                        <li><strong>Isolation:</strong> SERIALIZABLE</li>
+                    </ul>
+                    <strong>ACID Enforcement:</strong>
+                    <div class="code-snippet">
+                        -- Financial constraints
+                        CHECK (amount > 0)
+                        CHECK (captured_amount <= authorized_amount)
+                        CHECK (refunded_amount <= captured_amount)
+
+                        -- Optimistic locking
+                        version INTEGER NOT NULL
+
+                        -- Unique idempotency
+                        UNIQUE (idempotency_key)
+                    </div>
+                    <strong>Partitioning:</strong>
+                    <ul>
+                        <li>Range partition by created_at (monthly)</li>
+                        <li>Automatic partition creation</li>
+                        <li>12-month retention on hot storage</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Read Replicas (3x)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Asynchronous replication</li>
+                        <li>Lag monitoring (<100ms SLA)</li>
+                        <li>Read-only queries (analytics, reports)</li>
+                        <li>Geographic distribution (multi-region)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Backup Strategy</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Automated daily snapshots (7-year retention)</li>
+                        <li>Continuous WAL archiving (30-second RPO)</li>
+                        <li>Cross-region backup replication</li>
+                        <li>Point-in-time recovery (PITR)</li>
+                        <li>Encrypted backups (AES-256)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>6 nodes (3 masters, 3 replicas)</li>
+                        <li>Consistent hashing</li>
+                        <li>LRU eviction</li>
+                    </ul>
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>Idempotency cache (24h TTL)</li>
+                        <li>Session storage</li>
+                        <li>Rate limiting counters</li>
+                        <li>Velocity tracking (sorted sets)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # Idempotency key
+                        SET idempotency:uuid response EX 86400
+
+                        # Velocity check
+                        ZADD velocity:card:123 timestamp uuid
+                        ZCOUNT velocity:card:123 -inf +inf
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📨 MESSAGE QUEUE</div>
+
+            <div class="component">
+                <div class="component-name">Apache Kafka</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li>payment.created</li>
+                        <li>payment.authorized</li>
+                        <li>payment.captured</li>
+                        <li>payment.refunded</li>
+                        <li>fraud.detected</li>
+                    </ul>
+                    <strong>Config:</strong>
+                    <ul>
+                        <li>3 brokers, replication factor 3</li>
+                        <li>Min in-sync replicas: 2</li>
+                        <li>Retention: 7 days</li>
+                        <li>Partitions: 12 per topic</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS LAYER</div>
+
+            <div class="component">
+                <div class="component-name">ClickHouse (OLAP)</div>
+                <div class="component-details">
+                    <strong>Real-time Analytics:</strong>
+                    <ul>
+                        <li>Transaction volume by merchant</li>
+                        <li>Success/failure rates</li>
+                        <li>Fraud detection metrics</li>
+                        <li>Geographic distribution</li>
+                        <li>Payment method breakdown</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Column-oriented storage</li>
+                        <li>Query latency: <100ms (P95)</li>
+                        <li>Compression ratio: 10:1</li>
+                        <li>Partitioned by day</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Data Warehouse</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Daily ETL from PostgreSQL</li>
+                        <li>Historical trend analysis</li>
+                        <li>Merchant dashboards</li>
+                        <li>Compliance reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settlement -->
+        <div class="section settlement-section">
+            <div class="section-title">💸 SETTLEMENT & RECONCILIATION</div>
+
+            <div class="component">
+                <div class="component-name">Daily Settlement Service</div>
+                <div class="component-details">
+                    <strong>Process Flow:</strong>
+                    <div class="code-snippet">
+                        1. Batch Creation (2 AM UTC)
+                           - Group captured transactions by merchant
+                           - Calculate totals and fees
+
+                        2. Reconciliation
+                           - Compare with processor reports
+                           - Detect discrepancies (>$0.01)
+
+                        3. Payout Initiation
+                           - ACH transfer to merchant bank
+                           - T+2 settlement cycle
+
+                        4. Notification
+                           - Email settlement report
+                           - Webhook: settlement.completed
+                    </div>
+                    <strong>Fee Calculation:</strong>
+                    <ul>
+                        <li>Domestic cards: 2.9% + $0.30</li>
+                        <li>International cards: 3.9% + $0.30</li>
+                        <li>Amex: 3.5% + $0.30</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Reconciliation Engine</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Daily automated reconciliation</li>
+                        <li>Discrepancy alerts (>$100)</li>
+                        <li>Audit trail for all adjustments</li>
+                        <li>Integration with accounting systems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li><strong>Business:</strong> TPS, authorization rate, decline rate</li>
+                        <li><strong>Performance:</strong> P50/P95/P99 latency</li>
+                        <li><strong>Reliability:</strong> Error rate, uptime</li>
+                        <li><strong>Fraud:</strong> Fraud detection rate, false positives</li>
+                    </ul>
+                    <strong>Alert Rules:</strong>
+                    <div class="code-snippet">
+                        # High decline rate
+                        rate(payment_declined[5m]) > 0.10
+
+                        # Database replication lag
+                        postgres_replication_lag_seconds > 30
+
+                        # Fraud spike
+                        rate(fraud_detected[5m]) > 100
+                    </div>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Jaeger for end-to-end tracing</li>
+                        <li>Trace every payment transaction</li>
+                        <li>Performance bottleneck identification</li>
+                        <li>Cross-service debugging</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Log Aggregation</div>
+                <div class="component-details">
+                    <ul>
+                        <li>ELK stack (Elasticsearch, Logstash, Kibana)</li>
+                        <li>Structured JSON logging</li>
+                        <li>7-day retention (hot), 90-day (warm)</li>
+                        <li>PII redaction (mask card numbers, CVV)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance -->
+        <div class="section compliance-section">
+            <div class="section-title">🔒 COMPLIANCE & SECURITY</div>
+
+            <div class="component">
+                <div class="component-name">PCI-DSS Level 1</div>
+                <div class="component-details">
+                    <strong>Requirements:</strong>
+                    <ul>
+                        <li><strong>Tokenization:</strong> Never store real card numbers</li>
+                        <li><strong>Encryption:</strong> TLS 1.3 in transit, AES-256 at rest</li>
+                        <li><strong>Access Control:</strong> Least privilege, MFA</li>
+                        <li><strong>Network Segmentation:</strong> Isolated cardholder data environment</li>
+                        <li><strong>Logging:</strong> Immutable audit trail</li>
+                        <li><strong>Vulnerability Scanning:</strong> Quarterly PCI scans</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">SOC 2 Type II</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Annual third-party audit</li>
+                        <li>Security, availability, confidentiality</li>
+                        <li>Change management procedures</li>
+                        <li>Incident response plan</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Data Privacy (GDPR/CCPA)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Right to deletion (30-day SLA)</li>
+                        <li>Data portability (JSON export)</li>
+                        <li>Consent management</li>
+                        <li>Data residency (EU/US regions)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & SLA</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Uptime SLA (4 nines)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;500ms</div>
+                <div class="metric-label">P95 Authorization Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10M</div>
+                <div class="metric-label">Transactions per day</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">$500M</div>
+                <div class="metric-label">Daily payment volume</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">0.5%</div>
+                <div class="metric-label">False positive fraud rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">Zero</div>
+                <div class="metric-label">Data loss tolerance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">💡 CRITICAL DESIGN PATTERNS FOR FINANCIAL SYSTEMS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">ACID Guarantees</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Atomicity:</strong> All-or-nothing transactions (no partial payments)</li>
+                    <li><strong>Consistency:</strong> Database constraints enforce business rules</li>
+                    <li><strong>Isolation:</strong> SERIALIZABLE level prevents race conditions</li>
+                    <li><strong>Durability:</strong> WAL ensures no data loss on crash</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">Idempotency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Prevent Duplicates:</strong> Same request = same result</li>
+                    <li><strong>UUID Keys:</strong> Client-generated idempotency keys</li>
+                    <li><strong>24-hour Cache:</strong> Redis stores request fingerprints</li>
+                    <li><strong>Conflict Detection:</strong> SHA-256 hash comparison</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">Two-Phase Commit</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Phase 1:</strong> Authorize (reserve funds, 7-day hold)</li>
+                    <li><strong>Phase 2:</strong> Capture (transfer funds, finalize)</li>
+                    <li><strong>Void:</strong> Cancel authorization before capture</li>
+                    <li><strong>Partial Capture:</strong> Capture less than authorized</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">Money Handling</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Decimal Type:</strong> NEVER use float for money!</li>
+                    <li><strong>4 Decimal Places:</strong> DECIMAL(19, 4) for precision</li>
+                    <li><strong>Rounding:</strong> ROUND_HALF_UP for consistency</li>
+                    <li><strong>Currency Precision:</strong> Respect currency rules (JPY has 0 decimals)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">Audit Trail</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Immutable Logs:</strong> Append-only transaction events</li>
+                    <li><strong>Complete History:</strong> Every state change recorded</li>
+                    <li><strong>Regulatory Compliance:</strong> 7-year retention</li>
+                    <li><strong>Forensic Analysis:</strong> Replay transactions for debugging</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #7c3aed; margin-bottom: 10px;">Circuit Breaker</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Closed:</strong> Normal operation, requests flow</li>
+                    <li><strong>Open:</strong> 5+ failures, reject fast (no wait)</li>
+                    <li><strong>Half-Open:</strong> Test recovery after timeout</li>
+                    <li><strong>Fallback:</strong> Route to backup processor</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- State Machine -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🔄 PAYMENT STATE MACHINE</h2>
+        <div style="background: white; padding: 25px; border-radius: 10px; font-family: monospace; font-size: 0.9em;">
+<pre style="color: #1e293b; line-height: 1.8;">
+┌──────────┐
+│ CREATED  │ Initial state when payment intent is created
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│ PENDING  │ Waiting for customer action (3DS, redirect)
+└────┬─────┘
+     │
+     ├──────────────┐
+     ▼              ▼
+┌──────────┐  ┌──────────┐
+│AUTHORIZED│  │  FAILED  │ Terminal state (payment declined)
+└────┬─────┘  └──────────┘
+     │
+     ├──────────────┐
+     ▼              ▼
+┌──────────┐  ┌──────────┐
+│ CAPTURED │  │ CANCELED │ Authorization voided
+└────┬─────┘  └──────────┘
+     │
+     ├──────────────┐
+     ▼              ▼
+┌──────────┐  ┌──────────┐
+│ PARTIAL  │  │ REFUNDED │ Terminal state (full refund)
+│ REFUNDED │  └──────────┘
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│ REFUNDED │ Terminal state (full refund)
+└──────────┘
+
+VALID TRANSITIONS:
+• CREATED → PENDING, CANCELED
+• PENDING → AUTHORIZED, FAILED, CANCELED
+• AUTHORIZED → CAPTURED, CANCELED, FAILED
+• CAPTURED → PARTIALLY_REFUNDED, REFUNDED
+• PARTIALLY_REFUNDED → REFUNDED
+• FAILED, REFUNDED, CANCELED → (terminal, no transitions)
+</pre>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">🏦 <strong>Built for Financial Integrity:</strong> ACID compliance, zero data loss, PCI-DSS Level 1 certified</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Tech Stack: Java/Spring Boot • PostgreSQL • Redis • Kafka • Kubernetes • AWS</p>
+        <p style="font-size: 0.9em; margin-top: 10px; font-style: italic;">"In financial systems, consistency is not negotiable. ACID or nothing." - Senior Payment Architect</p>
+    </div>
+</div>
+</body>
+</html>
