@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Connections System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0a66c2;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #0a66c2;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.graph { background: #dbeafe; color: #1e40af; }
+        .tag.ml { background: #fef3c7; color: #92400e; }
+        .tag.scale { background: #fee2e2; color: #991b1b; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .edge-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 8;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 6;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .connection-service-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .graph-service-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 4;
+        }
+
+        .recommendation-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 4;
+        }
+
+        .graphdb-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 5;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 3;
+        }
+
+        .postgres-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 4;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 12;
+        }
+
+        .ml-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .notification-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            grid-column: span 4;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #0a66c2;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(10, 102, 194, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0a66c2;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #0a66c2;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🤝 LinkedIn Connections System Design Blueprint</h1>
+        <div class="subtitle">Professional Social Graph & ML Recommendation Engine</div>
+        <div class="tags">
+            <span class="tag graph">Graph Database</span>
+            <span class="tag ml">ML-Powered Recommendations</span>
+            <span class="tag scale">800M+ Users</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Multi-Platform Clients</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Web Application (React/Next.js)</li>
+                        <li>iOS/Android Apps (Native)</li>
+                        <li>Desktop Apps (Electron)</li>
+                        <li>API Clients (Partner integrations)</li>
+                    </ul>
+                    <strong>Operations:</strong>
+                    <ul>
+                        <li>Send/Accept connections</li>
+                        <li>View network (1st, 2nd, 3rd degree)</li>
+                        <li>Browse recommendations</li>
+                        <li>Search connections</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS Requests</div>
+        </div>
+
+        <!-- Edge Layer -->
+        <div class="section edge-section">
+            <div class="section-title">⚡ EDGE / CDN LAYER</div>
+            <div class="component">
+                <div class="component-name">CloudFlare + AWS CloudFront</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Static Assets:</strong> Profile pictures, company logos, UI assets</li>
+                        <li><strong>DDoS Protection:</strong> Cloudflare Shield, rate limiting at edge</li>
+                        <li><strong>SSL/TLS Termination:</strong> Secure all connections</li>
+                        <li><strong>Geographic Distribution:</strong> 200+ edge locations worldwide</li>
+                        <li><strong>Caching:</strong> Cache user profile data (public profiles)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        Cache-Control: public, max-age=3600
+                        X-LinkedIn-Edge: hit from cloudfront-sfo
+                        X-RateLimit-Remaining: 95</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">AWS Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Layer 7 load balancing</li>
+                        <li>Health checks every 30 seconds</li>
+                        <li>Auto-scaling integration</li>
+                        <li>Sticky sessions (for stateful operations)</li>
+                        <li>SSL offloading</li>
+                    </ul>
+                    <strong>Routing:</strong>
+                    <ul>
+                        <li>/api/connections → Connection Service</li>
+                        <li>/api/graph → Graph Service</li>
+                        <li>/api/recommendations → ML Service</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Services</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong Gateway / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Authentication:</strong>
+                    <ul>
+                        <li>JWT token validation</li>
+                        <li>OAuth 2.0 for third-party apps</li>
+                        <li>API key management</li>
+                    </ul>
+                    <strong>Rate Limiting:</strong>
+                    <div class="code-snippet">
+                        Free tier: 100 connection requests/day
+                        Premium: 500 requests/day
+                        Per IP: 1000 requests/hour</div>
+                    <strong>Request Validation:</strong>
+                    <ul>
+                        <li>Schema validation (JSON)</li>
+                        <li>User ID verification</li>
+                        <li>Privacy settings enforcement</li>
+                    </ul>
+                    <strong>Observability:</strong>
+                    <ul>
+                        <li>Request tracing (Jaeger)</li>
+                        <li>Metrics collection (Prometheus)</li>
+                        <li>Error logging</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Service -->
+        <div class="section connection-service-section">
+            <div class="section-title">🔗 CONNECTION SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Connection Manager (Java/Spring Boot)</div>
+                <div class="component-details">
+                    <strong>Core Operations:</strong>
+                    <div class="code-snippet">
+                        POST /api/v1/connections/request
+                        PUT  /api/v1/connections/{id}/accept
+                        PUT  /api/v1/connections/{id}/reject
+                        GET  /api/v1/users/{id}/connections
+                        DELETE /api/v1/connections/{id}</div>
+
+                    <strong>Business Logic:</strong>
+                    <ul>
+                        <li><strong>Send Request:</strong> Validate, check rate limits, create pending state</li>
+                        <li><strong>Accept:</strong> Create bidirectional edge in graph, update counts</li>
+                        <li><strong>Reject:</strong> Mark request as rejected, increment rejection counter</li>
+                        <li><strong>Block:</strong> Prevent future connection attempts</li>
+                    </ul>
+
+                    <strong>State Machine:</strong>
+                    <div class="code-snippet">
+                        PENDING → ACCEPTED → CONNECTED
+                                → REJECTED → CLOSED
+                                → BLOCKED  → PERMANENT</div>
+
+                    <strong>Privacy Enforcement:</strong>
+                    <ul>
+                        <li>Check if user allows requests from strangers</li>
+                        <li>Respect connection visibility settings</li>
+                        <li>Filter blocked users</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Service -->
+        <div class="section graph-service-section">
+            <div class="section-title">🕸️ GRAPH SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Graph Query Engine (Python/FastAPI)</div>
+                <div class="component-details">
+                    <strong>Graph Algorithms:</strong>
+                    <ul>
+                        <li><strong>Degree Calculation:</strong> BFS up to 3 degrees
+                            <div class="code-snippet">
+                                // Neo4j Cypher
+                                MATCH path = shortestPath(
+                                (a:User)-[:CONNECTED*1..3]-(b:User)
+                                )
+                                RETURN length(path)</div>
+                        </li>
+                        <li><strong>Mutual Connections:</strong> Graph intersection</li>
+                        <li><strong>Network Size:</strong> Count 1st, 2nd, 3rd degree</li>
+                        <li><strong>Connection Path:</strong> Find path between any two users</li>
+                    </ul>
+
+                    <strong>Optimizations:</strong>
+                    <ul>
+                        <li>Bidirectional BFS (search from both ends)</li>
+                        <li>Early termination at 3 degrees</li>
+                        <li>Connection pooling to graph DB</li>
+                        <li>Query result caching (Redis)</li>
+                    </ul>
+
+                    <strong>APIs:</strong>
+                    <div class="code-snippet">
+                        GET /api/v1/graph/degree/{user1}/{user2}
+                        GET /api/v1/graph/mutual/{user1}/{user2}
+                        GET /api/v1/graph/path/{user1}/{user2}
+                        GET /api/v1/graph/network-size/{user}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation Engine -->
+        <div class="section recommendation-section">
+            <div class="section-title">🎯 RECOMMENDATION ENGINE</div>
+
+            <div class="component">
+                <div class="component-name">ML-Powered "People You May Know"</div>
+                <div class="component-details">
+                    <strong>Two-Stage Pipeline:</strong>
+                    <ul>
+                        <li><strong>Stage 1: Candidate Generation</strong>
+                            <div class="code-snippet">
+                                // Get 2nd degree connections
+                                MATCH (user)-[:CONNECTED*2]-(candidate)
+                                WHERE NOT (user)-[:CONNECTED]-(candidate)
+                                RETURN candidate LIMIT 1000</div>
+                        </li>
+                        <li><strong>Stage 2: ML Ranking</strong>
+                            <ul>
+                                <li>LightGBM/XGBoost model</li>
+                                <li>Features: mutual connections, shared employers, skills</li>
+                                <li>Training: Weekly batch jobs</li>
+                                <li>Serving: Real-time prediction</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <strong>Feature Engineering:</strong>
+                    <div class="code-snippet">
+                        Features:
+                        - mutual_connections_count
+                        - shared_companies
+                        - shared_schools
+                        - skill_similarity (Jaccard)
+                        - profile_view_history
+                        - location_proximity
+                        - industry_match
+                        - seniority_difference</div>
+
+                    <strong>Personalization:</strong>
+                    <ul>
+                        <li>User engagement history</li>
+                        <li>Click-through rate tracking</li>
+                        <li>A/B testing framework</li>
+                        <li>Feedback loop (accepted connections → positive signal)</li>
+                    </ul>
+
+                    <strong>Serving:</strong>
+                    <ul>
+                        <li>Pre-compute top 100 recommendations (batch)</li>
+                        <li>Cache in Redis (24-hour TTL)</li>
+                        <li>Real-time filtering (remove connected users)</li>
+                        <li>Re-rank based on recent activity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Database -->
+        <div class="section graphdb-section">
+            <div class="section-title">🗄️ GRAPH DATABASE</div>
+
+            <div class="component">
+                <div class="component-name">Neo4j / Amazon Neptune / Dgraph</div>
+                <div class="component-details">
+                    <strong>Why Graph DB?</strong>
+                    <ul>
+                        <li>Optimized for relationship queries</li>
+                        <li>Native graph storage and processing</li>
+                        <li>Sub-second traversal of millions of nodes</li>
+                        <li>Cypher/Gremlin query language</li>
+                    </ul>
+
+                    <strong>Data Model:</strong>
+                    <div class="code-snippet">
+                        Nodes:
+                        - User (800M nodes)
+                        - Company (10M nodes)
+                        - School (100K nodes)
+
+                        Relationships:
+                        - CONNECTED_TO (bidirectional, 200B edges)
+                        - WORKS_AT (800M edges)
+                        - ATTENDED (500M edges)
+                        - REQUESTED (pending connections)
+                        - BLOCKED (user blocks)</div>
+
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li><strong>Sharding:</strong> 16 shards by user ID hash</li>
+                        <li><strong>Replication:</strong> 3x replicas per shard</li>
+                        <li><strong>Master-Slave:</strong> Writes to master, reads from replicas</li>
+                    </ul>
+
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>1st degree query: <10ms</li>
+                        <li>2nd degree query: 50-100ms</li>
+                        <li>3rd degree query: 200-500ms</li>
+                        <li>Mutual connections: 20-50ms</li>
+                    </ul>
+
+                    <strong>Backup & DR:</strong>
+                    <ul>
+                        <li>Incremental backups every hour</li>
+                        <li>Full backup daily</li>
+                        <li>Cross-region replication (async)</li>
+                        <li>Point-in-time recovery</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 REDIS CACHE</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <div class="code-snippet">
+                        # User connections (1st degree)
+                        SET user:123:conns "json_array"
+                        EXPIRE 3600  # 1 hour TTL
+
+                        # Recommendations
+                        ZADD recs:123 0.95 "user456"
+                        ZADD recs:123 0.87 "user789"
+                        EXPIRE 86400  # 24 hour TTL
+
+                        # Mutual connections
+                        SET mutual:123:456 "json"
+                        EXPIRE 7200  # 2 hour TTL
+
+                        # Rate limiting
+                        INCR conn_req:123:2025-11-16
+                        EXPIRE 86400</div>
+
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li>16-node cluster (sharded)</li>
+                        <li>3x replication per shard</li>
+                        <li>LRU eviction policy</li>
+                        <li>~2TB total memory</li>
+                    </ul>
+
+                    <strong>Hit Rates:</strong>
+                    <ul>
+                        <li>Connection queries: 85%</li>
+                        <li>Recommendations: 90%</li>
+                        <li>Mutual connections: 70%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PostgreSQL -->
+        <div class="section postgres-section">
+            <div class="section-title">🐘 POSTGRESQL</div>
+            <div class="component">
+                <div class="component-name">Metadata & Transactional Data</div>
+                <div class="component-details">
+                    <strong>Tables:</strong>
+                    <ul>
+                        <li><strong>users:</strong> Profile metadata, email, settings</li>
+                        <li><strong>connection_requests:</strong> Pending/rejected requests</li>
+                        <li><strong>connections:</strong> Accepted connections (denormalized)</li>
+                        <li><strong>privacy_settings:</strong> User preferences</li>
+                        <li><strong>user_activities:</strong> Audit log, ML features</li>
+                    </ul>
+
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>Connection request state management</li>
+                        <li>User authentication data</li>
+                        <li>Connection count tracking</li>
+                        <li>Activity logging for ML</li>
+                    </ul>
+
+                    <strong>Scaling:</strong>
+                    <ul>
+                        <li>Primary + 5 read replicas</li>
+                        <li>Sharding by user_id (16 shards)</li>
+                        <li>CQRS: Writes to primary, reads from replicas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE (Apache Kafka)</div>
+
+            <div class="component">
+                <div class="component-name">Event-Driven Architecture</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <div class="code-snippet">
+                        connection.requested  - New connection request sent
+                        connection.accepted   - Request accepted, new connection created
+                        connection.rejected   - Request rejected
+                        connection.removed    - Users disconnected
+                        recommendation.shown  - Recommendation displayed to user
+                        recommendation.clicked - User clicked on recommendation
+                        profile.viewed        - User viewed another user's profile</div>
+
+                    <strong>Consumer Groups:</strong>
+                    <ul>
+                        <li><strong>Notification Service:</strong> Send emails/push notifications</li>
+                        <li><strong>Analytics Service:</strong> Track metrics, user behavior</li>
+                        <li><strong>ML Pipeline:</strong> Feature extraction, model training data</li>
+                        <li><strong>Feed Service:</strong> Update user activity feeds</li>
+                        <li><strong>Cache Invalidation:</strong> Clear stale caches</li>
+                    </ul>
+
+                    <strong>Event Schema Example:</strong>
+                    <div class="code-snippet">
+                        {
+                          "event_type": "connection.accepted",
+                          "event_id": "uuid-here",
+                          "timestamp": "2025-11-16T10:30:00Z",
+                          "from_user_id": 123456,
+                          "to_user_id": 789012,
+                          "metadata": {
+                            "request_id": 555,
+                            "message": "Thanks for connecting!",
+                            "accepted_at": "2025-11-16T10:30:00Z"
+                          }
+                        }</div>
+
+                    <strong>Throughput:</strong>
+                    <ul>
+                        <li>Peak: 50K events/sec</li>
+                        <li>Retention: 7 days for hot data</li>
+                        <li>Partitioning: By user_id hash</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Training Pipeline -->
+        <div class="section ml-section">
+            <div class="section-title">🤖 ML TRAINING PIPELINE</div>
+
+            <div class="component">
+                <div class="component-name">Apache Spark + MLflow</div>
+                <div class="component-details">
+                    <strong>Training Pipeline:</strong>
+                    <ul>
+                        <li><strong>Data Collection:</strong> Kafka → S3 (Parquet format)</li>
+                        <li><strong>Feature Engineering:</strong> Spark jobs (daily)</li>
+                        <li><strong>Model Training:</strong> LightGBM/XGBoost (weekly)</li>
+                        <li><strong>Evaluation:</strong> A/B testing, offline metrics</li>
+                        <li><strong>Deployment:</strong> Model registry → serving layer</li>
+                    </ul>
+
+                    <strong>Features Extracted:</strong>
+                    <div class="code-snippet">
+                        User features:
+                        - connection_count
+                        - avg_response_time
+                        - acceptance_rate
+                        - profile_completeness
+
+                        Pairwise features:
+                        - mutual_connections
+                        - shared_employers
+                        - shared_schools
+                        - skill_jaccard_similarity
+                        - location_distance_km</div>
+
+                    <strong>Model Metrics:</strong>
+                    <ul>
+                        <li>AUC-ROC: 0.87 (prediction quality)</li>
+                        <li>Precision@10: 0.45 (top 10 recommendations)</li>
+                        <li>CTR: 12% (user engagement)</li>
+                        <li>Acceptance Rate: 35% (requests sent via recs)</li>
+                    </ul>
+
+                    <strong>Infrastructure:</strong>
+                    <ul>
+                        <li>Spark cluster: 50 nodes (on-demand)</li>
+                        <li>Training data: 1PB in S3</li>
+                        <li>Model artifacts: MLflow registry</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Service -->
+        <div class="section notification-section">
+            <div class="section-title">🔔 NOTIFICATION SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">Multi-Channel Notifications</div>
+                <div class="component-details">
+                    <strong>Channels:</strong>
+                    <ul>
+                        <li><strong>Email:</strong> Connection requests, acceptances (AWS SES)</li>
+                        <li><strong>Push Notifications:</strong> Mobile apps (FCM, APNs)</li>
+                        <li><strong>In-App:</strong> Bell icon, notification center</li>
+                        <li><strong>SMS:</strong> Critical alerts (optional, Twilio)</li>
+                    </ul>
+
+                    <strong>Event Triggers:</strong>
+                    <ul>
+                        <li>Connection request received</li>
+                        <li>Connection request accepted</li>
+                        <li>New recommendations available</li>
+                        <li>Profile viewed by connection</li>
+                    </ul>
+
+                    <strong>Personalization:</strong>
+                    <ul>
+                        <li>User notification preferences</li>
+                        <li>Quiet hours enforcement</li>
+                        <li>Batching (digest emails)</li>
+                        <li>Smart throttling (prevent spam)</li>
+                    </ul>
+
+                    <strong>Scalability:</strong>
+                    <ul>
+                        <li>Queue-based processing (SQS)</li>
+                        <li>Batch sending (1000 emails/sec)</li>
+                        <li>Template rendering (Handlebars)</li>
+                        <li>Delivery tracking & retry logic</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Service -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS SERVICE</div>
+
+            <div class="component">
+                <div class="component-name">ClickHouse + Redshift</div>
+                <div class="component-details">
+                    <strong>Metrics Tracked:</strong>
+                    <ul>
+                        <li>Connection request rate (per user, per day)</li>
+                        <li>Acceptance rate (%)</li>
+                        <li>Time to accept (median, P95)</li>
+                        <li>Recommendation CTR</li>
+                        <li>Network growth rate</li>
+                        <li>Degree distribution (how many users at each degree)</li>
+                    </ul>
+
+                    <strong>Dashboards:</strong>
+                    <ul>
+                        <li><strong>User Metrics:</strong> Grafana dashboards</li>
+                        <li><strong>Business KPIs:</strong> Tableau/Looker</li>
+                        <li><strong>ML Model Performance:</strong> MLflow UI</li>
+                        <li><strong>System Health:</strong> Prometheus + Grafana</li>
+                    </ul>
+
+                    <strong>Data Pipeline:</strong>
+                    <div class="code-snippet">
+                        Kafka events → Flink (stream processing)
+                                    → ClickHouse (real-time)
+                                    → S3 (data lake)
+                                    → Redshift (data warehouse)
+                                    → BI tools</div>
+
+                    <strong>Storage:</strong>
+                    <ul>
+                        <li>ClickHouse: 7-day hot data (fast queries)</li>
+                        <li>Redshift: Historical data (90 days)</li>
+                        <li>S3 Glacier: Long-term archival (7 years)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">800M</div>
+                <div class="metric-label">Total Users</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">200B</div>
+                <div class="metric-label">Total Connection Edges</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">46K QPS</div>
+                <div class="metric-label">Read Throughput (peak: 90K)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1.5K QPS</div>
+                <div class="metric-label">Write Throughput (peak: 3K)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;200ms</div>
+                <div class="metric-label">P95 Connection Query Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">12TB</div>
+                <div class="metric-label">Primary Graph Data</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">2TB</div>
+                <div class="metric-label">Redis Cache Size</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">System Availability</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">500/user</div>
+                <div class="metric-label">Avg Connections per User</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Considerations -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #0a66c2; margin-bottom: 10px;">Security & Privacy</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Privacy Levels:</strong> Public, Connections Only, Private</li>
+                    <li><strong>Block/Report:</strong> Prevent abuse, spam detection</li>
+                    <li><strong>Rate Limiting:</strong> 100 requests/day per user</li>
+                    <li><strong>Data Encryption:</strong> TLS 1.3, encrypted at rest</li>
+                    <li><strong>GDPR Compliance:</strong> Right to be forgotten, data export</li>
+                    <li><strong>Authentication:</strong> JWT, OAuth 2.0, MFA support</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #0a66c2; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Graph Sharding:</strong> 16 shards by user ID hash</li>
+                    <li><strong>Read Replicas:</strong> 3x replicas per shard</li>
+                    <li><strong>Horizontal Scaling:</strong> Auto-scale API servers (10-200)</li>
+                    <li><strong>Caching:</strong> Multi-tier (L1 app, L2 Redis, L3 DB)</li>
+                    <li><strong>Async Processing:</strong> Kafka for non-critical operations</li>
+                    <li><strong>Geographic Distribution:</strong> Multi-region deployment</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #0a66c2; margin-bottom: 10px;">Data Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Connection State:</strong> Strong consistency (PostgreSQL ACID)</li>
+                    <li><strong>Graph Data:</strong> Eventual consistency acceptable</li>
+                    <li><strong>Recommendations:</strong> Stale data OK (refresh daily)</li>
+                    <li><strong>Cache Invalidation:</strong> Event-driven + TTL</li>
+                    <li><strong>Conflict Resolution:</strong> Last-write-wins for edges</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #0a66c2; margin-bottom: 10px;">Monitoring & Observability</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Metrics:</strong> Prometheus + Grafana dashboards</li>
+                    <li><strong>Logging:</strong> ELK stack (centralized logs)</li>
+                    <li><strong>Tracing:</strong> Jaeger (distributed traces)</li>
+                    <li><strong>Alerting:</strong> PagerDuty, Slack integration</li>
+                    <li><strong>SLOs:</strong> P95 latency < 200ms, uptime 99.99%</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graph Database Deep Dive -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%); border-radius: 15px;">
+        <h2 style="color: #92400e; margin-bottom: 20px;">🕸️ GRAPH DATABASE ARCHITECTURE</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #0a66c2;">
+                <h4 style="color: #0a66c2; margin-bottom: 10px;">Neo4j Schema</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-size: 0.85em; overflow-x: auto;">
+// Nodes
+(:User {userId, name, email, ...})
+(:Company {companyId, name, ...})
+(:School {schoolId, name, ...})
+
+// Relationships
+(User)-[:CONNECTED_TO]->(User)
+(User)-[:WORKS_AT]->(Company)
+(User)-[:ATTENDED]->(School)
+(User)-[:REQUESTED]->(User)
+(User)-[:BLOCKED]->(User)</pre>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Query Examples</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-size: 0.85em; overflow-x: auto;">
+// Find mutual connections
+MATCH (a:User)-[:CONNECTED]-(m)-[:CONNECTED]-(b:User)
+WHERE a.userId = $userA AND b.userId = $userB
+RETURN m
+
+// Calculate degree
+MATCH path = shortestPath(
+  (a:User)-[:CONNECTED*1..3]-(b:User)
+)
+RETURN length(path)</pre>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Sharding Strategy</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Shard by User ID:</strong><br>
+                    - Hash user_id % 16 = shard_id<br>
+                    - Each shard: 50M users<br>
+                    - 3x replication per shard<br>
+                    - Cross-shard queries via coordinator<br>
+                    <br>
+                    <strong>Trade-off:</strong> Most connections are within shard (80%+), minimizing cross-shard queries
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>LinkedIn-Scale Architecture:</strong> Designed to handle 800M users with 200B connection edges using graph databases, ML recommendations, and distributed systems</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Neo4j/Dgraph • PostgreSQL • Redis • Kafka • LightGBM • Spark • Kubernetes</p>
+    </div>
+</div>
+</body>
+</html>
