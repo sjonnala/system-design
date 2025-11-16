@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Exchange System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e3a8a;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.acid { background: #fee2e2; color: #991b1b; }
+        .tag.consistency { background: #dbeafe; color: #1e40af; }
+        .tag.latency { background: #fef3c7; color: #92400e; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #3b82f6 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #06b6d4 100%);
+            grid-column: span 8;
+        }
+
+        .order-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .matching-section {
+            background: linear-gradient(135deg, #fecaca 0%, #dc2626 100%);
+            grid-column: span 4;
+        }
+
+        .trade-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #f97316 100%);
+            grid-column: span 4;
+        }
+
+        .portfolio-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #6366f1 100%);
+            grid-column: span 3;
+        }
+
+        .risk-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 3;
+        }
+
+        .marketdata-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%);
+            grid-column: span 3;
+        }
+
+        .settlement-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #a855f7 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .eventstore-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 3;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .compliance-section {
+            background: linear-gradient(135deg, #fee2e2 0%, #ef4444 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #1e40af;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .acid-badge {
+            background: #dc2626;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📈 Stock Exchange System Design Blueprint</h1>
+        <div class="subtitle">ACID-Compliant, Low-Latency Trading Platform</div>
+        <div class="tags">
+            <span class="tag acid">ACID Transactions</span>
+            <span class="tag consistency">Strong Consistency</span>
+            <span class="tag latency">&lt;1ms Matching</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Trading Clients</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Web Trading:</strong> React/Angular SPA</li>
+                        <li><strong>Mobile Apps:</strong> iOS, Android</li>
+                        <li><strong>FIX API:</strong> Institutional traders</li>
+                        <li><strong>Algo Trading:</strong> Python SDK, REST API</li>
+                        <li><strong>HFT:</strong> Co-located servers</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Orders via HTTPS/WebSocket/FIX</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY & LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">Kong API Gateway</div>
+                <div class="component-details">
+                    <strong>Authentication & Authorization:</strong>
+                    <ul>
+                        <li>JWT tokens (retail traders)</li>
+                        <li>OAuth2 / SAML (institutional)</li>
+                        <li>API keys with HMAC signatures</li>
+                        <li>Hardware tokens (YubiKey) for high-value accounts</li>
+                    </ul>
+                    <strong>Rate Limiting:</strong>
+                    <div class="code-snippet">
+                        Retail: 100 orders/min
+                        Premium: 1000 orders/min
+                        Institutional: 10K orders/min
+                        Market Maker: 100K orders/min</div>
+                    <strong>Security:</strong>
+                    <ul>
+                        <li>DDoS protection (AWS Shield, Cloudflare)</li>
+                        <li>IP whitelisting for institutional clients</li>
+                        <li>TLS 1.3 encryption</li>
+                        <li>Request signing (prevent replay attacks)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Load Balancer (F5 / HAProxy)</div>
+                <div class="component-details">
+                    <strong>Strategies:</strong>
+                    <ul>
+                        <li>Least connections for order services</li>
+                        <li>IP hash for WebSocket (sticky sessions)</li>
+                        <li>Health checks every 5 seconds</li>
+                        <li>Auto-scaling: 10-100 instances</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Service -->
+        <div class="section order-section">
+            <div class="section-title">📝 ORDER SERVICE</div>
+            <div class="component">
+                <div class="component-name">Order Management
+                    <span class="acid-badge">ACID</span>
+                </div>
+                <div class="component-details">
+                    <strong>Pre-Trade Validation:</strong>
+                    <ul>
+                        <li>Symbol validity check</li>
+                        <li>Market hours verification</li>
+                        <li>Order size limits (min/max)</li>
+                        <li>Price collar checks (±10% from NBBO)</li>
+                    </ul>
+                    <strong>Risk Checks:</strong>
+                    <div class="code-snippet">
+                        // Buying power check
+                        if (order.value > account.buyingPower) {
+                            reject("Insufficient funds");
+                        }
+
+                        // Position limit check
+                        if (newPosition > account.positionLimit) {
+                            reject("Position limit exceeded");
+                        }</div>
+                    <strong>Order Types:</strong>
+                    <ul>
+                        <li>Market: Execute at current best price</li>
+                        <li>Limit: Execute at specified price or better</li>
+                        <li>Stop: Trigger at stop price</li>
+                        <li>Stop-Limit: Stop + limit combination</li>
+                        <li>IOC: Immediate-or-cancel</li>
+                        <li>FOK: Fill-or-kill</li>
+                        <li>GTC: Good-till-cancelled</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Engine -->
+        <div class="section matching-section">
+            <div class="section-title">⚡ MATCHING ENGINE (CORE)</div>
+            <div class="component">
+                <div class="component-name">In-Memory Order Book
+                    <span class="acid-badge">CRITICAL</span>
+                </div>
+                <div class="component-details">
+                    <strong>Implementation:</strong>
+                    <ul>
+                        <li><strong>Language:</strong> C++17 / Rust</li>
+                        <li><strong>Data Structure:</strong> Lock-free skip lists</li>
+                        <li><strong>Algorithm:</strong> Price-Time Priority</li>
+                        <li><strong>Latency Target:</strong> &lt;100 microseconds</li>
+                    </ul>
+                    <strong>Order Book Structure:</strong>
+                    <div class="code-snippet">
+                        BID (Buy Orders) - Descending by Price
+                        ┌─────────┬──────────┬────────┐
+                        │ $150.50 │ 1,000 sh │ 5 ords │
+                        │ $150.45 │ 2,500 sh │ 12 ords│
+                        │ $150.40 │ 5,000 sh │ 20 ords│
+                        └─────────┴──────────┴────────┘
+
+                        ASK (Sell Orders) - Ascending by Price
+                        ┌─────────┬──────────┬────────┐
+                        │ $150.55 │ 800 sh   │ 3 ords │
+                        │ $150.60 │ 1,500 sh │ 7 ords │
+                        │ $150.65 │ 3,000 sh │ 15 ords│
+                        └─────────┴──────────┴────────┘</div>
+                    <strong>Matching Logic:</strong>
+                    <ul>
+                        <li>Aggressive order crosses spread → immediate fill</li>
+                        <li>Partial fills allowed (unless FOK)</li>
+                        <li>FIFO within price level (time priority)</li>
+                        <li>Pro-rata for some derivatives exchanges</li>
+                    </ul>
+                    <strong>Hardware Optimization:</strong>
+                    <ul>
+                        <li>Bare metal servers (no virtualization)</li>
+                        <li>CPU pinning (dedicated cores)</li>
+                        <li>NUMA-aware memory allocation</li>
+                        <li>Kernel bypass networking (DPDK)</li>
+                        <li>10GbE/40GbE low-latency NICs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Execution Service -->
+        <div class="section trade-section">
+            <div class="section-title">✅ TRADE EXECUTION</div>
+            <div class="component">
+                <div class="component-name">Trade Service
+                    <span class="acid-badge">ACID</span>
+                </div>
+                <div class="component-details">
+                    <strong>Atomic Trade Execution:</strong>
+                    <div class="code-snippet">
+                        BEGIN TRANSACTION;
+
+                        -- 1. Create trade record
+                        INSERT INTO trades VALUES (...);
+
+                        -- 2. Update buyer account
+                        UPDATE accounts
+                        SET cash_balance = cash_balance - trade_value
+                        WHERE account_id = buyer_id;
+
+                        -- 3. Update seller account
+                        UPDATE accounts
+                        SET cash_balance = cash_balance + trade_value
+                        WHERE account_id = seller_id;
+
+                        -- 4. Update positions
+                        UPDATE positions ...;
+
+                        -- 5. Create ledger entries (double-entry)
+                        INSERT INTO ledger_entries ...;
+
+                        COMMIT; -- All or nothing!</div>
+                    <strong>Post-Trade Processing:</strong>
+                    <ul>
+                        <li>Send execution reports (FIX messages)</li>
+                        <li>Update order status (FILLED/PARTIAL)</li>
+                        <li>Publish trade to market data feed</li>
+                        <li>Trigger settlement workflow (T+2)</li>
+                        <li>Update analytics (real-time P&L)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Service -->
+        <div class="section portfolio-section">
+            <div class="section-title">💼 PORTFOLIO</div>
+            <div class="component">
+                <div class="component-name">Portfolio Management</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Real-time position tracking</li>
+                        <li>P&L calculation (realized/unrealized)</li>
+                        <li>Average cost basis</li>
+                        <li>Tax lot tracking (FIFO, LIFO)</li>
+                        <li>Performance metrics (Sharpe ratio)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Management -->
+        <div class="section risk-section">
+            <div class="section-title">⚠️ RISK MGMT</div>
+            <div class="component">
+                <div class="component-name">Risk Engine</div>
+                <div class="component-details">
+                    <strong>Pre-Trade Checks:</strong>
+                    <ul>
+                        <li>Buying power verification</li>
+                        <li>Margin requirements (Reg T)</li>
+                        <li>Position limits per symbol</li>
+                        <li>Concentration limits</li>
+                    </ul>
+                    <strong>Circuit Breakers:</strong>
+                    <ul>
+                        <li>Halt if ±10% move in 5 min</li>
+                        <li>Market-wide halt (S&P drops 7%)</li>
+                        <li>Individual stock halts (LULD)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Data -->
+        <div class="section marketdata-section">
+            <div class="section-title">📊 MARKET DATA</div>
+            <div class="component">
+                <div class="component-name">Market Data Feed</div>
+                <div class="component-details">
+                    <strong>Data Levels:</strong>
+                    <ul>
+                        <li><strong>L1:</strong> Best bid/ask</li>
+                        <li><strong>L2:</strong> Top 10 levels</li>
+                        <li><strong>L3:</strong> Full order book</li>
+                    </ul>
+                    <strong>Distribution:</strong>
+                    <ul>
+                        <li>Multicast UDP (low latency)</li>
+                        <li>WebSocket (retail clients)</li>
+                        <li>FIX (institutional)</li>
+                        <li>Kafka topics (internal)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settlement -->
+        <div class="section settlement-section">
+            <div class="section-title">🏦 SETTLEMENT</div>
+            <div class="component">
+                <div class="component-name">T+2 Settlement</div>
+                <div class="component-details">
+                    <strong>Process:</strong>
+                    <ul>
+                        <li>T+0: Trade executed</li>
+                        <li>T+1: Trade confirmed</li>
+                        <li>T+2: Cash and securities transferred</li>
+                    </ul>
+                    <strong>Clearing:</strong>
+                    <ul>
+                        <li>DTCC integration (US)</li>
+                        <li>Netting: Offset buy/sell</li>
+                        <li>Delivery vs. Payment (DVP)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Layer -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER (ACID)</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL 15 (Primary OLTP)</div>
+                <div class="component-details">
+                    <strong>Tables:</strong>
+                    <ul>
+                        <li>users, accounts (balances)</li>
+                        <li>orders, trades</li>
+                        <li>positions, ledger_entries</li>
+                    </ul>
+                    <strong>ACID Guarantees:</strong>
+                    <div class="code-snippet">
+                        Isolation: SERIALIZABLE
+                        Durability: Synchronous WAL replication
+                        Constraints: CHECK (cash_balance >= 0)
+                        Foreign Keys: RESTRICT on delete</div>
+                    <strong>Partitioning:</strong>
+                    <ul>
+                        <li>Orders: HASH by symbol (16 partitions)</li>
+                        <li>Trades: RANGE by date (monthly)</li>
+                        <li>Market data: TimescaleDB hypertable</li>
+                    </ul>
+                    <strong>Replication:</strong>
+                    <ul>
+                        <li>Streaming replication (3 replicas)</li>
+                        <li>Synchronous commit to 1 replica</li>
+                        <li>Automatic failover (Patroni)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">TimescaleDB (Market Data)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Time-series optimized</li>
+                        <li>Automatic partitioning by time</li>
+                        <li>Compression (10x space savings)</li>
+                        <li>Continuous aggregates (OHLCV)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <ul>
+                        <li>User sessions (JWT)</li>
+                        <li>Account balances (5 sec TTL)</li>
+                        <li>Current positions</li>
+                        <li>Order book snapshots</li>
+                        <li>Recent trades (L1 quotes)</li>
+                    </ul>
+                    <strong>Cache Strategy:</strong>
+                    <ul>
+                        <li>Write-through for balances</li>
+                        <li>Cache-aside for market data</li>
+                        <li>Pub/Sub for real-time updates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Store -->
+        <div class="section eventstore-section">
+            <div class="section-title">📬 EVENT STORE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <ul>
+                        <li><strong>orders:</strong> New/cancelled orders</li>
+                        <li><strong>trades:</strong> Executed trades</li>
+                        <li><strong>market-data:</strong> Quotes, depth</li>
+                        <li><strong>settlement:</strong> T+2 events</li>
+                    </ul>
+                    <strong>Event Sourcing:</strong>
+                    <div class="code-snippet">
+                        Complete audit trail
+                        Replay events to rebuild state
+                        Regulatory compliance (CAT)</div>
+                    <strong>Config:</strong>
+                    <ul>
+                        <li>Partitions: 32 per topic (parallel)</li>
+                        <li>Replication factor: 3</li>
+                        <li>Retention: 30 days (compliance)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li>Order latency (p50, p95, p99, p999)</li>
+                        <li>Matching engine throughput (orders/sec)</li>
+                        <li>Trade execution success rate</li>
+                        <li>Database connection pool utilization</li>
+                        <li>Kafka consumer lag</li>
+                        <li>JVM heap usage, GC pauses</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Distributed Tracing (Jaeger)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Trace order from API → matching → DB</li>
+                        <li>Identify bottlenecks</li>
+                        <li>Error correlation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Alerting (PagerDuty)</div>
+                <div class="component-details">
+                    <strong>Critical Alerts:</strong>
+                    <ul>
+                        <li>Matching latency > 1ms (p99)</li>
+                        <li>Database failover event</li>
+                        <li>Failed trade execution</li>
+                        <li>Circuit breaker triggered</li>
+                        <li>Regulatory reporting failure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance -->
+        <div class="section compliance-section">
+            <div class="section-title">⚖️ COMPLIANCE & REGULATORY</div>
+            <div class="component">
+                <div class="component-name">SEC/FINRA Compliance</div>
+                <div class="component-details">
+                    <strong>Audit Trail (Rule 613 - CAT):</strong>
+                    <ul>
+                        <li>Every order event logged</li>
+                        <li>Immutable event store (Kafka)</li>
+                        <li>Daily CAT reporting</li>
+                        <li>PII encryption</li>
+                    </ul>
+                    <strong>Surveillance:</strong>
+                    <ul>
+                        <li>Wash trading detection</li>
+                        <li>Spoofing/layering detection</li>
+                        <li>Insider trading alerts</li>
+                        <li>Market manipulation patterns</li>
+                    </ul>
+                    <strong>Record Retention:</strong>
+                    <ul>
+                        <li>Trade records: 7 years (SEC Rule 17a-4)</li>
+                        <li>Customer communications: 3 years</li>
+                        <li>WORM storage (Write-Once-Read-Many)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Best Execution (Reg NMS)</div>
+                <div class="component-details">
+                    <ul>
+                        <li>NBBO (National Best Bid/Offer) checks</li>
+                        <li>Smart Order Routing (SOR)</li>
+                        <li>Execution quality reports</li>
+                        <li>Price improvement tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">&lt;100 μs</div>
+                <div class="metric-label">Matching engine latency (p99)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">120K</div>
+                <div class="metric-label">Peak orders/sec (market open)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">6K</div>
+                <div class="metric-label">Trade executions/sec</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;10ms</div>
+                <div class="metric-label">End-to-end order latency (p95)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability (market hours)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">ZERO</div>
+                <div class="metric-label">Data loss tolerance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACID Principles -->
+    <div style="margin-top: 40px; padding: 30px; background: #fee2e2; border-radius: 15px; border: 2px solid #dc2626;">
+        <h2 style="color: #991b1b; margin-bottom: 20px;">💎 ACID COMPLIANCE IN ACTION</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #dc2626; margin-bottom: 10px;">⚛️ Atomicity</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Trade Execution:</strong> All account updates happen together or none</li>
+                    <li><strong>Settlement:</strong> Cash and securities transferred atomically</li>
+                    <li><strong>Database Transactions:</strong> BEGIN...COMMIT or ROLLBACK</li>
+                    <li><strong>Two-Phase Commit:</strong> For distributed transactions across clearing brokers</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #dc2626; margin-bottom: 10px;">🔒 Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Constraints:</strong> cash_balance >= 0 (no overdrafts)</li>
+                    <li><strong>Double-Entry:</strong> Sum of debits = sum of credits</li>
+                    <li><strong>Foreign Keys:</strong> Referential integrity maintained</li>
+                    <li><strong>Business Rules:</strong> Position limits enforced</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #dc2626; margin-bottom: 10px;">🔐 Isolation</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Serializable:</strong> Highest isolation level for critical ops</li>
+                    <li><strong>Optimistic Locking:</strong> Version numbers detect conflicts</li>
+                    <li><strong>Lock-Free:</strong> CAS operations in matching engine</li>
+                    <li><strong>Row-Level Locks:</strong> PostgreSQL SELECT FOR UPDATE</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #dc2626; margin-bottom: 10px;">💾 Durability</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>WAL:</strong> Write-Ahead Logging in PostgreSQL</li>
+                    <li><strong>Synchronous Replication:</strong> Commit waits for replica ACK</li>
+                    <li><strong>Event Sourcing:</strong> Kafka persists all events</li>
+                    <li><strong>Backups:</strong> Continuous archiving, PITR (Point-In-Time Recovery)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Stack Summary -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🛠️ PRODUCTION TECH STACK</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #3b82f6;">
+                <h4 style="color: #1e40af; margin-bottom: 10px;">Core Services</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Matching Engine:</strong> C++17, Rust<br>
+                    <strong>Order Service:</strong> Java 17 (Spring Boot)<br>
+                    <strong>Trade Service:</strong> Java 17<br>
+                    <strong>Market Data:</strong> Go (high concurrency)<br>
+                    <strong>APIs:</strong> REST, WebSocket, FIX 4.4
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Data Layer</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>OLTP:</strong> PostgreSQL 15 (ACID)<br>
+                    <strong>Time-Series:</strong> TimescaleDB<br>
+                    <strong>Cache:</strong> Redis Cluster<br>
+                    <strong>Events:</strong> Apache Kafka<br>
+                    <strong>Search:</strong> Elasticsearch
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Infrastructure</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Container:</strong> Kubernetes (EKS)<br>
+                    <strong>Service Mesh:</strong> Istio<br>
+                    <strong>Load Balancer:</strong> F5, HAProxy<br>
+                    <strong>Monitoring:</strong> Prometheus, Grafana<br>
+                    <strong>Tracing:</strong> Jaeger, OpenTelemetry
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #dc2626;">
+                <h4 style="color: #dc2626; margin-bottom: 10px;">Hardware & Network</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Servers:</strong> Bare metal (Dell R750)<br>
+                    <strong>CPU:</strong> Intel Xeon Platinum (pinned cores)<br>
+                    <strong>Network:</strong> 10/40 GbE, Solarflare NICs<br>
+                    <strong>Storage:</strong> NVMe SSD (local), S3 (archive)<br>
+                    <strong>Latency:</strong> Kernel bypass (DPDK)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">
+            <strong>🎓 Professor's Note:</strong> This architecture prioritizes <strong>ACID guarantees</strong> and <strong>strong consistency</strong>
+            over eventual consistency. In financial systems, <strong>correctness trumps performance</strong>.
+        </p>
+        <p style="font-size: 0.9em; margin-top: 10px;">
+            <strong>🏛️ Real-World References:</strong> NASDAQ OMX • CME Globex • LMAX Exchange • Interactive Brokers
+        </p>
+    </div>
+</div>
+</body>
+</html>
