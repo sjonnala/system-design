@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation Engine System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.ml { background: #dbeafe; color: #1e40af; }
+        .tag.realtime { background: #fee2e2; color: #991b1b; }
+        .tag.scale { background: #fef3c7; color: #92400e; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 180px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 12;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 6;
+        }
+
+        .tracking-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .api-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 4;
+        }
+
+        .inference-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 4;
+        }
+
+        .user-service-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 4;
+        }
+
+        .kafka-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 12;
+        }
+
+        .feature-store-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 3;
+        }
+
+        .model-serving-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .candidate-gen-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 3;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .cassandra-section {
+            background: linear-gradient(135deg, #d8b4fe 0%, #a78bfa 100%);
+            grid-column: span 4;
+        }
+
+        .datalake-section {
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            grid-column: span 4;
+        }
+
+        .ml-pipeline-section {
+            background: linear-gradient(135deg, #86efac 0%, #22c55e 100%);
+            grid-column: span 4;
+        }
+
+        .training-section {
+            background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+            grid-column: span 4;
+        }
+
+        .evaluation-section {
+            background: linear-gradient(135deg, #cbd5e0 0%, #94a3b8 100%);
+            grid-column: span 4;
+        }
+
+        .vector-db-section {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🤖 Recommendation Engine System Design Blueprint</h1>
+        <div class="subtitle">ML-Powered Personalization at Scale</div>
+        <div class="tags">
+            <span class="tag ml">Machine Learning</span>
+            <span class="tag realtime">Real-time Inference</span>
+            <span class="tag scale">1B+ Users Scale</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT LAYER</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                <div class="component">
+                    <div class="component-name">💻 Web App</div>
+                    <div class="component-details">
+                        React/Vue SPA<br>
+                        WebSocket for real-time
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">📱 Mobile App</div>
+                    <div class="component-details">
+                        iOS/Android Native<br>
+                        Offline caching
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">📺 Smart TV</div>
+                    <div class="component-details">
+                        Android TV / tvOS<br>
+                        Grid-based UI
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">🔌 API Clients</div>
+                    <div class="component-details">
+                        Third-party integrations<br>
+                        REST/GraphQL
+                    </div>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS/WebSocket Requests</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> JWT, OAuth 2.0, API Keys</li>
+                        <li><strong>Rate Limiting:</strong> 100 req/min per user</li>
+                        <li><strong>Request Routing:</strong> Path-based, header-based</li>
+                        <li><strong>Load Balancing:</strong> Round-robin, least connections</li>
+                        <li><strong>Circuit Breaker:</strong> Protect downstream services</li>
+                        <li><strong>Request/Response transformation</strong></li>
+                    </ul>
+                    <div class="code-snippet">
+GET /api/v1/recommendations?user_id=123&context=home&limit=20
+Authorization: Bearer eyJhbGc...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Tracking -->
+        <div class="section tracking-section">
+            <div class="section-title">📊 EVENT TRACKING SERVICE</div>
+            <div class="component">
+                <div class="component-name">Behavioral Event Collector</div>
+                <div class="component-details">
+                    <strong>Tracked Events:</strong>
+                    <ul>
+                        <li>👁️ <strong>View:</strong> Item impression (scroll into view)</li>
+                        <li>🖱️ <strong>Click:</strong> User clicks on recommendation</li>
+                        <li>❤️ <strong>Like/Favorite:</strong> Explicit positive signal</li>
+                        <li>🛒 <strong>Add to Cart:</strong> Purchase intent</li>
+                        <li>💰 <strong>Purchase:</strong> Conversion event</li>
+                        <li>⭐ <strong>Rating:</strong> 1-5 star feedback</li>
+                        <li>⏱️ <strong>Dwell Time:</strong> Time spent on item</li>
+                        <li>🔄 <strong>Share:</strong> Social sharing</li>
+                    </ul>
+                    <div class="code-snippet">
+// Event Schema
+{
+  "event_id": "evt_abc123",
+  "user_id": "user_456",
+  "item_id": "item_789",
+  "event_type": "click",
+  "timestamp": "2025-11-16T10:30:00Z",
+  "context": {
+    "page": "home_feed",
+    "position": 3,
+    "device": "mobile_ios",
+    "session_id": "sess_xyz"
+  }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation API Service -->
+        <div class="section api-section">
+            <div class="section-title">🎯 RECOMMENDATION API</div>
+            <div class="component">
+                <div class="component-name">REST/gRPC Service</div>
+                <div class="component-details">
+                    <strong>Endpoints:</strong>
+                    <ul>
+                        <li>GET /recommendations</li>
+                        <li>GET /trending</li>
+                        <li>GET /similar/{item_id}</li>
+                        <li>POST /feedback</li>
+                    </ul>
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Context-aware routing</li>
+                        <li>Fallback strategies</li>
+                        <li>Response caching</li>
+                        <li>Batch requests</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inference Service -->
+        <div class="section inference-section">
+            <div class="section-title">🧠 ML INFERENCE ENGINE</div>
+            <div class="component">
+                <div class="component-name">Real-time Recommendation Generator</div>
+                <div class="component-details">
+                    <strong>Two-Stage Pipeline:</strong>
+                    <div class="code-snippet">
+Stage 1: Candidate Generation
+  Input: user_id, context
+  Output: 500-1000 candidates
+  Latency: 20-30ms
+
+Stage 2: Ranking & Scoring
+  Input: candidates, features
+  Output: Top 10-50 ranked items
+  Latency: 50-70ms
+
+Total: <100ms P95</div>
+                    <strong>Techniques:</strong>
+                    <ul>
+                        <li>🔍 <strong>Collaborative Filtering:</strong> User-user, item-item similarity</li>
+                        <li>📝 <strong>Content-based:</strong> TF-IDF, embeddings</li>
+                        <li>🌐 <strong>Matrix Factorization:</strong> ALS, SVD</li>
+                        <li>🤖 <strong>Deep Learning:</strong> Two-tower, NCF, Transformers</li>
+                        <li>🎲 <strong>Contextual Bandits:</strong> Exploration-exploitation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Service -->
+        <div class="section user-service-section">
+            <div class="section-title">👤 USER PROFILE SERVICE</div>
+            <div class="component">
+                <div class="component-name">User Management & Profiles</div>
+                <div class="component-details">
+                    <strong>User Data:</strong>
+                    <ul>
+                        <li>Demographics (age, gender, location)</li>
+                        <li>Preferences & interests</li>
+                        <li>Interaction history (last 90 days)</li>
+                        <li>Engagement metrics (CTR, time spent)</li>
+                        <li>User embeddings (128-dim vectors)</li>
+                    </ul>
+                    <strong>Operations:</strong>
+                    <ul>
+                        <li>Get user profile</li>
+                        <li>Update preferences</li>
+                        <li>Compute user embeddings</li>
+                        <li>Cold start handling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kafka Message Queue -->
+        <div class="section kafka-section">
+            <div class="section-title">📬 MESSAGE STREAMING (APACHE KAFKA / AWS KINESIS)</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="component">
+                    <div class="component-name">📨 Topics</div>
+                    <div class="component-details">
+                        <ul>
+                            <li><strong>user.interactions:</strong> Clicks, views, purchases</li>
+                            <li><strong>recommendations.served:</strong> What was shown</li>
+                            <li><strong>model.predictions:</strong> Inference logs</li>
+                            <li><strong>features.updated:</strong> Feature changes</li>
+                            <li><strong>ab.experiments:</strong> A/B test assignments</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">⚙️ Stream Processing</div>
+                    <div class="component-details">
+                        <ul>
+                            <li><strong>Flink/Spark Streaming:</strong> Real-time aggregations</li>
+                            <li><strong>Windowed computations:</strong> 5-min, 1-hour windows</li>
+                            <li><strong>Event-time processing:</strong> Handle late arrivals</li>
+                            <li><strong>Stateful computations:</strong> Session tracking</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="component">
+                    <div class="component-name">📊 Consumer Groups</div>
+                    <div class="component-details">
+                        <ul>
+                            <li>Feature updater (real-time features)</li>
+                            <li>Analytics aggregator</li>
+                            <li>Model retraining trigger</li>
+                            <li>A/B test logger</li>
+                            <li>Data lake archiver</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Store -->
+        <div class="section feature-store-section">
+            <div class="section-title">🗃️ FEATURE STORE</div>
+            <div class="component">
+                <div class="component-name">Feast / Tecton</div>
+                <div class="component-details">
+                    <strong>Feature Types:</strong>
+                    <ul>
+                        <li><strong>User Features:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>Lifetime purchases</li>
+                                <li>Avg session duration</li>
+                                <li>Category preferences</li>
+                                <li>Embedding vectors</li>
+                            </ul>
+                        </li>
+                        <li><strong>Item Features:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>Popularity (CTR, views)</li>
+                                <li>Content metadata</li>
+                                <li>Embedding vectors</li>
+                                <li>Freshness score</li>
+                            </ul>
+                        </li>
+                        <li><strong>Context Features:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>Time of day, day of week</li>
+                                <li>Device type</li>
+                                <li>Location/country</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="code-snippet">
+# Feature retrieval (Python)
+features = feast_client.get_online_features(
+    entity_rows=[
+        {"user_id": 123, "item_id": 456}
+    ],
+    feature_refs=[
+        "user_features:lifetime_purchases",
+        "item_features:ctr_7d",
+        "user_item_features:affinity_score"
+    ]
+)</div>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>✅ Training-serving consistency</li>
+                        <li>✅ Low-latency feature serving (&lt;5ms)</li>
+                        <li>✅ Feature versioning & lineage</li>
+                        <li>✅ Point-in-time correctness</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Serving -->
+        <div class="section model-serving-section">
+            <div class="section-title">🚀 MODEL SERVING</div>
+            <div class="component">
+                <div class="component-name">TensorFlow Serving / TorchServe</div>
+                <div class="component-details">
+                    <strong>Models Deployed:</strong>
+                    <ul>
+                        <li>🏗️ <strong>Two-Tower Model:</strong> User & item encoders</li>
+                        <li>🌲 <strong>XGBoost Ranker:</strong> Feature-based ranking</li>
+                        <li>🧬 <strong>Neural CF:</strong> Collaborative filtering DNN</li>
+                        <li>🔮 <strong>Transformer:</strong> Sequential recommendations</li>
+                    </ul>
+                    <strong>Serving Features:</strong>
+                    <ul>
+                        <li>Model versioning (A/B testing)</li>
+                        <li>Batch prediction API</li>
+                        <li>GPU acceleration</li>
+                        <li>Model warm-up</li>
+                        <li>Canary deployments</li>
+                    </ul>
+                    <div class="code-snippet">
+// gRPC request
+{
+  "model_spec": {
+    "name": "ranking_model",
+    "version": "v3.2"
+  },
+  "inputs": {
+    "user_features": [...],
+    "item_features": [...],
+    "context": [...]
+  }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidate Generation -->
+        <div class="section candidate-gen-section">
+            <div class="section-title">🔍 CANDIDATE GENERATION</div>
+            <div class="component">
+                <div class="component-name">Vector Search (ANN)</div>
+                <div class="component-details">
+                    <strong>Vector Databases:</strong>
+                    <ul>
+                        <li>🔹 <strong>FAISS:</strong> Facebook AI Similarity Search</li>
+                        <li>🔹 <strong>Pinecone:</strong> Managed vector DB</li>
+                        <li>🔹 <strong>Milvus:</strong> Open-source vector DB</li>
+                        <li>🔹 <strong>Weaviate:</strong> ML-native vector search</li>
+                    </ul>
+                    <strong>Indexing Strategies:</strong>
+                    <ul>
+                        <li>IVF (Inverted File Index)</li>
+                        <li>HNSW (Hierarchical NSW)</li>
+                        <li>Product Quantization (PQ)</li>
+                    </ul>
+                    <div class="code-snippet">
+# Generate candidates via ANN
+user_embedding = get_user_embedding(user_id)
+
+# Search top 500 similar items
+similar_items, scores = faiss_index.search(
+    user_embedding,
+    k=500
+)
+
+# Combine with other sources
+candidates = {
+    'cf_candidates': similar_items[:300],
+    'trending': get_trending(100),
+    'explore': get_diverse_items(100)
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Layer -->
+        <div class="section cache-section">
+            <div class="section-title">💾 CACHE LAYER</div>
+            <div class="component">
+                <div class="component-name">Redis Cluster</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <ul>
+                        <li><strong>User recommendations:</strong> Pre-computed top-N (TTL: 5-30 min)</li>
+                        <li><strong>Item embeddings:</strong> 128-dim vectors (no expiry)</li>
+                        <li><strong>Popular items:</strong> Trending lists (TTL: 5 min)</li>
+                        <li><strong>User profiles:</strong> Recent features (TTL: 10 min)</li>
+                        <li><strong>Model predictions:</strong> Repeated queries (TTL: 15 min)</li>
+                    </ul>
+                    <div class="code-snippet">
+# Cache key structure
+user:123:recs:home:en-US -> [item_1, item_2, ...]
+item:456:embedding -> [0.23, -0.45, ...]
+trending:category:tech -> [item_789, item_012, ...]
+
+# Cache hit rate: 70-85%
+# Latency: <1ms (P99)</div>
+                    <strong>Eviction Policy:</strong>
+                    <ul>
+                        <li>LRU (Least Recently Used)</li>
+                        <li>TTL-based expiration</li>
+                        <li>Probabilistic early expiration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PostgreSQL -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ POSTGRESQL (METADATA)</div>
+            <div class="component">
+                <div class="component-name">Relational Database</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+-- Users table
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP,
+    country VARCHAR(3),
+    preferences JSONB
+);
+
+-- Items/Content catalog
+CREATE TABLE items (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(500),
+    category VARCHAR(100),
+    metadata JSONB,
+    created_at TIMESTAMP,
+    status VARCHAR(20)
+);
+
+-- User preferences
+CREATE TABLE user_preferences (
+    user_id BIGINT,
+    category VARCHAR(100),
+    weight FLOAT,
+    PRIMARY KEY (user_id, category)
+);</div>
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>User account management</li>
+                        <li>Item catalog & metadata</li>
+                        <li>User preferences & settings</li>
+                        <li>Transactional data (ACID)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cassandra -->
+        <div class="section cassandra-section">
+            <div class="section-title">💿 CASSANDRA (INTERACTIONS)</div>
+            <div class="component">
+                <div class="component-name">Wide-Column Store</div>
+                <div class="component-details">
+                    <strong>Data Model:</strong>
+                    <div class="code-snippet">
+-- User interaction events
+CREATE TABLE user_interactions (
+    user_id BIGINT,
+    timestamp TIMESTAMP,
+    item_id BIGINT,
+    event_type VARCHAR(20),
+    context_data MAP<TEXT, TEXT>,
+    PRIMARY KEY (user_id, timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC);
+
+-- Item interaction events
+CREATE TABLE item_interactions (
+    item_id BIGINT,
+    timestamp TIMESTAMP,
+    user_id BIGINT,
+    event_type VARCHAR(20),
+    PRIMARY KEY (item_id, timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC);</div>
+                    <strong>Why Cassandra?</strong>
+                    <ul>
+                        <li>✅ Write-heavy workload (100K+ writes/sec)</li>
+                        <li>✅ Time-series data (interactions)</li>
+                        <li>✅ Horizontal scalability</li>
+                        <li>✅ No single point of failure</li>
+                        <li>✅ Tunable consistency</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Lake -->
+        <div class="section datalake-section">
+            <div class="section-title">☁️ DATA LAKE (S3 / HDFS)</div>
+            <div class="component">
+                <div class="component-name">Historical Data Storage</div>
+                <div class="component-details">
+                    <strong>Stored Data:</strong>
+                    <ul>
+                        <li>📦 <strong>Raw events:</strong> Parquet format, partitioned by date</li>
+                        <li>📊 <strong>Aggregated features:</strong> Daily/weekly aggregations</li>
+                        <li>🎯 <strong>Training datasets:</strong> Labeled data for ML</li>
+                        <li>📈 <strong>Analytics snapshots:</strong> Historical metrics</li>
+                        <li>🔄 <strong>Model artifacts:</strong> Trained model checkpoints</li>
+                    </ul>
+                    <div class="code-snippet">
+// S3 structure
+s3://recsys-datalake/
+  ├── events/year=2025/month=11/day=16/
+  │   └── interactions.parquet
+  ├── features/user_features/date=2025-11-16/
+  ├── training_data/v3/
+  │   ├── train.parquet
+  │   └── validation.parquet
+  └── models/two_tower/v3.2/
+      └── saved_model.pb</div>
+                    <strong>Processing:</strong>
+                    <ul>
+                        <li>Spark batch jobs (nightly)</li>
+                        <li>Athena/Presto for SQL queries</li>
+                        <li>Lifecycle policies (archive to Glacier)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Pipeline: Data Prep -->
+        <div class="section ml-pipeline-section">
+            <div class="section-title">🔧 DATA PREPARATION</div>
+            <div class="component">
+                <div class="component-name">Apache Spark / Beam</div>
+                <div class="component-details">
+                    <strong>Pipeline Stages:</strong>
+                    <div class="code-snippet">
+# 1. Data extraction from Cassandra + S3
+raw_events = spark.read.parquet("s3://events/")
+
+# 2. Data cleaning
+clean_events = raw_events
+    .filter(col("user_id").isNotNull())
+    .filter(col("event_type").isin(VALID_TYPES))
+    .dropDuplicates(["user_id", "item_id", "timestamp"])
+
+# 3. Feature engineering
+user_features = clean_events.groupBy("user_id").agg(
+    count("*").alias("interaction_count"),
+    avg("dwell_time").alias("avg_dwell"),
+    collect_set("category").alias("categories")
+)
+
+# 4. Create training dataset
+training_data = create_positive_negative_samples(
+    interactions=clean_events,
+    negative_samples_per_positive=4
+)
+
+# 5. Save to S3
+training_data.write.parquet("s3://training_data/v4/")</div>
+                    <strong>Orchestration:</strong>
+                    <ul>
+                        <li>Apache Airflow (DAGs)</li>
+                        <li>Schedule: Daily at 2 AM UTC</li>
+                        <li>Retries & alerting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Pipeline: Training -->
+        <div class="section training-section">
+            <div class="section-title">🎓 MODEL TRAINING</div>
+            <div class="component">
+                <div class="component-name">TensorFlow / PyTorch</div>
+                <div class="component-details">
+                    <strong>Training Infrastructure:</strong>
+                    <ul>
+                        <li>🖥️ <strong>GPU Cluster:</strong> 8x NVIDIA A100 GPUs</li>
+                        <li>⚡ <strong>Distributed Training:</strong> Data parallelism</li>
+                        <li>📊 <strong>Experiment Tracking:</strong> MLflow, Weights & Biases</li>
+                        <li>🔄 <strong>Hyperparameter Tuning:</strong> Optuna, Ray Tune</li>
+                    </ul>
+                    <div class="code-snippet">
+# Training loop (PyTorch)
+model = TwoTowerModel(
+    n_users=1_000_000_000,
+    n_items=100_000_000,
+    embedding_dim=128
+)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+criterion = torch.nn.BCEWithLogitsLoss()
+
+for epoch in range(10):
+    for batch in train_dataloader:
+        user_ids = batch['user_id']
+        item_ids = batch['item_id']
+        labels = batch['label']
+
+        # Forward pass
+        predictions = model(user_ids, item_ids)
+        loss = criterion(predictions, labels)
+
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    # Validation
+    val_auc = evaluate_on_validation(model, val_dataloader)
+    print(f"Epoch {epoch}: Val AUC = {val_auc}")
+
+# Save model
+torch.save(model.state_dict(), "two_tower_v3.2.pt")</div>
+                    <strong>Model Types Trained:</strong>
+                    <ul>
+                        <li>Collaborative filtering (Matrix Factorization)</li>
+                        <li>Two-tower neural networks</li>
+                        <li>Gradient boosted trees (XGBoost)</li>
+                        <li>Transformer-based sequential models</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Pipeline: Evaluation -->
+        <div class="section evaluation-section">
+            <div class="section-title">✅ MODEL EVALUATION & A/B TESTING</div>
+            <div class="component">
+                <div class="component-name">Offline + Online Evaluation</div>
+                <div class="component-details">
+                    <strong>Offline Metrics:</strong>
+                    <ul>
+                        <li>📏 <strong>Precision@K:</strong> % of top-K that are relevant</li>
+                        <li>🎯 <strong>Recall@K:</strong> % of relevant items in top-K</li>
+                        <li>📊 <strong>NDCG:</strong> Normalized Discounted Cumulative Gain</li>
+                        <li>🥇 <strong>MRR:</strong> Mean Reciprocal Rank</li>
+                        <li>📈 <strong>AUC-ROC:</strong> Classification performance</li>
+                    </ul>
+                    <div class="code-snippet">
+# Offline evaluation
+from sklearn.metrics import ndcg_score
+
+y_true = [[1, 0, 1, 0, 0]]  # Ground truth
+y_pred = [[0.9, 0.7, 0.85, 0.6, 0.5]]  # Model scores
+
+ndcg = ndcg_score(y_true, y_pred, k=5)
+print(f"NDCG@5: {ndcg}")</div>
+                    <strong>Online A/B Testing:</strong>
+                    <ul>
+                        <li>🔬 <strong>CTR:</strong> Click-through rate</li>
+                        <li>💰 <strong>Conversion Rate:</strong> Purchase rate</li>
+                        <li>⏱️ <strong>Engagement Time:</strong> Time spent on recommended items</li>
+                        <li>📈 <strong>Revenue per User:</strong> Business impact</li>
+                        <li>🔁 <strong>Return Rate:</strong> User retention</li>
+                    </ul>
+                    <strong>Experimentation Platform:</strong>
+                    <ul>
+                        <li>Optimizely / LaunchDarkly</li>
+                        <li>Feature flags for gradual rollout</li>
+                        <li>Statistical significance testing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vector Database -->
+        <div class="section vector-db-section">
+            <div class="section-title">🧮 VECTOR DATABASE (EMBEDDINGS)</div>
+            <div class="component">
+                <div class="component-name">FAISS / Pinecone / Milvus</div>
+                <div class="component-details">
+                    <strong>Stored Embeddings:</strong>
+                    <ul>
+                        <li>👤 <strong>User Embeddings:</strong> 1B users × 128 dims = 512 GB</li>
+                        <li>📦 <strong>Item Embeddings:</strong> 100M items × 128 dims = 51 GB</li>
+                        <li>🏷️ <strong>Category Embeddings:</strong> 10K categories × 64 dims = 2.5 MB</li>
+                    </ul>
+                    <div class="code-snippet">
+import faiss
+import numpy as np
+
+# Build FAISS index for 100M items
+dimension = 128
+item_embeddings = np.random.random((100_000_000, dimension))
+
+# IVF + PQ for compression & speed
+quantizer = faiss.IndexFlatL2(dimension)
+index = faiss.IndexIVFPQ(
+    quantizer,
+    dimension,
+    nlist=10000,  # number of clusters
+    m=8,          # number of subquantizers
+    nbits=8       # bits per subquantizer
+)
+
+# Train index
+index.train(item_embeddings)
+index.add(item_embeddings)
+
+# Search for top 500 similar items
+user_embedding = get_user_embedding(user_id)
+distances, indices = index.search(user_embedding, k=500)
+
+# Results: top 500 item IDs with similarity scores
+print(f"Top 500 candidates: {indices[0]}")</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>⚡ Query latency: 10-30ms for 500 results</li>
+                        <li>🎯 Recall@500: ~95% (vs exact search)</li>
+                        <li>💾 Memory footprint: ~50 GB (compressed)</li>
+                        <li>🔄 Index updates: Hourly batch refresh</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & OBSERVABILITY</div>
+            <div class="component">
+                <div class="component-name">Prometheus + Grafana + ELK</div>
+                <div class="component-details">
+                    <strong>Key Metrics:</strong>
+                    <ul>
+                        <li>🎯 <strong>Business Metrics:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>CTR (Click-Through Rate)</li>
+                                <li>Conversion rate</li>
+                                <li>Revenue per recommendation</li>
+                                <li>User engagement time</li>
+                            </ul>
+                        </li>
+                        <li>⚙️ <strong>System Metrics:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>Recommendation latency (P50, P95, P99)</li>
+                                <li>Cache hit rate</li>
+                                <li>Model inference time</li>
+                                <li>Feature store latency</li>
+                            </ul>
+                        </li>
+                        <li>🤖 <strong>ML Metrics:</strong>
+                            <ul style="margin-left: 10px; font-size: 0.9em;">
+                                <li>Model prediction distribution</li>
+                                <li>Feature drift detection</li>
+                                <li>Offline vs online metric correlation</li>
+                                <li>Model staleness (time since last update)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="code-snippet">
+# Prometheus alert example
+- alert: LowCTR
+  expr: recommendation_ctr < 0.02
+  for: 10m
+  labels:
+    severity: warning
+  annotations:
+    summary: "CTR dropped below 2%"
+
+- alert: HighLatency
+  expr: recommendation_latency_p95 > 200
+  for: 5m
+  labels:
+    severity: critical</div>
+                    <strong>Dashboards:</strong>
+                    <ul>
+                        <li>Real-time recommendation performance</li>
+                        <li>Model A/B test results</li>
+                        <li>Feature importance tracking</li>
+                        <li>Error rate & anomaly detection</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">1 Billion</div>
+                <div class="metric-label">Total Users</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">200M</div>
+                <div class="metric-label">Daily Active Users (DAU)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100M</div>
+                <div class="metric-label">Items in Catalog</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10,000</div>
+                <div class="metric-label">Recommendation QPS (peak)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">100K</div>
+                <div class="metric-label">Event Ingestion QPS</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;100ms</div>
+                <div class="metric-label">P95 Recommendation Latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">70-85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">3-5%</div>
+                <div class="metric-label">Target CTR</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10TB</div>
+                <div class="metric-label">User Profile Storage</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">730TB/yr</div>
+                <div class="metric-label">Interaction Event Storage</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">512GB</div>
+                <div class="metric-label">User Embedding Storage</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Model Architecture -->
+    <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px; border: 2px solid #3b82f6;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🤖 ML MODEL ARCHITECTURE DETAILS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 25px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Two-Tower Neural Network</h3>
+                <p style="color: #4a5568; line-height: 1.8; font-size: 0.95em;">
+                    <strong>Architecture:</strong><br>
+                    • User Tower: Embedding(1B users, 64) → Dense(128) → Dense(128)<br>
+                    • Item Tower: Embedding(100M items, 64) → Dense(128) → Dense(128)<br>
+                    • Similarity: Dot product of user/item vectors<br>
+                    <br>
+                    <strong>Training:</strong> Sampled softmax loss, negative sampling ratio 1:100<br>
+                    <strong>Serving:</strong> Pre-compute item embeddings, ANN search for candidates
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h3 style="color: #10b981; margin-bottom: 10px;">XGBoost Ranking Model</h3>
+                <p style="color: #4a5568; line-height: 1.8; font-size: 0.95em;">
+                    <strong>Features (200+ features):</strong><br>
+                    • User: demographics, behavior stats, embeddings<br>
+                    • Item: popularity, CTR, category, embeddings<br>
+                    • User-Item: affinity score, similarity<br>
+                    • Context: time, device, location<br>
+                    <br>
+                    <strong>Training:</strong> LambdaRank objective (learning-to-rank)<br>
+                    <strong>Inference:</strong> ~5ms for scoring 500 candidates
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h3 style="color: #f59e0b; margin-bottom: 10px;">Matrix Factorization (ALS)</h3>
+                <p style="color: #4a5568; line-height: 1.8; font-size: 0.95em;">
+                    <strong>Algorithm:</strong> Alternating Least Squares<br>
+                    • Latent factors: 128 dimensions<br>
+                    • Regularization: L2 (λ = 0.01)<br>
+                    • Implicit feedback (clicks, views)<br>
+                    <br>
+                    <strong>Use Case:</strong> Baseline collaborative filtering<br>
+                    <strong>Update Frequency:</strong> Daily batch retraining
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ef4444;">
+                <h3 style="color: #ef4444; margin-bottom: 10px;">Sequential Transformer (BST)</h3>
+                <p style="color: #4a5568; line-height: 1.8; font-size: 0.95em;">
+                    <strong>Architecture:</strong> Behavior Sequence Transformer<br>
+                    • Input: Last 50 user interactions<br>
+                    • Multi-head attention (8 heads, 128 dims)<br>
+                    • Position encoding for temporal patterns<br>
+                    <br>
+                    <strong>Advantage:</strong> Captures short-term user intent<br>
+                    <strong>Latency:</strong> ~20ms inference time
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Design Principles -->
+    <div style="margin-top: 30px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🎨 SYSTEM DESIGN PRINCIPLES</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services, load balancing</li>
+                    <li><strong>Caching:</strong> Multi-tier (Redis, CDN, client-side)</li>
+                    <li><strong>Sharding:</strong> User-based sharding for interactions</li>
+                    <li><strong>Async Processing:</strong> Event-driven architecture (Kafka)</li>
+                    <li><strong>Pre-computation:</strong> Batch-generated recommendations</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">ML Engineering Best Practices</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Feature Store:</strong> Centralized, versioned features</li>
+                    <li><strong>Model Versioning:</strong> A/B test multiple models</li>
+                    <li><strong>Online Learning:</strong> Continuous model updates</li>
+                    <li><strong>Monitoring:</strong> Track model drift, data quality</li>
+                    <li><strong>Fallback:</strong> Multiple model candidates</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Consistency</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Eventual Consistency:</strong> User interactions (acceptable delay)</li>
+                    <li><strong>Strong Consistency:</strong> Purchases, ratings (critical)</li>
+                    <li><strong>CQRS:</strong> Separate read/write models</li>
+                    <li><strong>Event Sourcing:</strong> Rebuild state from events</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Fault Tolerance</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Graceful Degradation:</strong> Fallback to trending/popular</li>
+                    <li><strong>Circuit Breakers:</strong> Prevent cascading failures</li>
+                    <li><strong>Retry Logic:</strong> Exponential backoff</li>
+                    <li><strong>Multi-Region:</strong> Geographic redundancy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>ML-First Design:</strong> This architecture balances real-time personalization with scalable batch processing for 1B+ users</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: TensorFlow/PyTorch • FAISS • Kafka • Cassandra • Redis • Feast • Spark • Kubernetes</p>
+    </div>
+</div>
+</body>
+</html>
