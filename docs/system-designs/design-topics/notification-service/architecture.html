@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.realtime { background: #fef3c7; color: #92400e; }
+        .tag.reliable { background: #fee2e2; color: #991b1b; }
+        .tag.scalable { background: #dbeafe; color: #1e40af; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .gateway-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 4;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span: 4;
+        }
+
+        .api-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 6;
+        }
+
+        .orchestrator-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .channels-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 12;
+        }
+
+        .providers-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 12;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .template-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 4;
+        }
+
+        .preference-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 6;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 6;
+        }
+
+        .storage-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 6;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔔 Notification Service System Design Blueprint</h1>
+        <div class="subtitle">Multi-Channel Real-Time Notification Platform</div>
+        <div class="tags">
+            <span class="tag realtime">Real-Time Delivery</span>
+            <span class="tag reliable">Fault Tolerant</span>
+            <span class="tag scalable">Highly Scalable</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👥 CLIENT APPLICATIONS</div>
+            <div class="component">
+                <div class="component-name">Application Services</div>
+                <div class="component-details">
+                    <strong>Notification Triggers:</strong>
+                    <ul>
+                        <li>E-commerce: Order placed, shipped, delivered</li>
+                        <li>Social: New follower, like, comment</li>
+                        <li>Banking: Transaction alerts, OTP</li>
+                        <li>Ride-sharing: Driver assigned, arrived</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ REST/gRPC Request</div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="section gateway-section">
+            <div class="section-title">🚪 API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Kong / AWS API Gateway</div>
+                <div class="component-details">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li><strong>Authentication:</strong> API Keys, JWT, OAuth2</li>
+                        <li><strong>Rate Limiting:</strong> 1000 notifications/min per service</li>
+                        <li><strong>Request Validation:</strong> Schema validation</li>
+                        <li><strong>Load Distribution:</strong> Round-robin to services</li>
+                        <li><strong>Circuit Breaker:</strong> Fail fast on overload</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCING</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer</div>
+                <div class="component-details">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Health checks (every 30s)</li>
+                        <li>Auto-scaling triggers</li>
+                        <li>SSL termination</li>
+                        <li>WebSocket support</li>
+                        <li>Sticky sessions for stateful connections</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Services</div>
+        </div>
+
+        <!-- Notification API Service -->
+        <div class="section api-section">
+            <div class="section-title">📨 NOTIFICATION API SERVICE</div>
+            <div class="component">
+                <div class="component-name">Node.js / Go Microservice</div>
+                <div class="component-details">
+                    <strong>API Endpoints:</strong>
+                    <div class="code-snippet">
+POST /api/v1/notifications/send
+{
+  "user_id": "user123",
+  "event_type": "order_placed",
+  "channels": ["email", "sms", "push"],
+  "priority": "high",
+  "data": {
+    "order_id": "ORD-2024-123",
+    "amount": "$99.99"
+  }
+}
+
+Response: {
+  "notification_id": "notif_abc123",
+  "status": "queued",
+  "estimated_delivery": "2025-11-16T10:00:00Z"
+}</div>
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li>Validate notification request</li>
+                        <li>Check user preferences (opt-out, quiet hours)</li>
+                        <li>Apply deduplication (prevent spam)</li>
+                        <li>Enrich with template data</li>
+                        <li>Publish to message queue</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Orchestrator -->
+        <div class="section orchestrator-section">
+            <div class="section-title">🎯 NOTIFICATION ORCHESTRATOR</div>
+            <div class="component">
+                <div class="component-name">Smart Routing Engine</div>
+                <div class="component-details">
+                    <strong>Decision Logic:</strong>
+                    <ul>
+                        <li><strong>Channel Selection:</strong> Based on user preference, urgency</li>
+                        <li><strong>Priority Routing:</strong> Critical → Fast lane queue</li>
+                        <li><strong>Batching:</strong> Group non-urgent notifications</li>
+                        <li><strong>Rate Limiting:</strong> Prevent notification fatigue</li>
+                        <li><strong>Retry Strategy:</strong> Exponential backoff on failure</li>
+                    </ul>
+                    <div class="code-snippet">
+// Priority Queue Strategy
+Critical (P0):  OTP, Security alerts → Immediate
+High (P1):      Payment, Delivery → <1 min
+Medium (P2):    Social, Marketing → <5 min
+Low (P3):       Digest, Batch → <1 hour</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Channels -->
+        <div class="section channels-section">
+            <div class="section-title">📡 NOTIFICATION CHANNELS</div>
+
+            <div class="component">
+                <div class="component-name">📧 Email Channel Service</div>
+                <div class="component-details">
+                    <strong>Implementation:</strong>
+                    <ul>
+                        <li><strong>Provider:</strong> SendGrid, AWS SES, Mailgun</li>
+                        <li><strong>Features:</strong> HTML templates, attachments, tracking</li>
+                        <li><strong>Throughput:</strong> 10,000 emails/sec</li>
+                        <li><strong>Delivery Time:</strong> 1-5 seconds</li>
+                        <li><strong>Fallback:</strong> Secondary provider on failure</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">💬 SMS Channel Service</div>
+                <div class="component-details">
+                    <strong>Implementation:</strong>
+                    <ul>
+                        <li><strong>Provider:</strong> Twilio, AWS SNS, Vonage</li>
+                        <li><strong>Features:</strong> Global coverage, delivery receipts</li>
+                        <li><strong>Throughput:</strong> 1,000 SMS/sec</li>
+                        <li><strong>Delivery Time:</strong> <10 seconds</li>
+                        <li><strong>Cost:</strong> $0.0075/SMS (variable by region)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">📱 Push Notification Service</div>
+                <div class="component-details">
+                    <strong>Implementation:</strong>
+                    <ul>
+                        <li><strong>iOS:</strong> Apple Push Notification Service (APNS)</li>
+                        <li><strong>Android:</strong> Firebase Cloud Messaging (FCM)</li>
+                        <li><strong>Web:</strong> Web Push Protocol</li>
+                        <li><strong>Throughput:</strong> 50,000 notifications/sec</li>
+                        <li><strong>Delivery Time:</strong> <1 second</li>
+                        <li><strong>Features:</strong> Rich media, action buttons, deep linking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">📞 Voice/WhatsApp/Slack Channels</div>
+                <div class="component-details">
+                    <ul>
+                        <li><strong>Voice:</strong> Twilio Voice for critical alerts</li>
+                        <li><strong>WhatsApp:</strong> WhatsApp Business API</li>
+                        <li><strong>Slack:</strong> Slack Webhooks for team notifications</li>
+                        <li><strong>In-App:</strong> WebSocket real-time notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Third-Party Providers -->
+        <div class="section providers-section">
+            <div class="section-title">🌐 THIRD-PARTY PROVIDER ADAPTERS</div>
+            <div class="component">
+                <div class="component-name">Provider Abstraction Layer</div>
+                <div class="component-details">
+                    <strong>Design Pattern:</strong> Strategy Pattern for provider switching
+                    <div class="code-snippet">
+interface NotificationProvider {
+  send(message: Message): Promise<DeliveryReceipt>
+  validateCredentials(): boolean
+  getHealthStatus(): HealthStatus
+}
+
+class EmailProviderFactory {
+  // Primary: SendGrid
+  // Fallback 1: AWS SES
+  // Fallback 2: Mailgun
+
+  getProvider(): NotificationProvider {
+    if (sendgrid.isHealthy()) return sendgrid
+    if (ses.isHealthy()) return ses
+    return mailgun
+  }
+}</div>
+                    <strong>Benefits:</strong>
+                    <ul>
+                        <li>Vendor independence - easily switch providers</li>
+                        <li>Multi-provider redundancy - auto-failover</li>
+                        <li>Cost optimization - route by cheapest provider</li>
+                        <li>Regional optimization - use local providers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka / RabbitMQ</div>
+                <div class="component-details">
+                    <strong>Topics/Queues:</strong>
+                    <ul>
+                        <li><strong>notifications.email:</strong> Email delivery queue</li>
+                        <li><strong>notifications.sms:</strong> SMS delivery queue</li>
+                        <li><strong>notifications.push:</strong> Push notification queue</li>
+                        <li><strong>notifications.dlq:</strong> Dead letter queue (failures)</li>
+                    </ul>
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li>Partitioning: By user_id for ordering</li>
+                        <li>Retention: 7 days</li>
+                        <li>Replication: 3x for durability</li>
+                        <li>Consumer Groups: 10-50 workers per channel</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template Service -->
+        <div class="section template-section">
+            <div class="section-title">📝 TEMPLATE ENGINE</div>
+            <div class="component">
+                <div class="component-name">Dynamic Template Service</div>
+                <div class="component-details">
+                    <strong>Template Storage:</strong>
+                    <ul>
+                        <li>Database: PostgreSQL for templates</li>
+                        <li>Cache: Redis for hot templates</li>
+                        <li>Versioning: A/B testing support</li>
+                    </ul>
+                    <strong>Template Example:</strong>
+                    <div class="code-snippet">
+Subject: Order {{order_id}} Confirmed!
+
+Hi {{user_name}},
+
+Your order #{{order_id}} has been confirmed.
+Total: {{currency}}{{amount}}
+Estimated delivery: {{delivery_date}}
+
+Track: {{tracking_url}}</div>
+                    <strong>Rendering Engine:</strong> Handlebars, Jinja2, Liquid
+                </div>
+            </div>
+        </div>
+
+        <!-- User Preferences -->
+        <div class="section preference-section">
+            <div class="section-title">⚙️ USER PREFERENCES</div>
+            <div class="component">
+                <div class="component-name">Preference Management</div>
+                <div class="component-details">
+                    <strong>Preference Schema:</strong>
+                    <div class="code-snippet">
+{
+  "user_id": "user123",
+  "channels": {
+    "email": true,
+    "sms": false,
+    "push": true
+  },
+  "quiet_hours": {
+    "enabled": true,
+    "start": "22:00",
+    "end": "08:00",
+    "timezone": "America/New_York"
+  },
+  "frequency_limits": {
+    "marketing": "weekly",
+    "transactional": "unlimited"
+  },
+  "opt_out": ["marketing", "social"]
+}</div>
+                    <strong>Respecting Preferences:</strong>
+                    <ul>
+                        <li>Check before sending (cached lookup)</li>
+                        <li>Honor quiet hours (except critical)</li>
+                        <li>Apply frequency caps</li>
+                        <li>Respect opt-out lists (legal compliance)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ DATABASE LAYER</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL / Cassandra</div>
+                <div class="component-details">
+                    <strong>Schema Design:</strong>
+                    <div class="code-snippet">
+-- Notification Log (Audit Trail)
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  event_type VARCHAR(100),
+  channel VARCHAR(50),
+  status VARCHAR(50), -- queued, sent, delivered, failed
+  priority INTEGER,
+  sent_at TIMESTAMP,
+  delivered_at TIMESTAMP,
+  metadata JSONB
+);
+
+CREATE INDEX idx_user_id ON notifications(user_id);
+CREATE INDEX idx_status ON notifications(status);
+CREATE INDEX idx_sent_at ON notifications(sent_at);
+
+-- User Preferences
+CREATE TABLE user_preferences (
+  user_id BIGINT PRIMARY KEY,
+  email_enabled BOOLEAN DEFAULT TRUE,
+  sms_enabled BOOLEAN DEFAULT TRUE,
+  push_enabled BOOLEAN DEFAULT TRUE,
+  quiet_hours JSONB,
+  updated_at TIMESTAMP
+);</div>
+                    <strong>Sharding Strategy:</strong>
+                    <ul>
+                        <li>Shard by user_id hash</li>
+                        <li>Time-based partitioning (monthly)</li>
+                        <li>Archive old data to S3 (>90 days)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Redis Cache</div>
+                <div class="component-details">
+                    <strong>Cached Data:</strong>
+                    <ul>
+                        <li>User preferences (TTL: 1 hour)</li>
+                        <li>Templates (TTL: 24 hours)</li>
+                        <li>Rate limit counters (sliding window)</li>
+                        <li>Deduplication keys (TTL: 5 minutes)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS & TRACKING</div>
+            <div class="component">
+                <div class="component-name">Event Tracking System</div>
+                <div class="component-details">
+                    <strong>Metrics Tracked:</strong>
+                    <ul>
+                        <li><strong>Delivery Metrics:</strong> Sent, delivered, failed, bounced</li>
+                        <li><strong>Engagement:</strong> Opens, clicks, conversions</li>
+                        <li><strong>Performance:</strong> Latency, throughput, error rate</li>
+                        <li><strong>Cost:</strong> Per-channel cost tracking</li>
+                    </ul>
+                    <strong>Storage:</strong>
+                    <ul>
+                        <li>ClickHouse for time-series analytics</li>
+                        <li>Elasticsearch for log search</li>
+                        <li>S3/Parquet for long-term storage</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Real-Time Dashboard</div>
+                <div class="component-details">
+                    <ul>
+                        <li>Grafana: System metrics visualization</li>
+                        <li>Kibana: Log analysis and debugging</li>
+                        <li>Custom Dashboard: Business metrics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING & ALERTS</div>
+            <div class="component">
+                <div class="component-name">Observability Stack</div>
+                <div class="component-details">
+                    <strong>Monitoring Tools:</strong>
+                    <ul>
+                        <li><strong>Prometheus:</strong> Metrics collection</li>
+                        <li><strong>Grafana:</strong> Visualization dashboards</li>
+                        <li><strong>ELK Stack:</strong> Centralized logging</li>
+                        <li><strong>Jaeger:</strong> Distributed tracing</li>
+                    </ul>
+                    <strong>Key Alerts:</strong>
+                    <ul>
+                        <li>Delivery failure rate > 5%</li>
+                        <li>Queue depth > 10,000 messages</li>
+                        <li>Processing latency > 5 seconds</li>
+                        <li>Provider API downtime</li>
+                        <li>Database connection pool exhaustion</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage -->
+        <div class="section storage-section">
+            <div class="section-title">☁️ OBJECT STORAGE</div>
+            <div class="component">
+                <div class="component-name">Amazon S3 / GCS</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li><strong>Email Attachments:</strong> Images, PDFs, documents</li>
+                        <li><strong>Archived Logs:</strong> Old notification data (>90 days)</li>
+                        <li><strong>Analytics Exports:</strong> Parquet files for data analysis</li>
+                        <li><strong>Template Assets:</strong> Images, logos for emails</li>
+                    </ul>
+                    <strong>Lifecycle Policies:</strong>
+                    <ul>
+                        <li>Hot data (0-30 days): S3 Standard</li>
+                        <li>Warm data (30-90 days): S3 Infrequent Access</li>
+                        <li>Cold data (>90 days): S3 Glacier</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">100K QPS</div>
+                <div class="metric-label">Peak notification throughput</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;5 sec</div>
+                <div class="metric-label">P95 end-to-end delivery latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.9%</div>
+                <div class="metric-label">Delivery success rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">1 Billion</div>
+                <div class="metric-label">Notifications per day</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">50 TB</div>
+                <div class="metric-label">Storage per year (logs + analytics)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">System availability SLA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADDITIONAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security & Compliance</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Encryption:</strong> TLS in transit, AES-256 at rest</li>
+                    <li><strong>PII Protection:</strong> GDPR, CCPA compliance</li>
+                    <li><strong>Rate Limiting:</strong> Prevent spam and abuse</li>
+                    <li><strong>Audit Logging:</strong> Complete notification trail</li>
+                    <li><strong>API Security:</strong> OAuth2, API key rotation</li>
+                    <li><strong>Opt-Out Honoring:</strong> CAN-SPAM, GDPR compliance</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Scalability Strategies</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Horizontal Scaling:</strong> Stateless services, auto-scaling</li>
+                    <li><strong>Queue-Based Architecture:</strong> Decoupling for resilience</li>
+                    <li><strong>Database Sharding:</strong> By user_id for even distribution</li>
+                    <li><strong>Caching:</strong> Redis for preferences and templates</li>
+                    <li><strong>Async Processing:</strong> Non-blocking notification delivery</li>
+                    <li><strong>Multi-Region:</strong> Geo-distribution for latency</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Reliability & Fault Tolerance</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Retry Mechanism:</strong> Exponential backoff with jitter</li>
+                    <li><strong>Dead Letter Queue:</strong> Handle permanent failures</li>
+                    <li><strong>Circuit Breaker:</strong> Fail fast on provider outages</li>
+                    <li><strong>Multi-Provider:</strong> Automatic failover between vendors</li>
+                    <li><strong>Idempotency:</strong> Prevent duplicate notifications</li>
+                    <li><strong>Health Checks:</strong> Proactive failure detection</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Performance Optimization</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Batching:</strong> Group notifications for efficiency</li>
+                    <li><strong>Connection Pooling:</strong> Reuse provider connections</li>
+                    <li><strong>Template Caching:</strong> Pre-compile frequently used</li>
+                    <li><strong>Priority Queues:</strong> Critical alerts first</li>
+                    <li><strong>Rate Limiting:</strong> Smooth traffic spikes</li>
+                    <li><strong>Lazy Loading:</strong> Load user data on-demand</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML & Advanced Features -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🤖 ML & ADVANCED FEATURES</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Smart Send-Time Optimization</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Predict optimal delivery time per user<br>
+                    <strong>Features:</strong> Historical open rates, timezone, user behavior<br>
+                    <strong>Algorithm:</strong> Time-series forecasting (LSTM/Prophet)<br>
+                    <strong>Benefit:</strong> 30-40% improvement in engagement
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Channel Selection AI</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Predict best channel for each notification<br>
+                    <strong>Features:</strong> User engagement history, device, location<br>
+                    <strong>Algorithm:</strong> Multi-armed bandit (contextual)<br>
+                    <strong>Benefit:</strong> Higher conversion, lower cost
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Churn Prediction & Re-engagement</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Identify users at risk of unsubscribing<br>
+                    <strong>Features:</strong> Declining open rates, time since last interaction<br>
+                    <strong>Algorithm:</strong> Gradient boosting (XGBoost)<br>
+                    <strong>Action:</strong> Reduce frequency or pause notifications
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Spam Detection</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Detect abusive notification patterns<br>
+                    <strong>Features:</strong> Frequency, content similarity, user reports<br>
+                    <strong>Algorithm:</strong> Anomaly detection (Isolation Forest)<br>
+                    <strong>Action:</strong> Auto-block or throttle suspicious senders
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #8b5cf6;">
+                <h4 style="color: #8b5cf6; margin-bottom: 10px;">Personalized Content Recommendations</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Recommend notification content variants<br>
+                    <strong>Features:</strong> User profile, past interactions, A/B test results<br>
+                    <strong>Algorithm:</strong> Collaborative filtering + NLP<br>
+                    <strong>Benefit:</strong> Personalized messaging at scale
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #06b6d4;">
+                <h4 style="color: #06b6d4; margin-bottom: 10px;">Delivery Failure Prediction</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>ML Model:</strong> Predict likelihood of delivery failure<br>
+                    <strong>Features:</strong> Provider health, user device status, historical delivery<br>
+                    <strong>Algorithm:</strong> Logistic regression ensemble<br>
+                    <strong>Action:</strong> Proactive channel switching
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain-Driven Design Mapping -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%); border-radius: 15px;">
+        <h2 style="color: #92400e; margin-bottom: 20px;">🎨 DOMAIN-DRIVEN DESIGN MAPPING</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Notification Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> Notification, NotificationBatch<br>
+                    <strong>Entities:</strong> NotificationEvent, DeliveryAttempt<br>
+                    <strong>Value Objects:</strong> UserId, Channel, Priority<br>
+                    <strong>Domain Events:</strong> NotificationQueued, NotificationDelivered<br>
+                    <strong>Repository:</strong> NotificationRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">User Preference Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> UserPreference<br>
+                    <strong>Entities:</strong> ChannelPreference, QuietHours<br>
+                    <strong>Value Objects:</strong> OptOutList, FrequencyCap<br>
+                    <strong>Domain Events:</strong> PreferenceUpdated, UserOptedOut<br>
+                    <strong>Repository:</strong> PreferenceRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Template Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> NotificationTemplate<br>
+                    <strong>Entities:</strong> TemplateVersion, TemplateVariable<br>
+                    <strong>Value Objects:</strong> TemplateType, Language<br>
+                    <strong>Domain Events:</strong> TemplateCreated, TemplatePublished<br>
+                    <strong>Repository:</strong> TemplateRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #ec4899;">
+                <h4 style="color: #ec4899; margin-bottom: 10px;">Analytics Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> DeliveryMetrics, EngagementMetrics<br>
+                    <strong>Entities:</strong> DeliveryEvent, ClickEvent<br>
+                    <strong>Value Objects:</strong> Timestamp, MetricValue<br>
+                    <strong>Domain Events:</strong> NotificationOpened, LinkClicked<br>
+                    <strong>Repository:</strong> MetricsRepository
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Real-World Scale:</strong> This design can handle 1 billion+ notifications/day with sub-5-second delivery</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Node.js/Go • Kafka • PostgreSQL • Redis • FCM/APNS • SendGrid • Twilio • AWS</p>
+    </div>
+</div>
+</body>
+</html>
