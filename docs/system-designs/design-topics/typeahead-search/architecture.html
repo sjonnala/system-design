@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typeahead + Search System Design Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .tag.latency { background: #fef3c7; color: #92400e; }
+        .tag.scale { background: #dbeafe; color: #1e40af; }
+        .tag.relevance { background: #dcfce7; color: #166534; }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #1a202c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .component {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .component-details {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .component-details ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .component-details li {
+            margin: 3px 0;
+        }
+
+        /* Color themes for different sections */
+        .client-section {
+            background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%);
+            grid-column: span 4;
+        }
+
+        .edge-section {
+            background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%);
+            grid-column: span 8;
+        }
+
+        .loadbalancer-section {
+            background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+            grid-column: span 12;
+        }
+
+        .typeahead-section {
+            background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+            grid-column: span 6;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, #86efac 0%, #22c55e 100%);
+            grid-column: span 6;
+        }
+
+        .trie-section {
+            background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
+            grid-column: span 3;
+        }
+
+        .cache-section {
+            background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%);
+            grid-column: span 3;
+        }
+
+        .elasticsearch-section {
+            background: linear-gradient(135deg, #d9f99d 0%, #84cc16 100%);
+            grid-column: span 6;
+        }
+
+        .ranking-section {
+            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+            grid-column: span 3;
+        }
+
+        .database-section {
+            background: linear-gradient(135deg, #bae6fd 0%, #38bdf8 100%);
+            grid-column: span 3;
+        }
+
+        .analytics-section {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+            grid-column: span 6;
+        }
+
+        .queue-section {
+            background: linear-gradient(135deg, #fca5a5 0%, #ef4444 100%);
+            grid-column: span 4;
+        }
+
+        .indexing-section {
+            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
+            grid-column: span 4;
+        }
+
+        .monitoring-section {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+            grid-column: span 4;
+        }
+
+        .flow-indicator {
+            font-size: 0.75em;
+            color: #6366f1;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .key-metrics {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .architecture {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .section { grid-column: span 6 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .section { grid-column: span 1 !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔍 Typeahead + Search System Design Blueprint</h1>
+        <div class="subtitle">Complete End-to-End Architecture</div>
+        <div class="tags">
+            <span class="tag latency">Ultra-Low Latency</span>
+            <span class="tag scale">Billion-Scale</span>
+            <span class="tag relevance">ML-Powered Ranking</span>
+        </div>
+    </div>
+
+    <div class="architecture">
+        <!-- Client Layer -->
+        <div class="section client-section">
+            <div class="section-title">👤 CLIENT LAYER</div>
+            <div class="component">
+                <div class="component-name">Web / Mobile Clients</div>
+                <div class="component-details">
+                    <strong>User Interactions:</strong>
+                    <ul>
+                        <li>Type query in search box</li>
+                        <li>GET /typeahead?q={prefix}</li>
+                        <li>POST /search (full query)</li>
+                        <li>Click result (analytics)</li>
+                    </ul>
+                    <strong>Client-side Optimization:</strong>
+                    <ul>
+                        <li>Debouncing (300ms delay)</li>
+                        <li>Request cancellation</li>
+                        <li>Local caching (session)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ HTTPS Requests</div>
+        </div>
+
+        <!-- Edge Network -->
+        <div class="section edge-section">
+            <div class="section-title">⚡ EDGE / CDN LAYER</div>
+            <div class="component">
+                <div class="component-name">CloudFlare / Fastly / CloudFront</div>
+                <div class="component-details">
+                    <strong>Functions:</strong>
+                    <ul>
+                        <li><strong>DDoS Protection:</strong> Rate limiting, bot detection</li>
+                        <li><strong>TLS Termination:</strong> HTTPS → HTTP</li>
+                        <li><strong>Geo-routing:</strong> Route to nearest region</li>
+                        <li><strong>Static Assets:</strong> Cache CSS, JS, images</li>
+                        <li><strong>Edge Caching:</strong> Popular typeahead results (limited)</li>
+                    </ul>
+                    <div class="code-snippet">
+                        # Edge caching for hot queries
+                        Cache-Control: public, max-age=300
+                        X-Cache-Status: HIT
+                        X-Edge-Location: IAD</div>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Latency reduction: 20-50ms</li>
+                        <li>200+ edge locations globally</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Balancer -->
+        <div class="section loadbalancer-section">
+            <div class="section-title">⚖️ LOAD BALANCING & API GATEWAY</div>
+            <div class="component">
+                <div class="component-name">Application Load Balancer (ALB) + Kong API Gateway</div>
+                <div class="component-details">
+                    <strong>Load Balancing:</strong>
+                    <ul>
+                        <li><strong>Algorithm:</strong> Least connections (for search), Round robin (for typeahead)</li>
+                        <li><strong>Health Checks:</strong> /health endpoint every 10s</li>
+                        <li><strong>Auto-scaling:</strong> Scale out at 70% CPU</li>
+                        <li><strong>Sticky Sessions:</strong> None (stateless services)</li>
+                    </ul>
+                    <strong>API Gateway Features:</strong>
+                    <ul>
+                        <li><strong>Rate Limiting:</strong> 1000 req/min per user (typeahead), 100 req/min (search)</li>
+                        <li><strong>Authentication:</strong> JWT validation, API key check</li>
+                        <li><strong>Request Routing:</strong> /typeahead → Typeahead Service, /search → Search Service</li>
+                        <li><strong>Circuit Breaker:</strong> Open after 10 consecutive failures</li>
+                        <li><strong>Request Logging:</strong> Track all queries for analytics</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flow-indicator">↓ Route to Backend Services</div>
+        </div>
+
+        <!-- Typeahead Service -->
+        <div class="section typeahead-section">
+            <div class="section-title">⚡ TYPEAHEAD SERVICE</div>
+            <div class="component">
+                <div class="component-name">Ultra-Low Latency Autocomplete</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong> Go / Java (Spring Boot)
+                    <div class="code-snippet">
+                        GET /api/v1/typeahead?q=sea&limit=10
+
+                        Response (15ms):
+                        {
+                          "suggestions": [
+                            {"text": "seattle weather", "score": 1500K},
+                            {"text": "search engine", "score": 1200K},
+                            {"text": "seahawks", "score": 800K}
+                          ],
+                          "latency_ms": 15
+                        }</div>
+                    <strong>Logic Flow:</strong>
+                    <ul>
+                        <li><strong>Step 1:</strong> Check Redis cache (key: prefix)</li>
+                        <li><strong>Step 2:</strong> Cache miss → Query Trie in memory</li>
+                        <li><strong>Step 3:</strong> If prefix not in Trie → Query Elasticsearch (long tail)</li>
+                        <li><strong>Step 4:</strong> Return top-10 suggestions sorted by frequency</li>
+                        <li><strong>Step 5:</strong> Async: Log query for analytics</li>
+                    </ul>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>In-memory Trie for hot prefixes (1-3 chars)</li>
+                        <li>Redis for warm prefixes (4-5 chars)</li>
+                        <li>Elasticsearch for cold/long-tail queries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Service -->
+        <div class="section search-section">
+            <div class="section-title">🔎 SEARCH SERVICE</div>
+            <div class="component">
+                <div class="component-name">Full-Text Search + Ranking</div>
+                <div class="component-details">
+                    <strong>Tech Stack:</strong> Python (FastAPI) / Java
+                    <div class="code-snippet">
+                        POST /api/v1/search
+                        {
+                          "query": "machine learning courses",
+                          "filters": {"category": "education"},
+                          "page": 1
+                        }
+
+                        Response (120ms):
+                        {
+                          "total": 15234,
+                          "results": [...],  // Top 20 results
+                          "facets": {...},
+                          "spell_correction": null,
+                          "took_ms": 120
+                        }</div>
+                    <strong>Logic Flow:</strong>
+                    <ul>
+                        <li><strong>Step 1:</strong> Query rewriting (spell check, synonyms)</li>
+                        <li><strong>Step 2:</strong> Check Redis cache (query hash key)</li>
+                        <li><strong>Step 3:</strong> Cache miss → Query Elasticsearch</li>
+                        <li><strong>Step 4:</strong> Apply ML ranking (personalization)</li>
+                        <li><strong>Step 5:</strong> Generate snippets with highlighting</li>
+                        <li><strong>Step 6:</strong> Return results + facets</li>
+                        <li><strong>Step 7:</strong> Async: Log query, update CTR model</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trie Data Structure -->
+        <div class="section trie-section">
+            <div class="section-title">🌲 TRIE STRUCTURE</div>
+            <div class="component">
+                <div class="component-name">In-Memory Prefix Tree</div>
+                <div class="component-details">
+                    <strong>Data Structure:</strong>
+                    <div class="code-snippet">
+                        class TrieNode {
+                          Map<char, TrieNode> children;
+                          boolean isEndOfWord;
+                          int frequency;
+                          List<String> topQueries; // Pre-computed
+                        }
+
+                        // Example: "sea" node stores:
+                        topQueries = [
+                          "seattle weather",
+                          "search engine",
+                          "seahawks"
+                        ]</div>
+                    <strong>Characteristics:</strong>
+                    <ul>
+                        <li><strong>Size:</strong> ~45 GB for 1B queries</li>
+                        <li><strong>Lookup:</strong> O(k) where k = prefix length</li>
+                        <li><strong>Pre-computation:</strong> Top-10 queries at each node</li>
+                        <li><strong>Update:</strong> Async batch updates (hourly)</li>
+                    </ul>
+                    <strong>Optimization:</strong>
+                    <ul>
+                        <li>Store only hot queries (top 100M)</li>
+                        <li>Shard by first character (26 shards)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis Cache -->
+        <div class="section cache-section">
+            <div class="section-title">💾 REDIS CACHE</div>
+            <div class="component">
+                <div class="component-name">Multi-Purpose Cache Layer</div>
+                <div class="component-details">
+                    <strong>Use Cases:</strong>
+                    <div class="code-snippet">
+                        # Typeahead cache
+                        SET typeahead:sea "[...]" EX 3600
+
+                        # Search cache
+                        SET search:hash123 "{results...}" EX 300
+
+                        # Hot queries (Sorted Set)
+                        ZADD trending:queries 1500 "seattle weather"</div>
+                    <strong>Architecture:</strong>
+                    <ul>
+                        <li><strong>Cluster:</strong> 3 masters + 3 replicas</li>
+                        <li><strong>Sharding:</strong> Consistent hashing</li>
+                        <li><strong>Eviction:</strong> LRU policy</li>
+                        <li><strong>Persistence:</strong> RDB snapshots (hourly)</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Throughput: 100K ops/sec per node</li>
+                        <li>Latency: <1ms (P99)</li>
+                        <li>Hit rate: 85-90% (target)</li>
+                        <li>Memory: 100 GB total</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elasticsearch Cluster -->
+        <div class="section elasticsearch-section">
+            <div class="section-title">🔍 ELASTICSEARCH CLUSTER</div>
+            <div class="component">
+                <div class="component-name">Distributed Search Engine</div>
+                <div class="component-details">
+                    <strong>Cluster Topology:</strong>
+                    <ul>
+                        <li><strong>Master Nodes:</strong> 3 dedicated (cluster management)</li>
+                        <li><strong>Data Nodes:</strong> 45 (storage + query)</li>
+                        <li><strong>Coordinating Nodes:</strong> 5 (query routing)</li>
+                        <li><strong>Ingest Nodes:</strong> 3 (document processing)</li>
+                    </ul>
+                    <strong>Index Configuration:</strong>
+                    <div class="code-snippet">
+                        {
+                          "settings": {
+                            "number_of_shards": 1800,
+                            "number_of_replicas": 2,
+                            "refresh_interval": "5s"
+                          },
+                          "mappings": {
+                            "properties": {
+                              "title": {"type": "text", "analyzer": "english"},
+                              "content": {"type": "text"},
+                              "popularity": {"type": "float"}
+                            }
+                          }
+                        }</div>
+                    <strong>Query Types:</strong>
+                    <ul>
+                        <li><strong>Prefix Query:</strong> For typeahead (long-tail)</li>
+                        <li><strong>Multi-Match:</strong> Search across fields</li>
+                        <li><strong>Function Score:</strong> Custom ranking</li>
+                        <li><strong>Aggregations:</strong> Faceted search</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Query latency: P95 <200ms</li>
+                        <li>Index size: 270 TB (with replicas)</li>
+                        <li>Indexing rate: 50K docs/sec</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ranking Service -->
+        <div class="section ranking-section">
+            <div class="section-title">🎯 RANKING SERVICE</div>
+            <div class="component">
+                <div class="component-name">ML-Powered Ranking</div>
+                <div class="component-details">
+                    <strong>Scoring Function:</strong>
+                    <div class="code-snippet">
+                        score = 0.5 × BM25(query, doc)
+                              + 0.2 × popularity(doc)
+                              + 0.15 × recency(doc)
+                              + 0.1 × personalization(user, doc)
+                              + 0.05 × quality(doc)</div>
+                    <strong>ML Models:</strong>
+                    <ul>
+                        <li><strong>LambdaMART:</strong> Learning-to-rank (LTR)</li>
+                        <li><strong>BERT:</strong> Semantic matching (offline computed)</li>
+                        <li><strong>CTR Prediction:</strong> Click-through rate model</li>
+                        <li><strong>Personalization:</strong> User embedding matching</li>
+                    </ul>
+                    <strong>Features (100+):</strong>
+                    <ul>
+                        <li>Text relevance (BM25, TF-IDF)</li>
+                        <li>Query-document similarity</li>
+                        <li>User engagement (CTR, dwell time)</li>
+                        <li>Freshness, authority, quality</li>
+                    </ul>
+                    <strong>A/B Testing:</strong>
+                    <ul>
+                        <li>10% traffic on experimental models</li>
+                        <li>Measure: NDCG, MRR, CTR</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Primary Database -->
+        <div class="section database-section">
+            <div class="section-title">🗄️ PRIMARY DATABASE</div>
+            <div class="component">
+                <div class="component-name">PostgreSQL Cluster</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+                        -- User Management
+                        CREATE TABLE users (
+                          id BIGSERIAL PRIMARY KEY,
+                          email VARCHAR(255) UNIQUE,
+                          created_at TIMESTAMP
+                        );
+
+                        -- Query History
+                        CREATE TABLE query_history (
+                          id BIGSERIAL PRIMARY KEY,
+                          user_id BIGINT,
+                          query TEXT,
+                          timestamp TIMESTAMP
+                        );
+                        CREATE INDEX idx_user_queries
+                          ON query_history(user_id, timestamp);</div>
+                    <strong>Use Cases:</strong>
+                    <ul>
+                        <li>User accounts & authentication</li>
+                        <li>API key management</li>
+                        <li>Configuration & metadata</li>
+                        <li>NOT for search data (use ES)</li>
+                    </ul>
+                    <strong>Scaling:</strong>
+                    <ul>
+                        <li>Master-replica (1 master, 2 replicas)</li>
+                        <li>Read-write splitting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Store -->
+        <div class="section analytics-section">
+            <div class="section-title">📊 ANALYTICS STORE</div>
+            <div class="component">
+                <div class="component-name">ClickHouse (OLAP Database)</div>
+                <div class="component-details">
+                    <strong>Schema:</strong>
+                    <div class="code-snippet">
+                        CREATE TABLE query_logs (
+                          query_id UUID,
+                          query_text String,
+                          user_id UInt64,
+                          timestamp DateTime,
+                          latency_ms UInt32,
+                          results_count UInt16,
+                          clicked_doc_id String,
+                          user_location String
+                        ) ENGINE = MergeTree()
+                        PARTITION BY toYYYYMM(timestamp)
+                        ORDER BY (timestamp, user_id);</div>
+                    <strong>Analytics Queries:</strong>
+                    <ul>
+                        <li><strong>Top Queries:</strong> GROUP BY query_text ORDER BY count() DESC</li>
+                        <li><strong>Zero-Result Rate:</strong> % of queries with 0 results</li>
+                        <li><strong>Latency Trends:</strong> P50, P95, P99 by hour</li>
+                        <li><strong>CTR Analysis:</strong> Click-through rates by position</li>
+                    </ul>
+                    <strong>Performance:</strong>
+                    <ul>
+                        <li>Compression: 10x (140 bytes → 14 bytes)</li>
+                        <li>Query speed: Billions of rows in seconds</li>
+                        <li>Storage: 10 TB for 1 year of logs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="component">
+                <div class="component-name">Grafana Dashboards</div>
+                <div class="component-details">
+                    <strong>Real-time Metrics:</strong>
+                    <ul>
+                        <li>QPS (typeahead vs search)</li>
+                        <li>Latency percentiles</li>
+                        <li>Cache hit rates</li>
+                        <li>Error rates</li>
+                        <li>Top queries / trending</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Queue -->
+        <div class="section queue-section">
+            <div class="section-title">📬 MESSAGE QUEUE</div>
+            <div class="component">
+                <div class="component-name">Apache Kafka</div>
+                <div class="component-details">
+                    <strong>Topics:</strong>
+                    <div class="code-snippet">
+                        # Query Logs
+                        queries.typeahead (10B events/day)
+                        queries.search (1B events/day)
+
+                        # User Events
+                        clicks.result (500M events/day)
+                        clicks.suggestion (2B events/day)
+
+                        # Indexing Pipeline
+                        documents.new (100M docs/day)
+                        documents.update (50M docs/day)</div>
+                    <strong>Configuration:</strong>
+                    <ul>
+                        <li><strong>Partitions:</strong> 100 per topic (parallelism)</li>
+                        <li><strong>Replication:</strong> 3x (fault tolerance)</li>
+                        <li><strong>Retention:</strong> 7 days</li>
+                        <li><strong>Compression:</strong> Snappy</li>
+                    </ul>
+                    <strong>Consumers:</strong>
+                    <ul>
+                        <li>Analytics pipeline → ClickHouse</li>
+                        <li>ML training pipeline → S3</li>
+                        <li>Indexing service → Elasticsearch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indexing Pipeline -->
+        <div class="section indexing-section">
+            <div class="section-title">🔄 INDEXING PIPELINE</div>
+            <div class="component">
+                <div class="component-name">Real-Time Indexing Service</div>
+                <div class="component-details">
+                    <strong>Pipeline Stages:</strong>
+                    <ul>
+                        <li><strong>1. Ingestion:</strong> Kafka → Document queue</li>
+                        <li><strong>2. Processing:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Text extraction (HTML → text)</li>
+                                <li>Tokenization & normalization</li>
+                                <li>Entity extraction (NER)</li>
+                                <li>Duplicate detection</li>
+                            </ul>
+                        </li>
+                        <li><strong>3. Enrichment:</strong>
+                            <ul style="margin-left: 15px;">
+                                <li>Calculate popularity score</li>
+                                <li>Extract categories/tags</li>
+                                <li>Generate embeddings (BERT)</li>
+                            </ul>
+                        </li>
+                        <li><strong>4. Indexing:</strong> Bulk index to Elasticsearch (1000 docs/batch)</li>
+                    </ul>
+                    <strong>Latency:</strong>
+                    <ul>
+                        <li>Target: <5 minutes from publish to searchable</li>
+                        <li>ES refresh interval: 5 seconds</li>
+                    </ul>
+                    <strong>Tech Stack:</strong> Python (Apache Beam / Spark)
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="section monitoring-section">
+            <div class="section-title">📈 MONITORING</div>
+            <div class="component">
+                <div class="component-name">Observability Stack</div>
+                <div class="component-details">
+                    <strong>Metrics (Prometheus):</strong>
+                    <ul>
+                        <li>Typeahead: latency, QPS, cache hit rate</li>
+                        <li>Search: latency, QPS, zero-result rate</li>
+                        <li>ES: cluster health, indexing rate, query time</li>
+                        <li>Redis: memory usage, eviction rate, hit rate</li>
+                    </ul>
+                    <strong>Logging (ELK):</strong>
+                    <ul>
+                        <li>Centralized logging (Logstash)</li>
+                        <li>Structured logs (JSON)</li>
+                        <li>Full-text search (Elasticsearch)</li>
+                        <li>Visualization (Kibana)</li>
+                    </ul>
+                    <strong>Tracing (Jaeger):</strong>
+                    <ul>
+                        <li>Distributed tracing</li>
+                        <li>Request flow visualization</li>
+                        <li>Latency breakdown</li>
+                    </ul>
+                    <strong>Alerting (PagerDuty):</strong>
+                    <ul>
+                        <li>P95 latency > threshold</li>
+                        <li>Cache hit rate < 70%</li>
+                        <li>ES cluster RED status</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key System Metrics -->
+    <div class="key-metrics">
+        <div class="section-title">🎯 KEY SYSTEM METRICS & CAPACITY PLANNING</div>
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-value">100K QPS</div>
+                <div class="metric-label">Typeahead throughput (peak)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10K QPS</div>
+                <div class="metric-label">Search throughput (peak)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;50ms</div>
+                <div class="metric-label">Typeahead P95 latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">&lt;200ms</div>
+                <div class="metric-label">Search P95 latency</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Redis cache hit rate</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">99.9%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">270 TB</div>
+                <div class="metric-label">Elasticsearch index size</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">10B</div>
+                <div class="metric-label">Searchable documents</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 15px; border: 2px solid #e2e8f0;">
+        <h2 style="color: #2d3748; margin-bottom: 20px;">🔐 ADDITIONAL SYSTEM CONSIDERATIONS</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Data Flow Patterns</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Write Path (Indexing):</strong> Document → Kafka → Indexing Service → Elasticsearch</li>
+                    <li><strong>Read Path (Typeahead):</strong> Client → LB → Typeahead → Trie/Redis → Response</li>
+                    <li><strong>Read Path (Search):</strong> Client → LB → Search → ES/Ranking → Response</li>
+                    <li><strong>Analytics Path:</strong> Query → Kafka → ClickHouse → Dashboards</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Consistency Guarantees</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Typeahead:</strong> Eventual consistency (Trie updated hourly)</li>
+                    <li><strong>Search:</strong> Near real-time (5s refresh interval)</li>
+                    <li><strong>Analytics:</strong> Eventual consistency (acceptable lag)</li>
+                    <li><strong>User Data:</strong> Strong consistency (PostgreSQL ACID)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Failure Handling</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>ES Down:</strong> Serve stale cache, degrade gracefully</li>
+                    <li><strong>Redis Down:</strong> Fallback to Trie → ES (slower)</li>
+                    <li><strong>Kafka Down:</strong> Buffer in application, retry with backoff</li>
+                    <li><strong>Ranking Service Down:</strong> Use BM25 scores only</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Security Measures</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Rate Limiting:</strong> Token bucket algorithm (per user/IP)</li>
+                    <li><strong>Authentication:</strong> JWT tokens for API access</li>
+                    <li><strong>Encryption:</strong> TLS 1.3 in transit, AES-256 at rest</li>
+                    <li><strong>Content Filtering:</strong> Block NSFW, spam, malicious content</li>
+                    <li><strong>PII Protection:</strong> Anonymize query logs (hash user IDs)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Search Quality Metrics</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>NDCG:</strong> Normalized Discounted Cumulative Gain</li>
+                    <li><strong>MRR:</strong> Mean Reciprocal Rank (position of first relevant result)</li>
+                    <li><strong>CTR:</strong> Click-through rate on top results</li>
+                    <li><strong>Zero-Result Rate:</strong> % of queries with no results (<5% target)</li>
+                    <li><strong>Dwell Time:</strong> Time spent on clicked result</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color: #6366f1; margin-bottom: 10px;">Cost Optimization</h3>
+                <ul style="line-height: 2; color: #4a5568;">
+                    <li><strong>Reserved Instances:</strong> 40% savings on stable workloads</li>
+                    <li><strong>Spot Instances:</strong> 70% savings for indexing workers</li>
+                    <li><strong>Compression:</strong> Reduce storage by 10x (ClickHouse)</li>
+                    <li><strong>Tiered Storage:</strong> Hot (SSD) → Warm (HDD) → Cold (S3)</li>
+                    <li><strong>Cache Warming:</strong> Preload popular queries (reduce ES load)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain-Driven Design Mapping -->
+    <div style="margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); border-radius: 15px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">🎨 DOMAIN-DRIVEN DESIGN MAPPING</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #6366f1;">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">Typeahead Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> QuerySuggestion<br>
+                    <strong>Entities:</strong> Prefix, Query<br>
+                    <strong>Value Objects:</strong> Frequency, Rank<br>
+                    <strong>Domain Events:</strong> QueryTyped, SuggestionClicked<br>
+                    <strong>Repository:</strong> TrieRepository, SuggestionCache
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981;">
+                <h4 style="color: #10b981; margin-bottom: 10px;">Search Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> SearchResult, Document<br>
+                    <strong>Entities:</strong> Query, Result<br>
+                    <strong>Value Objects:</strong> Score, Snippet<br>
+                    <strong>Domain Events:</strong> QuerySubmitted, ResultClicked<br>
+                    <strong>Repository:</strong> SearchIndexRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Indexing Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> Document, Index<br>
+                    <strong>Entities:</strong> Content, Metadata<br>
+                    <strong>Value Objects:</strong> DocumentId, Version<br>
+                    <strong>Domain Events:</strong> DocumentIndexed, IndexUpdated<br>
+                    <strong>Repository:</strong> DocumentRepository
+                </p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #a855f7;">
+                <h4 style="color: #a855f7; margin-bottom: 10px;">Analytics Context</h4>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    <strong>Aggregates:</strong> QueryLog, ClickEvent<br>
+                    <strong>Entities:</strong> UserSession, Interaction<br>
+                    <strong>Value Objects:</strong> Timestamp, Latency<br>
+                    <strong>Domain Events:</strong> EventLogged, MetricComputed<br>
+                    <strong>Repository:</strong> AnalyticsRepository
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #718096;">
+        <p style="font-size: 0.9em;">💡 <strong>Pareto Principle Applied:</strong> 80% of queries are served from cache (20% hit ES)</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Built with: Go/Java • Elasticsearch • Redis • ClickHouse • Kafka • Kubernetes</p>
+        <p style="font-size: 0.85em; margin-top: 10px; color: #94a3b8;">Tech inspired by: Google Search, LinkedIn, Amazon, Algolia</p>
+    </div>
+</div>
+</body>
+</html>
