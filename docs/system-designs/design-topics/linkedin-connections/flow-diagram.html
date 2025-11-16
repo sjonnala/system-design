@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Connections Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0a66c2;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #0a66c2;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(10, 102, 194, 0.5));
+        }
+
+        .component rect {
+            transition: all 0.3s;
+        }
+
+        .component:hover rect {
+            stroke-width: 3;
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #0a66c2;
+        }
+
+        .flow-description h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #0a66c2;
+        }
+
+        .flow-description code {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #0a66c2;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #0a66c2;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🤝 LinkedIn Connections Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('send-request')">📤 Send Connection Request</button>
+            <button class="tab" onclick="showDiagram('accept')">✅ Accept Connection</button>
+            <button class="tab" onclick="showDiagram('recommendations')">🎯 Generate Recommendations</button>
+            <button class="tab" onclick="showDiagram('full')">🏗️ Full System Flow</button>
+        </div>
+    </div>
+
+    <!-- Send Connection Request Flow -->
+    <div id="send-request-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#0a66c2" />
+                </marker>
+                <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+                </marker>
+                <marker id="arrowhead-error" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
+                </marker>
+                <linearGradient id="grad-user" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-api" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-service" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-graph" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#facc15;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#eab308;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-kafka" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Send Connection Request Flow
+            </text>
+
+            <!-- User A (Sender) -->
+            <g class="component">
+                <rect x="300" y="70" width="180" height="80" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="390" y="105" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User A</text>
+                <text x="390" y="125" font-size="12" text-anchor="middle" fill="white">(Sender)</text>
+            </g>
+
+            <!-- User B (Receiver) -->
+            <g class="component">
+                <rect x="920" y="70" width="180" height="80" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="1010" y="105" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User B</text>
+                <text x="1010" y="125" font-size="12" text-anchor="middle" fill="white">(Receiver)</text>
+            </g>
+
+            <!-- Arrow 1: User clicks "Connect" -->
+            <path d="M 390 150 L 390 200" stroke="#0a66c2" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="410" y="180" font-size="11" fill="#1e40af" font-weight="600">Click "Connect"</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="300" y="200" width="180" height="80" rx="10" fill="url(#grad-api)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="390" y="235" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="390" y="255" font-size="11" text-anchor="middle" fill="white">Auth + Rate Limit</text>
+            </g>
+
+            <!-- Arrow 2: Validate & Route -->
+            <path d="M 390 280 L 390 330" stroke="#0a66c2" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="410" y="310" font-size="11" fill="#1e40af" font-weight="600">POST /connections/request</text>
+
+            <!-- Connection Service -->
+            <g class="component">
+                <rect x="270" y="330" width="240" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="390" y="365" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🔗 Connection Service</text>
+                <text x="390" y="385" font-size="11" text-anchor="middle" fill="white">• Validate request</text>
+                <text x="390" y="405" font-size="11" text-anchor="middle" fill="white">• Check rate limits</text>
+            </g>
+
+            <!-- Decision Diamond: Rate Limit Check -->
+            <g class="component">
+                <path d="M 390 470 L 490 530 L 390 590 L 290 530 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="390" y="525" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Rate Limit</text>
+                <text x="390" y="543" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">OK?</text>
+            </g>
+
+            <!-- Rate Limit Exceeded (Right) -->
+            <path d="M 490 530 L 640 530" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="530" y="520" font-size="12" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="640" y="490" width="200" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+                <text x="740" y="525" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Error</text>
+                <text x="740" y="545" font-size="11" text-anchor="middle" fill="#991b1b">429 Too Many Requests</text>
+            </g>
+
+            <!-- Rate Limit OK (Down) -->
+            <path d="M 390 590 L 390 640" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="325" y="620" font-size="12" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- Decision: Already Connected? -->
+            <g class="component">
+                <path d="M 390 640 L 490 700 L 390 760 L 290 700 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="390" y="695" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Already</text>
+                <text x="390" y="713" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Connected?</text>
+            </g>
+
+            <!-- Already Connected (Right) -->
+            <path d="M 490 700 L 640 700" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead-error)"/>
+            <text x="530" y="690" font-size="12" fill="#dc2626" font-weight="700">YES</text>
+
+            <g class="component">
+                <rect x="640" y="660" width="200" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+                <text x="740" y="695" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Error</text>
+                <text x="740" y="715" font-size="11" text-anchor="middle" fill="#991b1b">Already connected</text>
+            </g>
+
+            <!-- Not Connected (Down) -->
+            <path d="M 390 760 L 390 820" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)"/>
+            <text x="325" y="795" font-size="12" fill="#059669" font-weight="700">NO ✓</text>
+
+            <!-- PostgreSQL -->
+            <g class="component">
+                <rect x="270" y="820" width="240" height="100" rx="10" fill="url(#grad-db)" stroke="#ea580c" stroke-width="2"/>
+                <text x="390" y="855" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🐘 PostgreSQL</text>
+                <text x="390" y="875" font-size="11" text-anchor="middle" fill="white">INSERT connection_request</text>
+                <text x="390" y="895" font-size="10" text-anchor="middle" fill="white">status = PENDING</text>
+            </g>
+
+            <!-- Arrow to Graph DB -->
+            <path d="M 510 870 L 890 870" stroke="#0a66c2" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="660" y="860" font-size="11" fill="#1e40af" font-weight="600">Create REQUESTED edge</text>
+
+            <!-- Neo4j Graph DB -->
+            <g class="component">
+                <rect x="890" y="820" width="240" height="100" rx="10" fill="url(#grad-graph)" stroke="#ca8a04" stroke-width="2"/>
+                <text x="1010" y="855" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🕸️ Neo4j</text>
+                <text x="1010" y="875" font-size="10" text-anchor="middle" fill="white">(A)-[:REQUESTED]->(B)</text>
+                <text x="1010" y="895" font-size="10" text-anchor="middle" fill="white">timestamp, message</text>
+            </g>
+
+            <!-- Arrow to Kafka -->
+            <path d="M 390 920 L 390 1000" stroke="#0a66c2" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="410" y="965" font-size="11" fill="#1e40af" font-weight="600">Publish Event</text>
+
+            <!-- Kafka -->
+            <g class="component">
+                <rect x="270" y="1000" width="240" height="100" rx="10" fill="url(#grad-kafka)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="390" y="1035" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📬 Kafka</text>
+                <text x="390" y="1055" font-size="11" text-anchor="middle" fill="white">Topic: connection.requested</text>
+                <text x="390" y="1075" font-size="10" text-anchor="middle" fill="white">{from: A, to: B, ...}</text>
+            </g>
+
+            <!-- Async Processing Arrows -->
+            <path d="M 510 1050 L 890 1050" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="660" y="1040" font-size="10" fill="#9333ea">Async Consumers</text>
+
+            <!-- Notification Service -->
+            <g class="component">
+                <rect x="890" y="1000" width="220" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="1000" y="1030" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">🔔 Send Notification to B</text>
+            </g>
+
+            <!-- Analytics Service -->
+            <g class="component">
+                <rect x="890" y="1065" width="220" height="50" rx="8" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="1000" y="1095" font-size="12" font-weight="bold" text-anchor="middle" fill="#6b21a8">📊 Track Metrics</text>
+            </g>
+
+            <!-- Response Path -->
+            <path d="M 270 870 L 150 870 L 150 240 L 300 240" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead-success)" stroke-dasharray="8,4"/>
+            <text x="50" y="560" font-size="12" fill="#059669" font-weight="700">← Response</text>
+            <text x="50" y="580" font-size="11" fill="#059669">201 Created</text>
+            <text x="50" y="595" font-size="10" fill="#059669">{request_id, status: PENDING}</text>
+
+            <!-- Notification to User B -->
+            <path d="M 1010 200 L 1010 150" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="1030" y="180" font-size="10" fill="#9333ea">Notification</text>
+
+            <!-- Step Numbers -->
+            <circle cx="390" cy="110" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="390" y="117" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="390" cy="240" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="390" y="247" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="390" cy="380" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="390" y="387" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="390" cy="870" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="390" y="877" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="1010" cy="870" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1010" y="877" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+
+            <circle cx="390" cy="1050" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="390" y="1057" font-size="14" font-weight="bold" text-anchor="middle" fill="white">6</text>
+
+            <circle cx="1010" cy="110" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1010" y="117" font-size="14" font-weight="bold" text-anchor="middle" fill="white">7</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📤 Send Connection Request Flow Steps</h3>
+            <ol>
+                <li><strong>User A initiates:</strong> Clicks "Connect" button on User B's profile</li>
+                <li><strong>API Gateway:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Validates JWT token (authentication)</li>
+                        <li>Checks API rate limits (100 requests/day per user)</li>
+                        <li>Routes to Connection Service</li>
+                    </ul>
+                </li>
+                <li><strong>Connection Service validates:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Rate limit check (not exceeded?)</li>
+                        <li>Already connected check (query graph or cache)</li>
+                        <li>Privacy settings (does B allow requests from strangers?)</li>
+                        <li>Block list check (has B blocked A?)</li>
+                    </ul>
+                </li>
+                <li><strong>PostgreSQL write:</strong> Insert into <code>connection_requests</code> table with status = PENDING</li>
+                <li><strong>Graph DB (Neo4j):</strong> Create <code>(A)-[:REQUESTED {timestamp, message}]->(B)</code> relationship</li>
+                <li><strong>Kafka event:</strong> Publish <code>connection.requested</code> event for async processing</li>
+                <li><strong>Async consumers:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Notification Service: Send email/push to User B ("You have a new connection request from User A")</li>
+                        <li>Analytics Service: Track metrics (request rate, user behavior)</li>
+                        <li>ML Pipeline: Update user activity for recommendation model</li>
+                    </ul>
+                </li>
+                <li><strong>Response:</strong> Return 201 Created with <code>{request_id, status: "PENDING", requested_at}</code></li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>⚡ Performance:</strong> Typical latency: 100-200ms (PostgreSQL + Neo4j writes). Async processing (notifications) doesn't block response.
+            </div>
+            <div style="margin-top: 10px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 5px;">
+                <strong>❌ Error Cases:</strong><br>
+                • Rate limit exceeded → 429 Too Many Requests<br>
+                • Already connected → 400 Bad Request<br>
+                • User blocked → 403 Forbidden<br>
+                • Privacy violation → 403 Forbidden
+            </div>
+        </div>
+    </div>
+
+    <!-- Accept Connection Flow (Placeholder for brevity) -->
+    <div id="accept-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <text x="700" y="100" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Accept Connection Request Flow
+            </text>
+            <text x="700" y="140" font-size="16" text-anchor="middle" fill="#64748b">
+                (Similar structure to Send Request, with bidirectional edge creation in graph DB)
+            </text>
+        </svg>
+        <div class="flow-description">
+            <h3>✅ Accept Connection Flow Steps</h3>
+            <ol>
+                <li><strong>User B views pending request</strong> from User A</li>
+                <li><strong>User B clicks "Accept":</strong> <code>PUT /api/v1/connections/request/{id}</code></li>
+                <li><strong>API Gateway:</strong> Auth + validation</li>
+                <li><strong>Connection Service:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>Verify request exists and status is PENDING</li>
+                        <li>Verify User B is the recipient</li>
+                        <li>Update request status to ACCEPTED in PostgreSQL</li>
+                    </ul>
+                </li>
+                <li><strong>Graph DB (Neo4j):</strong> Create bidirectional connection
+                    <pre style="background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 5px;">
+// Delete pending request edge
+MATCH (a:User)-[r:REQUESTED]->(b:User)
+WHERE a.userId = $userA AND b.userId = $userB
+DELETE r
+
+// Create bidirectional connection
+CREATE (a)-[:CONNECTED_TO {connectedAt: timestamp()}]->(b)
+CREATE (b)-[:CONNECTED_TO {connectedAt: timestamp()}]->(a)
+
+// Update connection counts
+SET a.connectionCount = a.connectionCount + 1
+SET b.connectionCount = b.connectionCount + 1</pre>
+                </li>
+                <li><strong>PostgreSQL:</strong> Insert into <code>connections</code> table (denormalized for fast queries)</li>
+                <li><strong>Cache invalidation:</strong> Delete cached connection lists for both users</li>
+                <li><strong>Kafka event:</strong> Publish <code>connection.accepted</code></li>
+                <li><strong>Async processing:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>Notify User A: "User B accepted your connection request"</li>
+                        <li>Update feed for both users</li>
+                        <li>Trigger recommendation refresh (new mutual connections available)</li>
+                        <li>ML model: Positive signal for recommendation algorithm</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Recommendation Generation Flow -->
+    <div id="recommendations-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1300" xmlns="http://www.w3.org/2000/svg">
+            <text x="700" y="100" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                "People You May Know" Recommendation Flow
+            </text>
+            <text x="700" y="140" font-size="16" text-anchor="middle" fill="#64748b">
+                Two-stage ML pipeline: Candidate Generation + Ranking
+            </text>
+        </svg>
+        <div class="flow-description">
+            <h3>🎯 Recommendation Generation Steps</h3>
+            <p style="margin-bottom: 10px;"><strong>Architecture:</strong> Hybrid batch + real-time approach</p>
+            
+            <h4 style="color: #0a66c2; margin-top: 15px; margin-bottom: 10px;">🔹 Offline Batch Processing (Nightly)</h4>
+            <ol>
+                <li><strong>Spark Job extracts features:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>User profile data (PostgreSQL)</li>
+                        <li>Connection graph (Neo4j export)</li>
+                        <li>User activity logs (Kafka → S3)</li>
+                        <li>Profile views, searches, clicks (Analytics DB)</li>
+                    </ul>
+                </li>
+                <li><strong>Stage 1 - Candidate Generation (Graph-based):</strong>
+                    <pre style="background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 5px;">
+// Get 2nd degree connections (friends of friends)
+MATCH (user:User {userId: $uid})-[:CONNECTED*2]-(candidate:User)
+WHERE NOT (user)-[:CONNECTED]-(candidate)
+  AND NOT (user)-[:REQUESTED]-(candidate)
+  AND user <> candidate
+WITH candidate, COUNT(*) as mutualCount
+ORDER BY mutualCount DESC
+LIMIT 1000
+RETURN candidate.userId, mutualCount</pre>
+                </li>
+                <li><strong>Stage 2 - Feature Engineering for each candidate:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li><code>mutual_connections</code>: Count from graph</li>
+                        <li><code>shared_companies</code>: Intersection of work history</li>
+                        <li><code>shared_schools</code>: Intersection of education</li>
+                        <li><code>skill_similarity</code>: Jaccard similarity of skills</li>
+                        <li><code>profile_view_history</code>: Has user viewed candidate's profile?</li>
+                        <li><code>location_proximity</code>: Distance in km</li>
+                        <li><code>industry_match</code>: Boolean</li>
+                        <li><code>seniority_difference</code>: Abs difference in seniority level</li>
+                    </ul>
+                </li>
+                <li><strong>ML Model Scoring (LightGBM):</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>Input: Feature vector for (user, candidate) pair</li>
+                        <li>Output: Probability of connection acceptance (0-1)</li>
+                        <li>Training data: Historical accepted/rejected connections</li>
+                    </ul>
+                </li>
+                <li><strong>Store top 100 recommendations per user in Redis:</strong>
+                    <pre style="background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 5px;">
+// Redis Sorted Set (score = ML probability)
+ZADD recommendations:123456 0.95 "user789012"
+ZADD recommendations:123456 0.87 "user345678"
+...
+EXPIRE recommendations:123456 86400  // 24 hour TTL</pre>
+                </li>
+            </ol>
+
+            <h4 style="color: #10b981; margin-top: 15px; margin-bottom: 10px;">🔹 Real-Time Serving (API Request)</h4>
+            <ol>
+                <li><strong>User requests recommendations:</strong> <code>GET /api/v1/recommendations/connections</code></li>
+                <li><strong>API checks Redis cache:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>If exists: Return pre-computed recommendations ✓</li>
+                        <li>If missing or stale: Fallback to real-time generation ↓</li>
+                    </ul>
+                </li>
+                <li><strong>Real-time filtering & re-ranking:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>Remove users already connected (graph query)</li>
+                        <li>Remove blocked users</li>
+                        <li>Boost based on recent activity (profile views in last 24h)</li>
+                        <li>Personalize based on current context (e.g., job search mode)</li>
+                    </ul>
+                </li>
+                <li><strong>Generate explanation for each recommendation:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>"15 mutual connections" (if mutual_count > 10)</li>
+                        <li>"Both worked at Google" (if shared_company)</li>
+                        <li>"Both attended Stanford" (if shared_school)</li>
+                        <li>"Similar skills: Python, ML" (if skill_similarity > 0.5)</li>
+                    </ul>
+                </li>
+                <li><strong>Return top 10 recommendations</strong> with metadata:
+                    <pre style="background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 5px;">
+{
+  "recommendations": [
+    {
+      "user_id": 789012,
+      "name": "Jane Smith",
+      "headline": "Senior SWE at Meta",
+      "profile_picture_url": "...",
+      "mutual_connections": 15,
+      "reason": "You both worked at Google",
+      "confidence_score": 0.87
+    },
+    ...
+  ]
+}</pre>
+                </li>
+                <li><strong>Track engagement:</strong> Publish event when recommendation shown (for ML feedback loop)</li>
+            </ol>
+
+            <div style="margin-top: 15px; padding: 15px; background: #dbeafe; border-left: 4px solid #0a66c2; border-radius: 5px;">
+                <strong>🎯 Key Metrics:</strong><br>
+                • Recommendation CTR: 12% (users who click on recommendation)<br>
+                • Connection acceptance rate: 35% (requests sent via recommendations)<br>
+                • Precision@10: 45% (top 10 recommendations are relevant)<br>
+                • Latency: <100ms (cached), <500ms (real-time generation)
+            </div>
+        </div>
+    </div>
+
+    <!-- Full System Flow -->
+    <div id="full-diagram" class="diagram-container">
+        <svg viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg">
+            <text x="800" y="50" font-size="28" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Complete LinkedIn Connections System Flow
+            </text>
+
+            <!-- Simplified full system architecture -->
+            <text x="800" y="150" font-size="18" text-anchor="middle" fill="#64748b">
+                See architecture.html for detailed component-level system design
+            </text>
+
+            <text x="800" y="250" font-size="16" text-anchor="middle" fill="#1e293b">
+                Key Data Flow Patterns:
+            </text>
+
+            <!-- Data Flow Patterns -->
+            <g transform="translate(200, 300)">
+                <rect x="0" y="0" width="350" height="150" rx="10" fill="#f0f9ff" stroke="#0a66c2" stroke-width="2"/>
+                <text x="175" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e40af">
+                    📝 Write Path (Connection Request)
+                </text>
+                <text x="175" y="60" font-size="12" text-anchor="middle" fill="#1e293b">
+                    Client → API Gateway → Connection Service
+                </text>
+                <text x="175" y="85" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → PostgreSQL + Neo4j (dual write)
+                </text>
+                <text x="175" y="110" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → Kafka → Async Workers (notifications, analytics)
+                </text>
+            </g>
+
+            <g transform="translate(650, 300)">
+                <rect x="0" y="0" width="350" height="150" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/>
+                <text x="175" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">
+                    📖 Read Path (Get Connections)
+                </text>
+                <text x="175" y="60" font-size="12" text-anchor="middle" fill="#1e293b">
+                    Client → API Gateway → Connection Service
+                </text>
+                <text x="175" y="85" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → Redis Cache (85% hit rate)
+                </text>
+                <text x="175" y="110" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → Neo4j Read Replica (on miss)
+                </text>
+            </g>
+
+            <g transform="translate(200, 500)">
+                <rect x="0" y="0" width="350" height="150" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                <text x="175" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">
+                    🎯 Recommendation Path
+                </text>
+                <text x="175" y="60" font-size="12" text-anchor="middle" fill="#1e293b">
+                    Batch: Spark → Neo4j export → ML training
+                </text>
+                <text x="175" y="85" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → Pre-compute top 100 → Store in Redis
+                </text>
+                <text x="175" y="110" font-size="12" text-anchor="middle" fill="#1e293b">
+                    Real-time: API → Redis → Filter + Re-rank
+                </text>
+            </g>
+
+            <g transform="translate(650, 500)">
+                <rect x="0" y="0" width="350" height="150" rx="10" fill="#fae8ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="175" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#6b21a8">
+                    📊 Analytics Path
+                </text>
+                <text x="175" y="60" font-size="12" text-anchor="middle" fill="#1e293b">
+                    All events → Kafka
+                </text>
+                <text x="175" y="85" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → Flink stream processing
+                </text>
+                <text x="175" y="110" font-size="12" text-anchor="middle" fill="#1e293b">
+                    → ClickHouse (metrics) + S3 (data lake)
+                </text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🏗️ Complete System Flow Overview</h3>
+            <p>The LinkedIn Connections system uses multiple specialized data flow paths for different operations:</p>
+            
+            <h4 style="color: #0a66c2; margin-top: 15px;">🔹 Architecture Principles</h4>
+            <ul style="line-height: 2;">
+                <li><strong>Dual Database Strategy:</strong>
+                    <ul style="margin-left: 20px;">
+                        <li>PostgreSQL: Transactional data, metadata, strong consistency</li>
+                        <li>Neo4j: Graph relationships, traversal queries, eventual consistency OK</li>
+                        <li>Redis: Caching layer, hot data, fast reads</li>
+                    </ul>
+                </li>
+                <li><strong>CQRS Pattern:</strong> Separate write and read paths for optimal performance</li>
+                <li><strong>Event-Driven Architecture:</strong> Kafka for async processing, decoupling services</li>
+                <li><strong>Multi-tier Caching:</strong> Application → Redis → Database (85% cache hit rate)</li>
+                <li><strong>Hybrid ML Pipeline:</strong> Batch pre-computation + real-time personalization</li>
+            </ul>
+
+            <h4 style="color: #10b981; margin-top: 15px;">🔹 Scalability Features</h4>
+            <ul style="line-height: 2;">
+                <li>Graph DB sharding: 16 shards by user ID hash</li>
+                <li>Read replicas: 3x replicas per database shard</li>
+                <li>Auto-scaling: API servers scale 10-200 based on load</li>
+                <li>Geographic distribution: Multi-region deployment</li>
+                <li>Async processing: Non-blocking operations via Kafka</li>
+            </ul>
+
+            <h4 style="color: #f59e0b; margin-top: 15px;">🔹 Data Consistency Model</h4>
+            <ul style="line-height: 2;">
+                <li><strong>Strong consistency:</strong> Connection request state (PostgreSQL ACID)</li>
+                <li><strong>Eventual consistency:</strong> Graph edges (Neo4j), acceptable lag <100ms</li>
+                <li><strong>Cache staleness:</strong> Connections (1hr TTL), Recommendations (24hr TTL)</li>
+                <li><strong>Conflict resolution:</strong> Last-write-wins for edge updates</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">46K QPS</div>
+                <div class="metric-label">Read Throughput</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">1.5K QPS</div>
+                <div class="metric-label">Write Throughput</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt;200ms</div>
+                <div class="metric-label">P95 Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Availability</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">12%</div>
+                <div class="metric-label">Recommendation CTR</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(10, 102, 194, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
