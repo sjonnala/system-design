@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce System Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .diagram-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+        }
+
+        .flow-arrow {
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #cbd5e0;
+        }
+
+        .metrics-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #6366f1;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .flow-description {
+            background: #e0e7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #6366f1;
+        }
+
+        .flow-description h3 {
+            color: #4338ca;
+            margin-bottom: 10px;
+        }
+
+        .flow-description ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #1e293b;
+        }
+
+        .flow-description ol li {
+            margin: 8px 0;
+        }
+
+        .flow-description strong {
+            color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🛒 E-Commerce System Flow Diagrams</h1>
+        <p style="color: #64748b; margin-top: 10px;">Interactive Component Flow Visualization</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram('order')">📦 Order Placement Flow</button>
+            <button class="tab" onclick="showDiagram('search')">🔍 Product Search Flow</button>
+            <button class="tab" onclick="showDiagram('payment')">💳 Payment Processing</button>
+            <button class="tab" onclick="showDiagram('inventory')">📊 Inventory Management</button>
+        </div>
+    </div>
+
+    <!-- ORDER PLACEMENT FLOW -->
+    <div id="order-diagram" class="diagram-container active">
+        <svg viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#6366f1" />
+                </marker>
+                <linearGradient id="grad-user" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-api" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-service" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-inventory" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-payment" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad-db" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f472b6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Order Placement Flow (Saga Pattern)
+            </text>
+
+            <!-- User/Cart -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Shopping Cart Ready</text>
+            </g>
+
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#4338ca" font-weight="600">POST /checkout</text>
+
+            <!-- API Gateway -->
+            <g class="component">
+                <rect x="600" y="180" width="200" height="80" rx="10" fill="url(#grad-api)" stroke="#4f46e5" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🚪 API Gateway</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="white">Auth + Validation</text>
+            </g>
+
+            <path d="M 700 260 L 700 300" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Order Service -->
+            <g class="component">
+                <rect x="550" y="300" width="300" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="335" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📋 Order Service</text>
+                <text x="700" y="355" font-size="12" text-anchor="middle" fill="white">Saga Orchestrator</text>
+                <text x="700" y="375" font-size="11" text-anchor="middle" fill="white">Create Order (status: pending)</text>
+            </g>
+
+            <!-- STEP 1: Reserve Inventory -->
+            <path d="M 550 350 L 350 450" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="420" y="400" font-size="11" fill="#4338ca" font-weight="600">1. Reserve</text>
+
+            <g class="component">
+                <rect x="200" y="450" width="200" height="100" rx="10" fill="url(#grad-inventory)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="300" y="485" font-size="14" font-weight="bold" text-anchor="middle" fill="white">📊 Inventory Service</text>
+                <text x="300" y="505" font-size="11" text-anchor="middle" fill="white">Reserve items (10 min TTL)</text>
+                <text x="300" y="525" font-size="10" text-anchor="middle" fill="white">PostgreSQL + Redis</text>
+            </g>
+
+            <!-- Inventory Decision -->
+            <g class="component">
+                <path d="M 300 590 L 380 640 L 300 690 L 220 640 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="300" y="635" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Stock</text>
+                <text x="300" y="652" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Available?</text>
+            </g>
+
+            <path d="M 220 640 L 100 640" stroke="#ef4444" stroke-width="3" fill="none"/>
+            <text x="130" y="630" font-size="11" fill="#dc2626" font-weight="700">NO → Fail Order</text>
+
+            <path d="M 380 640 L 550 640" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="450" y="630" font-size="11" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- STEP 2: Process Payment -->
+            <g class="component">
+                <rect x="550" y="590" width="300" height="100" rx="10" fill="url(#grad-payment)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="625" font-size="14" font-weight="bold" text-anchor="middle" fill="white">💳 Payment Service</text>
+                <text x="700" y="645" font-size="11" text-anchor="middle" fill="white">Process payment via Stripe/PayPal</text>
+                <text x="700" y="665" font-size="10" text-anchor="middle" fill="white">Idempotency key: order_id</text>
+            </g>
+
+            <!-- Payment Decision -->
+            <g class="component">
+                <path d="M 700 730 L 780 780 L 700 830 L 620 780 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="775" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Payment</text>
+                <text x="700" y="792" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Success?</text>
+            </g>
+
+            <path d="M 620 780 L 450 780" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="510" y="770" font-size="11" fill="#dc2626" font-weight="700">NO → Compensate</text>
+
+            <!-- Compensation (Release Inventory) -->
+            <g class="component">
+                <rect x="250" y="740" width="200" height="80" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <text x="350" y="770" font-size="12" font-weight="bold" text-anchor="middle" fill="#991b1b">⚠️ Compensation</text>
+                <text x="350" y="790" font-size="10" text-anchor="middle" fill="#991b1b">Release inventory</text>
+                <text x="350" y="805" font-size="10" text-anchor="middle" fill="#991b1b">Mark order FAILED</text>
+            </g>
+
+            <path d="M 780 780 L 950 780" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="850" y="770" font-size="11" fill="#059669" font-weight="700">YES ✓</text>
+
+            <!-- STEP 3: Confirm Order -->
+            <g class="component">
+                <rect x="950" y="730" width="250" height="100" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="1075" y="765" font-size="14" font-weight="bold" text-anchor="middle" fill="white">✅ Confirm Order</text>
+                <text x="1075" y="785" font-size="11" text-anchor="middle" fill="white">Update status: CONFIRMED</text>
+                <text x="1075" y="805" font-size="11" text-anchor="middle" fill="white">Deduct inventory</text>
+            </g>
+
+            <!-- Save to Database -->
+            <path d="M 1075 830 L 1075 900" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <g class="component">
+                <rect x="950" y="900" width="250" height="100" rx="10" fill="url(#grad-db)" stroke="#db2777" stroke-width="2"/>
+                <text x="1075" y="935" font-size="14" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="1075" y="955" font-size="11" text-anchor="middle" fill="white">Save order details</text>
+                <text x="1075" y="975" font-size="10" text-anchor="middle" fill="white">ACID transaction</text>
+            </g>
+
+            <!-- Publish Events -->
+            <path d="M 700 400 L 700 1100" stroke="#9333ea" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="720" y="750" font-size="11" fill="#9333ea" font-weight="600">Publish Events</text>
+
+            <g class="component">
+                <rect x="550" y="1100" width="300" height="120" rx="10" fill="#e9d5ff" stroke="#9333ea" stroke-width="2"/>
+                <text x="700" y="1135" font-size="14" font-weight="bold" text-anchor="middle" fill="#7c3aed">📬 Kafka Events</text>
+                <text x="700" y="1157" font-size="11" text-anchor="middle" fill="#7c3aed">order.created</text>
+                <text x="700" y="1175" font-size="11" text-anchor="middle" fill="#7c3aed">payment.completed</text>
+                <text x="700" y="1193" font-size="11" text-anchor="middle" fill="#7c3aed">inventory.updated</text>
+            </g>
+
+            <!-- Async Processing -->
+            <path d="M 850 1160 L 1050 1160" stroke="#9333ea" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+
+            <g class="component">
+                <rect x="1050" y="1110" width="200" height="100" rx="10" fill="#dbeafe" stroke="#0284c7" stroke-width="2"/>
+                <text x="1150" y="1145" font-size="12" font-weight="bold" text-anchor="middle" fill="#075985">Async Consumers</text>
+                <text x="1150" y="1165" font-size="10" text-anchor="middle" fill="#075985">• Email notification</text>
+                <text x="1150" y="1182" font-size="10" text-anchor="middle" fill="#075985">• SMS alert</text>
+                <text x="1150" y="1199" font-size="10" text-anchor="middle" fill="#075985">• Analytics tracking</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="300" cy="500" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="300" y="507" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="640" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="647" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="1075" cy="780" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1075" y="787" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+
+            <circle cx="1075" cy="950" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="1075" y="957" font-size="14" font-weight="bold" text-anchor="middle" fill="white">4</text>
+
+            <circle cx="700" cy="1160" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="1167" font-size="14" font-weight="bold" text-anchor="middle" fill="white">5</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📦 Order Placement Flow (Distributed Saga Pattern)</h3>
+            <ol>
+                <li><strong>User Initiates Checkout:</strong> User clicks "Place Order" with items in cart</li>
+                <li><strong>API Gateway:</strong> Validates JWT token, checks rate limits, forwards to Order Service</li>
+                <li><strong>Order Service (Saga Orchestrator):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Creates order record with status: PENDING</li>
+                        <li>Generates unique order_id: ORD-12345</li>
+                        <li>Orchestrates the following steps...</li>
+                    </ul>
+                </li>
+                <li><strong>Step 1 - Reserve Inventory:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Inventory Service receives reserve request</li>
+                        <li>Executes PostgreSQL transaction with row-level locks</li>
+                        <li>Updates: available_quantity -= 1, reserved_quantity += 1</li>
+                        <li>Creates reservation with 10-minute TTL</li>
+                        <li><strong>If stock unavailable:</strong> Return error → Order FAILED</li>
+                    </ul>
+                </li>
+                <li><strong>Step 2 - Process Payment:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Payment Service calls Stripe/PayPal API</li>
+                        <li>Uses order_id as idempotency key (prevent duplicate charges)</li>
+                        <li>Tokenized card processing (PCI-DSS compliant)</li>
+                        <li><strong>If payment fails:</strong> Compensate → Release inventory, mark order FAILED</li>
+                    </ul>
+                </li>
+                <li><strong>Step 3 - Confirm Order:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Update order status: CONFIRMED</li>
+                        <li>Deduct inventory (complete reservation)</li>
+                        <li>Save order to PostgreSQL (partitioned by date)</li>
+                    </ul>
+                </li>
+                <li><strong>Step 4 - Publish Events (Async):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Kafka topic: order.created, payment.completed, inventory.updated</li>
+                        <li>Email service consumes event → Send confirmation email</li>
+                        <li>Analytics service → Track conversion metrics</li>
+                        <li>Seller service → Notify seller of new order</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Why Saga Pattern?</strong> We need distributed transactions across 3 services (Order, Inventory, Payment).
+                Traditional 2PC (Two-Phase Commit) doesn't scale well. Saga provides compensation logic: if payment fails after inventory reservation,
+                we automatically release the reserved items. This ensures eventual consistency without distributed locks!
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT SEARCH FLOW -->
+    <div id="search-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1000" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Product Search & Discovery Flow
+            </text>
+
+            <!-- User -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Search: "wireless headphones"</text>
+            </g>
+
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="165" font-size="11" fill="#4338ca" font-weight="600">GET /search?q=...</text>
+
+            <!-- CDN Check -->
+            <g class="component">
+                <rect x="550" y="180" width="300" height="100" rx="10" fill="#a5f3fc" stroke="#0891b2" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="#0c4a6e">⚡ CDN / Edge Cache</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="#0c4a6e">Check cached search results</text>
+                <text x="700" y="255" font-size="11" text-anchor="middle" fill="#0c4a6e">TTL: 5 minutes</text>
+            </g>
+
+            <!-- Cache Decision -->
+            <g class="component">
+                <path d="M 700 320 L 800 380 L 700 440 L 600 380 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="375" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Cache</text>
+                <text x="700" y="393" font-size="13" font-weight="bold" text-anchor="middle" fill="#92400e">Hit?</text>
+            </g>
+
+            <path d="M 800 380 L 1000 380" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="880" y="370" font-size="12" fill="#059669" font-weight="700">YES (30%)</text>
+
+            <g class="component">
+                <rect x="1000" y="330" width="200" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="1100" y="370" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Return Cached</text>
+                <text x="1100" y="390" font-size="11" text-anchor="middle" fill="#065f46">Latency: ~10ms</text>
+            </g>
+
+            <path d="M 700 440 L 700 500" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="630" y="475" font-size="12" fill="#dc2626" font-weight="700">NO (70%)</text>
+
+            <!-- Search Service -->
+            <g class="component">
+                <rect x="550" y="500" width="300" height="120" rx="10" fill="url(#grad-service)" stroke="#4d7c0f" stroke-width="2"/>
+                <text x="700" y="540" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🔍 Search Service</text>
+                <text x="700" y="560" font-size="12" text-anchor="middle" fill="white">Query Elasticsearch</text>
+                <text x="700" y="580" font-size="11" text-anchor="middle" fill="white">Multi-match + filters + facets</text>
+            </g>
+
+            <path d="M 700 620 L 700 680" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Elasticsearch -->
+            <g class="component">
+                <rect x="500" y="680" width="400" height="140" rx="10" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>
+                <text x="700" y="720" font-size="16" font-weight="bold" text-anchor="middle" fill="#854d0e">⚡ Elasticsearch</text>
+                <text x="700" y="745" font-size="12" text-anchor="middle" fill="#854d0e">500M product documents indexed</text>
+                <text x="700" y="770" font-size="11" text-anchor="middle" fill="#854d0e">Ranking: Relevance (60%) + Rating (20%) + Sales (20%)</text>
+                <text x="700" y="790" font-size="11" text-anchor="middle" fill="#854d0e">Facets: Brand, Price, Rating, Category</text>
+            </g>
+
+            <!-- Enrichment -->
+            <path d="M 900 750 L 1050 750" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="3,3"/>
+            <text x="950" y="740" font-size="10" fill="#4338ca">Enrich</text>
+
+            <g class="component">
+                <rect x="1050" y="690" width="200" height="120" rx="10" fill="#fbcfe8" stroke="#db2777" stroke-width="2"/>
+                <text x="1150" y="730" font-size="13" font-weight="bold" text-anchor="middle" fill="#831843">Enrich Results</text>
+                <text x="1150" y="750" font-size="10" text-anchor="middle" fill="#831843">• Fetch prices (Redis)</text>
+                <text x="1150" y="768" font-size="10" text-anchor="middle" fill="#831843">• Check inventory</text>
+                <text x="1150" y="786" font-size="10" text-anchor="middle" fill="#831843">• Add recommendations</text>
+            </g>
+
+            <!-- Response -->
+            <path d="M 700 820 L 700 880" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+
+            <g class="component">
+                <rect x="500" y="880" width="400" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="700" y="915" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">📦 Response to User</text>
+                <text x="700" y="935" font-size="11" text-anchor="middle" fill="#065f46">Results: 1,247 products | Latency: P95 < 200ms</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="700" cy="230" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="237" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="560" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="567" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="750" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="757" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>🔍 Product Search & Discovery Flow</h3>
+            <ol>
+                <li><strong>User Search Query:</strong> User types "wireless headphones" and hits search</li>
+                <li><strong>CDN Edge Cache:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Check if this exact search query is cached (query string as key)</li>
+                        <li>TTL: 5 minutes (balance freshness vs performance)</li>
+                        <li><strong>Cache Hit (30%):</strong> Return immediately (~10ms latency) ✅</li>
+                        <li><strong>Cache Miss (70%):</strong> Forward to Search Service ↓</li>
+                    </ul>
+                </li>
+                <li><strong>Search Service:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Parse user query: extract keywords, detect typos, apply stemming</li>
+                        <li>Build Elasticsearch query with filters (price, brand, rating)</li>
+                        <li>Execute multi-match query across fields: name^3, description, brand^2</li>
+                    </ul>
+                </li>
+                <li><strong>Elasticsearch Processing:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Search across 500M product documents</li>
+                        <li><strong>Ranking Algorithm:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Text Relevance Score (60 weight)</li>
+                                <li>Product Rating (20% weight)</li>
+                                <li>Sales Velocity (20% weight)</li>
+                            </ul>
+                        </li>
+                        <li>Apply filters: price range, brand, in-stock only</li>
+                        <li>Generate facets/aggregations: brands, price ranges, categories</li>
+                        <li>Return top 50 results</li>
+                    </ul>
+                </li>
+                <li><strong>Enrich Results:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Fetch real-time prices from Redis (may have flash sale discounts)</li>
+                        <li>Check inventory availability (in-stock vs out-of-stock)</li>
+                        <li>Add "Similar Products" recommendations</li>
+                        <li>Inject sponsored products (ads) at positions 1, 5, 10</li>
+                    </ul>
+                </li>
+                <li><strong>Cache & Return:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Cache enriched results in CDN (TTL: 5 min)</li>
+                        <li>Return JSON response with pagination</li>
+                        <li>Total latency: P95 < 200ms</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>🎯 Performance Optimization:</strong> We cache at the edge (CDN) to reduce Elasticsearch load by 30%.
+                For the remaining 70%, Elasticsearch uses inverted indices for sub-second search across 500M products.
+                Sharding (6 shards) parallelizes the search query for faster results!
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT PROCESSING FLOW -->
+    <div id="payment-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Payment Processing Flow (PCI-DSS Compliant)
+            </text>
+
+            <!-- User enters card -->
+            <g class="component">
+                <rect x="600" y="60" width="200" height="80" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="700" y="95" font-size="16" font-weight="bold" text-anchor="middle" fill="white">👤 User</text>
+                <text x="700" y="115" font-size="12" text-anchor="middle" fill="white">Enter card details</text>
+            </g>
+
+            <path d="M 700 140 L 700 180" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Frontend tokenization -->
+            <g class="component">
+                <rect x="550" y="180" width="300" height="100" rx="10" fill="#c7d2fe" stroke="#6366f1" stroke-width="2"/>
+                <text x="700" y="215" font-size="16" font-weight="bold" text-anchor="middle" fill="#4338ca">🔐 Frontend (Stripe.js)</text>
+                <text x="700" y="235" font-size="12" text-anchor="middle" fill="#4338ca">Tokenize card (client-side)</text>
+                <text x="700" y="255" font-size="11" text-anchor="middle" fill="#4338ca">PCI-DSS Scope Reduction</text>
+            </g>
+
+            <text x="900" y="230" font-size="10" fill="#ef4444" font-weight="700">⚠️ Never send raw card to backend!</text>
+
+            <path d="M 700 280 L 700 320" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+            <text x="720" y="305" font-size="11" fill="#4338ca" font-weight="600">POST /payments (token only)</text>
+
+            <!-- Payment Service -->
+            <g class="component">
+                <rect x="550" y="320" width="300" height="120" rx="10" fill="url(#grad-payment)" stroke="#ea580c" stroke-width="2"/>
+                <text x="700" y="360" font-size="16" font-weight="bold" text-anchor="middle" fill="white">💳 Payment Service</text>
+                <text x="700" y="380" font-size="12" text-anchor="middle" fill="white">Receive: {token, amount, order_id}</text>
+                <text x="700" y="400" font-size="11" text-anchor="middle" fill="white">Idempotency: order_id</text>
+            </g>
+
+            <!-- Check idempotency -->
+            <path d="M 700 440 L 700 500" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <g class="component">
+                <path d="M 700 540 L 800 600 L 700 660 L 600 600 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="595" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Already</text>
+                <text x="700" y="612" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Processed?</text>
+            </g>
+
+            <path d="M 800 600 L 1000 600" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="880" y="590" font-size="11" fill="#059669" font-weight="700">YES → Return existing</text>
+
+            <g class="component">
+                <rect x="1000" y="550" width="200" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="1100" y="590" font-size="13" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Return Cached</text>
+                <text x="1100" y="610" font-size="11" text-anchor="middle" fill="white">Prevent duplicate charge</text>
+            </g>
+
+            <path d="M 700 660 L 700 720" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="620" y="695" font-size="11" fill="#dc2626" font-weight="700">NO → Process</text>
+
+            <!-- Call Stripe API -->
+            <g class="component">
+                <rect x="550" y="720" width="300" height="100" rx="10" fill="#c7d2fe" stroke="#6366f1" stroke-width="2"/>
+                <text x="700" y="755" font-size="16" font-weight="bold" text-anchor="middle" fill="#4338ca">🔗 Stripe API</text>
+                <text x="700" y="775" font-size="12" text-anchor="middle" fill="#4338ca">POST /v1/charges</text>
+                <text x="700" y="795" font-size="11" text-anchor="middle" fill="#4338ca">3D Secure / CVV verification</text>
+            </g>
+
+            <path d="M 700 820 L 700 880" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- Success/Failure Decision -->
+            <g class="component">
+                <path d="M 700 920 L 800 980 L 700 1040 L 600 980 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                <text x="700" y="975" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Payment</text>
+                <text x="700" y="992" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">Success?</text>
+            </g>
+
+            <!-- Success Path -->
+            <path d="M 800 980 L 1000 980" stroke="#10b981" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="880" y="970" font-size="11" fill="#059669" font-weight="700">YES ✓</text>
+
+            <g class="component">
+                <rect x="1000" y="930" width="250" height="100" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="1125" y="965" font-size="14" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Save Success</text>
+                <text x="1125" y="985" font-size="11" text-anchor="middle" fill="#065f46">status: COMPLETED</text>
+                <text x="1125" y="1005" font-size="11" text-anchor="middle" fill="#065f46">transaction_id: ch_abc123</text>
+            </g>
+
+            <!-- Failure Path -->
+            <path d="M 600 980 L 400 980" stroke="#ef4444" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+            <text x="480" y="970" font-size="11" fill="#dc2626" font-weight="700">NO ✗</text>
+
+            <g class="component">
+                <rect x="150" y="930" width="250" height="100" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+                <text x="275" y="965" font-size="14" font-weight="bold" text-anchor="middle" fill="#991b1b">❌ Save Failure</text>
+                <text x="275" y="985" font-size="11" text-anchor="middle" fill="#991b1b">status: FAILED</text>
+                <text x="275" y="1005" font-size="11" text-anchor="middle" fill="#991b1b">error: Insufficient funds</text>
+            </g>
+
+            <!-- Step Numbers -->
+            <circle cx="700" cy="230" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="237" font-size="14" font-weight="bold" text-anchor="middle" fill="white">1</text>
+
+            <circle cx="700" cy="380" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="387" font-size="14" font-weight="bold" text-anchor="middle" fill="white">2</text>
+
+            <circle cx="700" cy="770" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="700" y="777" font-size="14" font-weight="bold" text-anchor="middle" fill="white">3</text>
+        </svg>
+
+        <div class="flow-description">
+            <h3>💳 Payment Processing Flow (PCI-DSS Compliant)</h3>
+            <ol>
+                <li><strong>User Enters Card:</strong> User fills in card number, expiry, CVV on checkout page</li>
+                <li><strong>Client-Side Tokenization (Stripe.js):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Critical:</strong> Card data NEVER touches our backend servers!</li>
+                        <li>Stripe.js library sends card directly to Stripe servers (HTTPS)</li>
+                        <li>Stripe returns a one-time token: <code>tok_1234abcd</code></li>
+                        <li>Frontend sends only this token to our backend</li>
+                        <li><strong>Why?</strong> Reduces PCI-DSS compliance scope massively</li>
+                    </ul>
+                </li>
+                <li><strong>Payment Service Receives Token:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Receives: <code>{token: "tok_1234", amount: 999.99, order_id: "ORD-456"}</code></li>
+                        <li><strong>Idempotency Check:</strong> Query DB: Has order_id been processed?</li>
+                        <li>If YES → Return existing transaction (prevent duplicate charges)</li>
+                        <li>If NO → Proceed to charge...</li>
+                    </ul>
+                </li>
+                <li><strong>Call Payment Gateway (Stripe):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>POST to Stripe API: <code>/v1/charges</code></li>
+                        <li>Stripe validates token, charges card</li>
+                        <li>3D Secure / CVV verification if required</li>
+                        <li>Response time: 1-3 seconds</li>
+                    </ul>
+                </li>
+                <li><strong>Handle Response:</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><strong>Success:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Save transaction: status=COMPLETED, transaction_id=ch_abc123</li>
+                                <li>Return success to Order Service</li>
+                                <li>Publish event: payment.completed</li>
+                            </ul>
+                        </li>
+                        <li><strong>Failure:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Save transaction: status=FAILED, error="Insufficient funds"</li>
+                                <li>Return failure to Order Service</li>
+                                <li>Order Service compensates: releases inventory</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Retry Logic (if gateway timeout):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Exponential backoff: 1s, 2s, 4s retries</li>
+                        <li>Max 3 retries</li>
+                        <li>Idempotency key ensures no duplicate charges</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #dc2626; border-radius: 5px;">
+                <strong>🔐 Security & Compliance:</strong>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>PCI-DSS Level 1:</strong> By tokenizing on frontend, we avoid storing/transmitting raw card data</li>
+                    <li><strong>Encryption:</strong> All data encrypted at rest (AES-256) and in transit (TLS 1.3)</li>
+                    <li><strong>Fraud Detection:</strong> Run ML model on each transaction (50+ signals, <100ms)</li>
+                    <li><strong>Idempotency:</strong> Using order_id as key prevents duplicate charges if user refreshes page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVENTORY MANAGEMENT FLOW -->
+    <div id="inventory-diagram" class="diagram-container">
+        <svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Title -->
+            <text x="700" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2d3748">
+                Inventory Management Flow (Strong Consistency)
+            </text>
+
+            <!-- Multiple users -->
+            <g class="component">
+                <rect x="100" y="80" width="150" height="70" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="175" y="120" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User A</text>
+            </g>
+
+            <g class="component">
+                <rect x="300" y="80" width="150" height="70" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="375" y="120" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User B</text>
+            </g>
+
+            <g class="component">
+                <rect x="500" y="80" width="150" height="70" rx="10" fill="url(#grad-user)" stroke="#2563eb" stroke-width="2"/>
+                <text x="575" y="120" font-size="14" font-weight="bold" text-anchor="middle" fill="white">👤 User C</text>
+            </g>
+
+            <text x="375" y="60" font-size="13" fill="#ef4444" font-weight="700">⚠️ All trying to buy last 1 item!</text>
+
+            <path d="M 175 150 L 350 220" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 375 150 L 375 220" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+            <path d="M 575 150 L 400 220" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+            <!-- Inventory Service -->
+            <g class="component">
+                <rect x="250" y="220" width="250" height="100" rx="10" fill="url(#grad-inventory)" stroke="#b91c1c" stroke-width="2"/>
+                <text x="375" y="260" font-size="16" font-weight="bold" text-anchor="middle" fill="white">📊 Inventory Service</text>
+                <text x="375" y="280" font-size="12" text-anchor="middle" fill="white">Concurrent Requests</text>
+                <text x="375" y="300" font-size="11" text-anchor="middle" fill="white">available_quantity: 1</text>
+            </g>
+
+            <path d="M 375 320 L 375 380" stroke="#6366f1" stroke-width="3" fill="none" marker-end="url(#arrowhead)" class="flow-arrow" stroke-dasharray="5,5"/>
+
+            <!-- PostgreSQL with Lock -->
+            <g class="component">
+                <rect x="250" y="380" width="250" height="140" rx="10" fill="url(#grad-db)" stroke="#db2777" stroke-width="3"/>
+                <text x="375" y="420" font-size="16" font-weight="bold" text-anchor="middle" fill="white">🗄️ PostgreSQL</text>
+                <text x="375" y="445" font-size="12" text-anchor="middle" fill="white">BEGIN TRANSACTION;</text>
+                <text x="375" y="465" font-size="11" text-anchor="middle" fill="white">SELECT ... FOR UPDATE;</text>
+                <text x="375" y="485" font-size="11" text-anchor="middle" fill="white">UPDATE inventory SET...</text>
+                <text x="375" y="505" font-size="12" text-anchor="middle" fill="white">COMMIT;</text>
+            </g>
+
+            <text x="550" y="450" font-size="11" fill="#ef4444" font-weight="700">🔒 Row-level lock!</text>
+
+            <!-- Timeline of events -->
+            <rect x="600" y="380" width="700" height="700" rx="10" fill="#f8fafc" stroke="#cbd5e0" stroke-width="2"/>
+            <text x="950" y="415" font-size="16" font-weight="bold" text-anchor="middle" fill="#2d3748">⏱️ Timeline of Events</text>
+
+            <!-- T1 -->
+            <text x="650" y="460" font-size="13" font-weight="bold" fill="#6366f1">T1 (00:00.000):</text>
+            <text x="800" y="460" font-size="12" fill="#4a5568">User A's request arrives first</text>
+            <rect x="650" y="470" width="600" height="60" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="660" y="490" font-size="11" fill="#1e40af">BEGIN;</text>
+            <text x="660" y="505" font-size="11" fill="#1e40af">SELECT available_qty FROM inventory WHERE sku='ABC' FOR UPDATE;</text>
+            <text x="660" y="520" font-size="11" fill="#059669" font-weight="600">→ Acquires row-level lock! 🔒</text>
+
+            <!-- T2 -->
+            <text x="650" y="560" font-size="13" font-weight="bold" fill="#6366f1">T2 (00:00.005):</text>
+            <text x="800" y="560" font-size="12" fill="#4a5568">User B's request arrives (5ms later)</text>
+            <rect x="650" y="570" width="600" height="60" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="660" y="590" font-size="11" fill="#92400e">BEGIN;</text>
+            <text x="660" y="605" font-size="11" fill="#92400e">SELECT available_qty FROM inventory WHERE sku='ABC' FOR UPDATE;</text>
+            <text x="660" y="620" font-size="11" fill="#dc2626" font-weight="600">→ BLOCKED (waits for User A's lock) ⏸️</text>
+
+            <!-- T3 -->
+            <text x="650" y="660" font-size="13" font-weight="bold" fill="#6366f1">T3 (00:00.008):</text>
+            <text x="800" y="660" font-size="12" fill="#4a5568">User C's request arrives</text>
+            <rect x="650" y="670" width="600" height="60" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="660" y="690" font-size="11" fill="#92400e">BEGIN;</text>
+            <text x="660" y="705" font-size="11" fill="#92400e">SELECT available_qty FROM inventory WHERE sku='ABC' FOR UPDATE;</text>
+            <text x="660" y="720" font-size="11" fill="#dc2626" font-weight="600">→ BLOCKED (waits for User A's lock) ⏸️</text>
+
+            <!-- T4 -->
+            <text x="650" y="760" font-size="13" font-weight="bold" fill="#6366f1">T4 (00:00.050):</text>
+            <text x="800" y="760" font-size="12" fill="#4a5568">User A completes transaction</text>
+            <rect x="650" y="770" width="600" height="80" rx="5" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+            <text x="660" y="790" font-size="11" fill="#065f46">Result: available_qty = 1 ✓</text>
+            <text x="660" y="805" font-size="11" fill="#065f46">UPDATE inventory SET available_qty=0, reserved_qty=1;</text>
+            <text x="660" y="820" font-size="11" fill="#065f46">INSERT INTO reservations (user_id, sku) VALUES ('A', 'ABC');</text>
+            <text x="660" y="835" font-size="11" fill="#059669" font-weight="700">COMMIT; → Lock released! 🔓</text>
+
+            <!-- T5 -->
+            <text x="650" y="880" font-size="13" font-weight="bold" fill="#6366f1">T5 (00:00.051):</text>
+            <text x="800" y="880" font-size="12" fill="#4a5568">User B's query executes</text>
+            <rect x="650" y="890" width="600" height="70" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+            <text x="660" y="910" font-size="11" fill="#991b1b">Result: available_qty = 0 ✗</text>
+            <text x="660" y="925" font-size="11" fill="#991b1b">Condition failed: WHERE available_qty >= 1</text>
+            <text x="660" y="940" font-size="11" fill="#dc2626" font-weight="700">ROLLBACK; → Return "Out of Stock"</text>
+
+            <!-- T6 -->
+            <text x="650" y="990" font-size="13" font-weight="bold" fill="#6366f1">T6 (00:00.052):</text>
+            <text x="800" y="990" font-size="12" fill="#4a5568">User C's query executes</text>
+            <rect x="650" y="1000" width="600" height="70" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+            <text x="660" y="1020" font-size="11" fill="#991b1b">Result: available_qty = 0 ✗</text>
+            <text x="660" y="1035" font-size="11" fill="#991b1b">Condition failed: WHERE available_qty >= 1</text>
+            <text x="660" y="1050" font-size="11" fill="#dc2626" font-weight="700">ROLLBACK; → Return "Out of Stock"</text>
+
+            <!-- Final Results -->
+            <text x="950" y="1120" font-size="14" font-weight="bold" text-anchor="middle" fill="#2d3748">✅ Final Result:</text>
+            <text x="950" y="1145" font-size="12" text-anchor="middle" fill="#059669" font-weight="600">User A: Order successful (1 item reserved)</text>
+            <text x="950" y="1165" font-size="12" text-anchor="middle" fill="#dc2626">User B: Out of stock</text>
+            <text x="950" y="1185" font-size="12" text-anchor="middle" fill="#dc2626">User C: Out of stock</text>
+
+            <!-- Left side final state -->
+            <g class="component">
+                <rect x="50" y="600" width="450" height="150" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                <text x="275" y="640" font-size="16" font-weight="bold" text-anchor="middle" fill="#065f46">✅ Inventory Table (Final State)</text>
+                <text x="80" y="670" font-size="12" fill="#065f46">sku: ABC-123</text>
+                <text x="80" y="690" font-size="12" fill="#065f46">available_quantity: 0 (was 1)</text>
+                <text x="80" y="710" font-size="12" fill="#065f46">reserved_quantity: 1 (was 0)</text>
+                <text x="80" y="730" font-size="11" fill="#059669" font-weight="600">NO OVERSELLING! ✓</text>
+            </g>
+        </svg>
+
+        <div class="flow-description">
+            <h3>📊 Inventory Management (Preventing Overselling)</h3>
+            <p style="margin-bottom: 15px; line-height: 1.8;">
+                <strong>Challenge:</strong> 3 users trying to buy the last remaining item simultaneously.
+                How do we ensure only 1 user succeeds without overselling?
+            </p>
+            <p style="margin-bottom: 15px; line-height: 1.8;">
+                <strong>Solution:</strong> PostgreSQL row-level locks with <code>SELECT ... FOR UPDATE</code>
+            </p>
+            <ol>
+                <li><strong>User A arrives first (T1):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Begins transaction: <code>BEGIN;</code></li>
+                        <li>Locks row: <code>SELECT available_quantity FROM inventory WHERE sku='ABC' FOR UPDATE;</code></li>
+                        <li>PostgreSQL acquires exclusive row-level lock 🔒</li>
+                        <li>Sees: available_quantity = 1 ✓</li>
+                    </ul>
+                </li>
+                <li><strong>User B arrives 5ms later (T2):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Tries same query: <code>SELECT ... FOR UPDATE;</code></li>
+                        <li>Gets BLOCKED by User A's lock ⏸️</li>
+                        <li>PostgreSQL makes User B wait in queue</li>
+                    </ul>
+                </li>
+                <li><strong>User C arrives 8ms later (T3):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Also gets BLOCKED, joins the queue ⏸️</li>
+                    </ul>
+                </li>
+                <li><strong>User A completes (T4 - 50ms):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Updates: <code>SET available_quantity=0, reserved_quantity=1</code></li>
+                        <li>Commits: <code>COMMIT;</code></li>
+                        <li>Lock released! 🔓</li>
+                    </ul>
+                </li>
+                <li><strong>User B's turn (T5 - 51ms):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Query finally executes</li>
+                        <li>Sees: available_quantity = 0 ✗</li>
+                        <li>Rollback, return "Out of Stock"</li>
+                    </ul>
+                </li>
+                <li><strong>User C's turn (T6 - 52ms):</strong>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Same result: Out of Stock</li>
+                    </ul>
+                </li>
+            </ol>
+            <div style="margin-top: 15px; padding: 15px; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 5px;">
+                <strong>🎯 Why Strong Consistency Matters:</strong>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>Pessimistic Locking:</strong> <code>SELECT ... FOR UPDATE</code> ensures only one transaction at a time</li>
+                    <li><strong>ACID Guarantees:</strong> PostgreSQL ensures atomicity (all-or-nothing updates)</li>
+                    <li><strong>No Race Conditions:</strong> Impossible to oversell inventory</li>
+                    <li><strong>Performance:</strong> Lock duration ~50ms, acceptable for checkout flow</li>
+                </ul>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                <strong>Alternative: Optimistic Locking (not recommended for inventory):</strong>
+                <p style="margin-top: 10px; line-height: 1.8;">
+                    Could use version numbers and retry on conflict, but higher chance of user disappointment
+                    ("Sorry, someone else bought it while you were checking out"). Pessimistic locking gives better UX.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-panel">
+        <h2 style="margin-bottom: 15px; color: #92400e;">⚡ System Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">50ms</div>
+                <div class="metric-label">Order Flow Latency (P95)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">200ms</div>
+                <div class="metric-label">Search Latency (P95)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100ms</div>
+                <div class="metric-label">Payment Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">30%</div>
+                <div class="metric-label">Search Cache Hit Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">99.99%</div>
+                <div class="metric-label">Payment Success Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0%</div>
+                <div class="metric-label">Overselling Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);"></div>
+            <span>User/Client</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #818cf8, #6366f1);"></div>
+            <span>API Gateway</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #84cc16, #65a30d);"></div>
+            <span>Services</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+            <span>Inventory</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #fb923c, #f97316);"></div>
+            <span>Payment</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #f472b6, #ec4899);"></div>
+            <span>Database</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDiagram(type) {
+        // Hide all diagrams
+        document.querySelectorAll('.diagram-container').forEach(d => {
+            d.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+
+        // Show selected diagram
+        document.getElementById(type + '-diagram').classList.add('active');
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.addEventListener('mouseenter', function() {
+            this.style.filter = 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))';
+        });
+
+        comp.addEventListener('mouseleave', function() {
+            this.style.filter = 'none';
+        });
+    });
+</script>
+</body>
+</html>
