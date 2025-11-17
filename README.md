@@ -35,7 +35,14 @@
 - [Data Modeling](docs/databases/data-modeling.md)
 - [Object Storage](docs/databases/object-storage.md)
 
-### 5. [Networking & Protocols](docs/networking/README.md)
+### 5. [Data Processing & Analytics](docs/data-processing/README.md)
+- [Stream Processing Systems (Apache Flink)](docs/data-processing/stream-processing.md)
+- [Message Queues (Kafka vs RabbitMQ)](docs/data-processing/message-queues.md)
+- [Data Capture (Debezium CDC)](docs/data-processing/data-capture.md)
+- [Data Warehousing (Snowflake, Mesa)](docs/data-processing/data-warehousing.md)
+- [Advanced Data Formats (Iceberg, Hudi, Parquet)](docs/data-processing/data-formats.md)
+
+### 6. [Networking & Protocols](docs/networking/README.md)
 - [HTTP/HTTPS/HTTP2/HTTP3](docs/networking/http-protocols.md)
 - [TCP/UDP](docs/networking/tcp-udp.md)
 - [DNS & Service Discovery](docs/networking/dns.md)
@@ -43,7 +50,7 @@
 - [WebSockets & Real-time Communication](docs/networking/realtime.md)
 - [Network Security](docs/networking/security.md)
 
-### 6. [Platform Engineering](docs/platform-engineering/README.md)
+### 7. [Platform Engineering](docs/platform-engineering/README.md)
 - [Infrastructure as Code](docs/platform-engineering/iac.md)
 - [CI/CD Pipelines](docs/platform-engineering/cicd.md)
 - [Container Orchestration (Kubernetes)](docs/platform-engineering/kubernetes.md)
@@ -52,7 +59,7 @@
 - [GitOps](docs/platform-engineering/gitops.md)
 - [Platform Architecture](docs/platform-engineering/architecture.md)
 
-### 7. [Real-World System Designs](docs/system-designs/README.md)
+### 8. [Real-World System Designs](docs/system-designs/README.md)
 - [URL Shortener](docs/system-designs/design-topics/tiny-url/url-shortener.md)
 - [Social Media Feed](docs/system-designs/social-feed.md)
 - [Distributed Cache](docs/system-designs/distributed-cache.md)
@@ -64,7 +71,7 @@
 - [Chat System](docs/system-designs/chat-system.md)
 - [Rate Limiter](docs/system-designs/rate-limiter.md)
 
-### 8. [Interview Preparation](docs/interview-prep/README.md)
+### 9. [Interview Preparation](docs/interview-prep/README.md)
 - [Interview Framework (RADIO)](docs/interview-prep/framework.md)
 - [Common Questions & Answers](docs/interview-prep/common-questions.md)
 - [Estimation & Capacity Planning](docs/interview-prep/capacity-planning.md)
@@ -92,8 +99,9 @@
 ### Study Plan Suggestion
 - **Week 1-2**: Fundamentals + Distributed Systems
 - **Week 3**: Scalability + Databases
-- **Week 4**: Networking + Platform Engineering
-- **Week 5-6**: Practice System Designs + Mock Interviews
+- **Week 4**: Data Processing & Analytics
+- **Week 5**: Networking + Platform Engineering
+- **Week 6-7**: Practice System Designs + Mock Interviews
 
 ## 🔑 Key Focus Areas for Senior Roles
 
@@ -132,5 +140,5 @@
 
 ---
 
-**Last Updated**: 2025-11-14
+**Last Updated**: 2025-11-17
 **Target Role**: Senior Systems/Platform Engineer
